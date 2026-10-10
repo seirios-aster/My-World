@@ -83,6 +83,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #mnl,#fnl{display:flex;flex-direction:column;gap:4px;padding:8px 6px 4px;margin-top:4px;border-top:2px solid var(--paper-2);font:700 12px var(--body);color:var(--ink-soft)}
 #myname,#fname{font:600 15px var(--display);border:2px solid var(--paper-2);border-radius:9px;padding:6px 8px;color:var(--ink);background:#fff;min-width:0;width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 #onames{display:flex;flex-direction:column}
+#ocred{font:600 11px/1.4 var(--body);opacity:.6;padding:8px 6px 0;margin-top:4px;border-top:2px solid var(--paper-2)}#ocred a{color:inherit}
 @media (max-height:600px){   /* a phone on its side: the preview stays beside the choices, and the names sit side by side */
   #outfits{width:min(560px,calc(100vw - 92px - env(safe-area-inset-right,0px)));max-height:calc(100vh - 56px)}
   #obody{flex-direction:row;align-items:flex-start}
@@ -301,13 +302,14 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="swap"></button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
-      <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div></div>
+      <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div><div class="lbl">Eye colour</div><div class="sws" id="sweye"></div></div>
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
       <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
   <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
-  <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label></div></div>
+  <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
+  <div id="ocred">Characters are built on “Free Pack – Chibi Base Mesh” by <a href="https://sketchfab.com/dunguyn" target="_blank" rel="noopener">DuNguyn Studio</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
@@ -359,6 +361,10 @@ import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+// the people's body model starts downloading right away (while the world is built); null if it can't be had in time, and then the older figures are used
+const CBP=(async()=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL('models/chibi/chibi-base.glb',location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] model not loaded, using the older figures:',e&&e.message||e);return null}})();
 
 /* ============================== EDIT ME ============================== */
 // Your places. media = a photo/video as a data: URI (leave it out for a placeholder tile)
@@ -1978,6 +1984,7 @@ const mDark=new THREE.MeshBasicMaterial({color:'#1d1b22'}),mBlush=new THREE.Mesh
   mIn=new THREE.MeshBasicMaterial({color:'#6b2b30'}),mTongue=new THREE.MeshBasicMaterial({color:'#ff8d8d'});
 const SKINS=[['Porcelain','#ffe3d0'],['Fair','#ffd9b3'],['Golden','#f1c27d'],['Tan','#e0ac84'],['Caramel','#c68642'],['Bronze','#a46a3c'],['Brown','#8d5524'],['Deep','#5e3a22']];
 const HAIRC=[['Black','#241c1c'],['Espresso','#3b2a20'],['Brown','#5e3622'],['Auburn','#9a4a24'],['Ginger','#c8602a'],['Honey','#d9a74a'],['Blonde','#ecd081'],['Platinum','#efe6d0'],['Silver','#a9aeb8'],['Rose','#f06d9b'],['Lilac','#a07ae0'],['Sky','#4f8fe8']];
+const EYES=[['Brown','#7a4a2a'],['Hazel','#9a7a2e'],['Green','#3f9a5a'],['Teal','#2fa3a8'],['Blue','#3f7fd8'],['Violet','#8a5ad8'],['Rose','#d85a8a'],['Grey','#7a8494']];
 const hex6=n=>'#'+n.toString(16).padStart(6,'0'),shade=(c,f)=>new THREE.Color(c).multiplyScalar(f).getHex();
 // shared geometry: every person is built from the same few shapes
 const SHAPES=new Map(),shp=(k,f)=>{let g=SHAPES.get(k);if(!g)SHAPES.set(k,g=f());return g};
@@ -2156,10 +2163,10 @@ function wear(p,o,h){
     [-1,1].forEach(s=>{part(C,gTor(.17,.024),gm,[s*.28,2.97,.73],null,[0,s*.36,0]);if(sh)part(C,gSph(.17,12),mt(0x16151c),[s*.28,2.97,.72],[1,1,.12],[0,s*.36,0]);
       part(C,gCap(.016,.62),gm,[s*.55,2.97,.38],null,null,[s*.28,0,-.78])});
     part(C,gBar(.02,.1),gm,[0,2.99,.74])}
-  [C,D,...A.map(a=>a.cl),...L.map(l=>l.cl)].forEach(bake);p.cover=!!(H&&COVER[H.t]);showHat(p,true)}
+  [C,D,...A.map(a=>a.cl),...L.map(l=>l.cl)].forEach(bake);p.cover=!!(H&&COVER[H.t]);showHatLegacy(p,true)}
 // headwear on or off (the preview takes it off while you pick a hair style); a hat over the crown tucks the hair on top away
-function showHat(p,on){p.hd.visible=on;p.hairTop.visible=!(on&&p.cover)}
-function dress(p,c){const s=p.st,h=HAIRS[c.hair],M=p.M;
+function showHatLegacy(p,on){p.hd.visible=on;p.hairTop.visible=!(on&&p.cover)}
+function dressLegacy(p,c){const s=p.st,h=HAIRS[c.hair],M=p.M;
   if(s.skin!==c.skin){M.skin.color.set(SKINS[c.skin][1]);M.fleck.color.copy(M.skin.color).multiplyScalar(.78)}
   if(s.hcol!==c.hcol)M.hair.color.set(HAIRC[c.hcol][1]);
   if(s.face!==c.face)buildFace(p,FACES[c.face]);
@@ -2167,10 +2174,10 @@ function dress(p,c){const s=p.st,h=HAIRS[c.hair],M=p.M;
   if(s.outfit!==c.outfit||s.hair!==c.hair)wear(p,OUT[c.outfit],h);
   p.st={skin:c.skin,hair:c.hair,hcol:c.hcol,face:c.face,outfit:c.outfit}}
 // the look as a short list of numbers (saved, and sent to the others): skin, hair style, hair colour, face, outfit. Anything out of range is pulled back in.
-const LOOKK=['skin','hair','hcol','face','outfit'],LOOKN=()=>[SKINS.length,HAIRS.length,HAIRC.length,FACES.length,OUT.length];
+const LOOKK=['skin','hair','hcol','face','outfit','eye'],LOOKN=()=>[SKINS.length,HAIRS.length,HAIRC.length,FACES.length,OUT.length,EYES.length];   // (eye colour came last: looks saved before it just get the first one)
 const packLook=c=>LOOKK.map(k=>c[k]|0);
 function unpackLook(a,outfit){if(!Array.isArray(a))a=[1,0,1,0,outfit|0];const n=LOOKN(),r={};LOOKK.forEach((k,i)=>r[k]=clamp(a[i]|0,0,n[i]-1));return r}
-function makePerson(parent=W){const root=new THREE.Group(),body=new THREE.Group();root.add(body);parent.add(root);
+function makePersonLegacy(parent=W){const root=new THREE.Group(),body=new THREE.Group();root.add(body);parent.add(root);
   const M={skin:smooth('#ffd9b3',{roughness:.85}),hair:smooth('#3b2a20'),fleck:smooth('#c58f63')};
   const torso=part(body,shp('torso',()=>new THREE.CapsuleGeometry(.6,.62,6,16)),smooth('#ff7a3d'),[0,1.62,0]);
   const hips=part(body,shp('hips',()=>new THREE.SphereGeometry(.614,24,10,0,Math.PI*2,Math.PI/2,Math.PI/2)),smooth('#2a4d8f'),[0,1.31,0]);   // the pants (or skirt) from the waist down
@@ -2182,11 +2189,395 @@ function makePerson(parent=W){const root=new THREE.Group(),body=new THREE.Group(
     g.cl=new THREE.Group();g.add(g.cl);g.rotation.z=s*.12;body.add(g);return g});
   const legs=[-1,1].map(s=>{const g=new THREE.Group();g.position.set(s*.27,1.02,0);part(g,gCap(.2,.42),M.skin,[0,-.36,0]);g.cl=new THREE.Group();g.add(g.cl);body.add(g);return g});
   root.traverse(o=>{if(o.isMesh)o.castShadow=true});   // (the baked parts set their own)
-  return{root,body,torso,hips,head,hairTop,hairRest,faceB,eyeG,cl,hd,arms,legs,M,mc:new Map(),eyes:[],st:{},cover:false,bl:{t:2+Math.random()*2,k:0}}}
+  return{root,body,torso,hips,head,hairTop,hairRest,faceB,eyeG,cl,hd,arms,legs,M,mc:new Map(),eyes:[],st:{},cover:false,bl:{t:2+Math.random()*2,k:0},sy:.71,pv:.85,rideY:.46,rideZ:-.38,rideT:.28}}
 // the eyes blink now and then (sometimes twice); closed, smiling eyes stay as they are
-function blinkTick(p,dt){const b=p.bl;b.t-=dt;if(b.t<=0){b.k=.13;b.t=2.2+Math.random()*3.8;if(Math.random()<.2)b.t=.35}if(b.k>0)b.k-=dt;const y=b.k>0?.12:1;p.eyes.forEach(e=>{if(!e.userData.nb)e.scale.y=y})}
+function blinkTickLegacy(p,dt){const b=p.bl;b.t-=dt;if(b.t<=0){b.k=.13;b.t=2.2+Math.random()*3.8;if(Math.random()<.2)b.t=.35}if(b.k>0)b.k-=dt;const y=b.k>0?.12:1;p.eyes.forEach(e=>{if(!e.userData.nb)e.scale.y=y})}
+/* =========================== CHIBI BODIES ===========================
+   Everyone is built on a free rigged chibi base mesh (models/chibi/chibi-base.glb: "Free Pack - Chibi Base Mesh" by DuNguyn Studio, CC BY 4.0; see models/chibi/CREDITS.md).
+   We keep its skeleton and body and give it our own skin tones, a painted anime face, hair and clothes (all built here in code, so a look is still just the same few numbers).
+   Clothes are offset copies of the body's own mesh (so they bend with the skeleton) with a clean hem cut in the shader; hair, hats and other details are small rigid shapes riding on bones.
+   The old figures above stay as the fallback: if the model can't be loaded, CB is null and nothing below is used. */
+const CB=await (async()=>{
+const S=7.4,HS=.152,HR=.92,TH=.0036,AD=1.22;   // model metres -> game units; the head is drawn in units of HS metres (hair and hats for a head of radius HR); outline thickness (m); how far the arms hang down from the T-pose
+/* ---- colours and shading ---- */
+const col=c=>new THREE.Color(c),cshade=(c,k)=>col(c).multiplyScalar(k);
+const inkOf=(c,k=.42)=>{const o=col(c),h={};o.getHSL(h);o.setHSL(h.h,Math.min(1,h.s*1.05+.05),Math.max(.05,h.l*k));return o};   // the outline colour: the part's own colour, much darker (looks drawn, not black)
+const sm=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
+const RAMP=(()=>{const n=96,d=new Uint8Array(n*4);for(let i=0;i<n;i++){const x=i/(n-1),b=Math.round(Math.min(1,.60+.24*sm(.36,.46,x)+.16*sm(.66,.76,x))*255);d.set([b,b,b,255],i*4)}   // a soft 3-tone anime ramp
+  const t=new THREE.DataTexture(d,n,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return t})();
+function toon(color,o={}){
+  const m=new THREE.MeshToonMaterial({color:col(color),gradientMap:RAMP,map:o.map||null,transparent:!!o.transparent,opacity:o.opacity??1,vertexColors:!!o.vc});
+  const rim=o.rim??.22,spec=o.spec??0;
+  m.onBeforeCompile=sh=>{sh.uniforms.uRim={value:rim};sh.uniforms.uSpec={value:spec};
+    if(o.hgrad)sh.vertexShader=sh.vertexShader.replace('void main() {','varying float vHY;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n vHY=position.y;');
+    sh.fragmentShader=sh.fragmentShader.replace('void main() {',(o.hgrad?'varying float vHY;\n':'')+'uniform float uRim;uniform float uSpec;\nvoid main() {')
+      .replace('#include <opaque_fragment>',`
+        vec3 vn=normalize(vNormal);vec3 vv=normalize(vViewPosition);
+        float fr=pow(1.0-clamp(dot(vn,vv),0.0,1.0),2.4);
+        outgoingLight+=uRim*fr*vec3(1.0,.94,.88)*clamp(.45+vn.y*.55,0.,1.);
+        float band=smoothstep(.60,.68,vn.y)*(1.0-smoothstep(.78,.86,vn.y));
+        outgoingLight+=uSpec*band*mix(vec3(1.0),diffuseColor.rgb*1.7,.4);
+        ${o.hgrad?'outgoingLight*=mix(.74,1.06,smoothstep(-1.3,.95,vHY));':''}
+        #include <opaque_fragment>`)};
+  m.customProgramCacheKey=()=>'toon'+(o.hgrad?'H':'');
+  m.userData.ink=o.ink?col(o.ink):inkOf(color,o.inkK);m.userData.noOutline=!!o.noOutline;
+  m.userData.plain=!(o.map||o.transparent||o.hgrad||o.noOutline||o.vc||o.ink||o.rim!=null||o.spec||o.inkK!=null);return m}   // (plain: just a colour, so it can be merged with the others into one mesh)
+// the inverted-hull outline: the same shape drawn inside out, pushed out along its normals
+function outlineMat(ink,th,vc){const m=new THREE.MeshBasicMaterial({color:ink,side:THREE.BackSide,vertexColors:!!vc});
+  m.onBeforeCompile=sh=>{sh.uniforms.uTh={value:th};sh.vertexShader=sh.vertexShader.replace('void main() {','uniform float uTh;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n transformed += normalize(normal) * uTh;')};m.customProgramCacheKey=()=>'outline';return m}
+/* ---- shapes ---- */
+const VCM=toon(0xffffff,{vc:true,noOutline:true}),VCO=outlineMat(0xffffff,TH/.01,true);   // (shared by everyone: the colours are in the vertices)
+const lathe=(pts,seg=40)=>{const g=new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),seg);g.computeVertexNormals();return g};
+const ellG=(rx,ry,rz,seg=28)=>{const g=new THREE.SphereGeometry(1,seg,Math.round(seg*.72));g.scale(rx,ry,rz);return g};
+function sphereDirs(geo,fn){const p=geo.attributes.position,v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.set(p.getX(i),p.getY(i),p.getZ(i)).normalize();const o=fn(v.x,v.y,v.z);p.setXYZ(i,o[0],o[1],o[2])}geo.computeVertexNormals();return geo}
+// a tapered hair lock / tail along a curve (round or flat), pointed at the end
+function lockGeo(pts,w,{flat=.5,rad=8,seg=16,pow=1.5,base=.8}={}){
+  const cur=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],p[1],p[2])));const pos=[],idx=[],uv=[];const up=new THREE.Vector3(0,1,0);
+  for(let i=0;i<=seg;i++){const t=i/seg,c=cur.getPoint(t),T=cur.getTangent(t);let N=new THREE.Vector3().crossVectors(T,up);if(N.lengthSq()<1e-4)N.set(1,0,0);N.normalize();
+    const B=new THREE.Vector3().crossVectors(N,T).normalize();const ww=w*(base+(1-base)*Math.sin(Math.min(1,t*3)*Math.PI/2))*Math.pow(Math.max(0,1-Math.pow(t,pow)),.75);
+    for(let j=0;j<rad;j++){const a=j/rad*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a);pos.push(c.x+N.x*ca*ww+B.x*sa*ww*flat,c.y+N.y*ca*ww+B.y*sa*ww*flat,c.z+N.z*ca*ww+B.z*sa*ww*flat);uv.push(j/rad,t)}}
+  for(let i=0;i<seg;i++)for(let j=0;j<rad;j++){const a=i*rad+j,b=i*rad+(j+1)%rad,c2=(i+1)*rad+j,d=(i+1)*rad+(j+1)%rad;idx.push(a,c2,b,b,c2,d)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return g}
+
+/* ---- faces: painted on a curved decal that hugs the head ---- */
+const FW=512,FH=324,FACEC=new Map();   // (drawn on a 1024-wide plan, at half size)
+// one painted face per (expression, eye colour, ink); `blink` has the eyes shut. They are shared by everyone wearing the same one; the least recently used are let go when there are many
+function faceTex(kind,eyeHex,inkHex,blink){const key=kind+eyeHex+inkHex+(blink?'b':'');let t=FACEC.get(key);if(t){FACEC.delete(key);FACEC.set(key,t);return t}
+  const cv=document.createElement('canvas');cv.width=FW;cv.height=FH;const g=cv.getContext('2d');g.scale(FW/1024,FW/1024);g.lineCap='round';g.lineJoin='round';
+  const ink=inkHex,iris=col(eyeHex),cx=[292,732],cy=300,hex=c=>'#'+c.getHexString();
+  const blush=(x,y,rx,ry,a)=>{const gr=g.createRadialGradient(x,y,0,x,y,rx);gr.addColorStop(0,`rgba(255,104,122,${a})`);gr.addColorStop(.6,`rgba(255,110,126,${a*.55})`);gr.addColorStop(1,'rgba(255,110,126,0)');g.save();g.translate(x,y);g.scale(1,ry/rx);g.translate(-x,-y);g.fillStyle=gr;g.beginPath();g.arc(x,y,rx,0,7);g.fill();g.restore()};
+  const eyeRound=(x,side,o={})=>{const rx=o.rx||110,ry=o.ry||138,y=o.y||cy;
+    g.save();g.beginPath();g.ellipse(x,y,rx,ry,0,0,7);g.clip();
+    g.fillStyle='#fffaf3';g.fillRect(x-rx,y-ry,rx*2,ry*2);
+    const gr=g.createLinearGradient(0,y-ry,0,y+ry);gr.addColorStop(0,hex(iris.clone().multiplyScalar(.30)));gr.addColorStop(.45,hex(iris.clone().multiplyScalar(.85)));gr.addColorStop(1,hex(iris.clone().lerp(col('#ffffff'),.42)));
+    g.fillStyle=gr;g.beginPath();g.ellipse(x,y+8,rx*.9,ry*.97,0,0,7);g.fill();
+    g.fillStyle=hex(iris.clone().multiplyScalar(.16));g.beginPath();g.ellipse(x,y-6,rx*.43,ry*.46,0,0,7);g.fill();
+    const gl=g.createRadialGradient(x,y+ry*.62,2,x,y+ry*.62,rx*.75);gl.addColorStop(0,'rgba(255,255,255,.55)');gl.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gl;g.fillRect(x-rx,y,rx*2,ry);   // the glow low in the iris
+    g.restore();
+    g.fillStyle='#fff';g.beginPath();g.ellipse(x-side*rx*.30,y-ry*.38,rx*.27,ry*.2,-.3*side,0,7);g.fill();   // highlights
+    g.beginPath();g.ellipse(x+side*rx*.34,y+ry*.34,rx*.12,ry*.09,0,0,7);g.fill();
+    g.globalAlpha=.9;g.beginPath();g.arc(x+side*rx*.05,y+ry*.12,rx*.055,0,7);g.fill();g.globalAlpha=1;
+    g.strokeStyle=ink;g.globalAlpha=.55;g.lineWidth=9;g.beginPath();g.ellipse(x,y,rx*.99,ry*.99,0,0,7);g.stroke();g.globalAlpha=1;
+    g.fillStyle='#fff';g.globalAlpha=.9;g.beginPath();g.arc(x-side*rx*.55,y+ry*.1,rx*.06,0,7);g.fill();g.globalAlpha=1;
+    g.strokeStyle=ink;g.lineWidth=o.lid||19;g.beginPath();g.ellipse(x,y,rx*1.02,ry*1.02,0,Math.PI*1.07,Math.PI*1.93);g.stroke();   // the upper lid line, with a little wing
+    g.lineWidth=(o.lid||19)*.75;g.beginPath();g.moveTo(x+side*rx*.92,y-ry*.28);g.quadraticCurveTo(x+side*rx*1.14,y-ry*.4,x+side*rx*1.2,y-ry*.62);g.stroke();
+    if(o.lash){g.lineWidth=9;for(let i=0;i<3;i++){const a=-.55-i*.32;g.beginPath();g.moveTo(x+side*rx*Math.cos(a)*.98,y+ry*Math.sin(a)*.98*.98);g.lineTo(x+side*rx*(Math.cos(a)*1.25),y+ry*Math.sin(a)*1.22);g.stroke()}}
+    g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=5;g.beginPath();g.ellipse(x,y,rx*.88,ry*.9,0,Math.PI*.18,Math.PI*.82);g.stroke()};
+  const eyeShut=(x,side)=>{g.strokeStyle=ink;g.lineWidth=20;g.beginPath();g.arc(x,cy-84,112,Math.PI*.14,Math.PI*.86);g.stroke();g.lineWidth=12;g.beginPath();g.moveTo(x+side*100,cy-36);g.lineTo(x+side*136,cy-14);g.stroke()};   // a shut eye: one soft curve and a little lash
+  const eyeHappy=(x,side,o={})=>{g.strokeStyle=ink;g.lineWidth=o.w||24;g.beginPath();g.arc(x,cy+46,88,Math.PI*1.1,Math.PI*1.9);g.stroke();g.lineWidth=14;g.beginPath();g.moveTo(x+side*84,cy-16);g.lineTo(x+side*108,cy-34);g.stroke()};
+  const eyeChill=(x,side)=>{eyeRound(x,side,{ry:136});
+    g.save();g.globalCompositeOperation='destination-out';g.beginPath();g.rect(x-130,cy-160,260,128);g.fill();g.restore();   // the heavy lid: clear the top of the eye
+    g.strokeStyle=ink;g.lineWidth=22;g.beginPath();g.moveTo(x-104,cy-30);g.quadraticCurveTo(x,cy-52,x+104,cy-30);g.stroke();g.lineWidth=14;g.beginPath();g.moveTo(x+side*98,cy-30);g.lineTo(x+side*122,cy-50);g.stroke()};
+  const ER=blink?(x,side)=>eyeShut(x,side):eyeRound,EC=blink?(x,side)=>eyeShut(x,side):eyeChill;
+  const brow=(x,side,a=0,y=cy-182,len=104,w=14)=>{g.strokeStyle=ink;g.globalAlpha=.9;g.lineWidth=w;g.beginPath();g.moveTo(x-len/2,y+14+a*side*-8);g.quadraticCurveTo(x,y-8,x+len/2,y+14+a*side*8);g.stroke();g.globalAlpha=1};
+  const mouth=(m)=>{const x=512,y=548;g.strokeStyle=ink;g.fillStyle='#8c2a3a';g.lineWidth=9;
+    if(m==='smile'){g.beginPath();g.arc(x,y-16,44,Math.PI*.18,Math.PI*.82);g.stroke()}
+    else if(m==='open'){g.beginPath();g.moveTo(x-52,y-14);g.quadraticCurveTo(x,y-4,x+52,y-14);g.quadraticCurveTo(x+44,y+64,x,y+64);g.quadraticCurveTo(x-44,y+64,x-52,y-14);g.closePath();g.fill();
+      g.save();g.clip();g.fillStyle='#ff8a98';g.beginPath();g.ellipse(x,y+62,34,26,0,0,7);g.fill();g.restore();g.beginPath();g.moveTo(x-52,y-14);g.quadraticCurveTo(x,y-4,x+52,y-14);g.stroke()}
+    else if(m==='cat'){g.lineWidth=8;g.beginPath();g.arc(x-24,y-4,24,Math.PI*.05,Math.PI*.95);g.stroke();g.beginPath();g.arc(x+24,y-4,24,Math.PI*.05,Math.PI*.95);g.stroke();g.beginPath();g.moveTo(x,y-26);g.lineTo(x,y-4);g.stroke();
+      g.fillStyle='#ff8a98';g.beginPath();g.ellipse(x,y-34,13,9,0,0,7);g.fill()}
+    else if(m==='smirk'){g.beginPath();g.moveTo(x-34,y);g.quadraticCurveTo(x+6,y+22,x+46,y-12);g.stroke()}
+    else if(m==='grin'){g.beginPath();g.moveTo(x-58,y-16);g.quadraticCurveTo(x,y+14,x+58,y-16);g.quadraticCurveTo(x+40,y+58,x,y+58);g.quadraticCurveTo(x-40,y+58,x-58,y-16);g.closePath();g.fillStyle='#fffaf3';g.fill();g.stroke();
+      g.beginPath();g.moveTo(x-52,y-6);g.quadraticCurveTo(x,y+18,x+52,y-6);g.stroke()}};
+  const nose=()=>{g.strokeStyle='rgba(150,80,60,.55)';g.lineWidth=7;g.beginPath();g.arc(512,478,12,Math.PI*.15,Math.PI*.85);g.stroke()};
+  const k=kind;
+  if(k==='Cheerful'){ER(cx[0],-1);ER(cx[1],1);brow(cx[0],-1);brow(cx[1],1);mouth('open');blush(190,462,86,50,.55);blush(834,462,86,50,.55);nose()}
+  else if(k==='Sweet'){ER(cx[0],-1,{lash:1,rx:104,ry:142});ER(cx[1],1,{lash:1,rx:104,ry:142});brow(cx[0],-1,-.5,cy-182);brow(cx[1],1,-.5,cy-182);mouth('smile');blush(190,464,94,54,.65);blush(834,464,94,54,.65);nose()}
+  else if(k==='Happy'){eyeHappy(cx[0],-1);eyeHappy(cx[1],1);brow(cx[0],-1,-.4,cy-150);brow(cx[1],1,-.4,cy-150);mouth('grin');blush(190,456,88,50,.6);blush(834,456,88,50,.6)}
+  else if(k==='Wink'){ER(cx[0],-1);eyeHappy(cx[1],1);brow(cx[0],-1);brow(cx[1],1,-.5,cy-150);mouth('open');blush(190,462,86,50,.55);blush(834,462,86,50,.55);nose()}
+  else if(k==='Chill'){EC(cx[0],-1);EC(cx[1],1);brow(cx[0],-1,.3,cy-150);brow(cx[1],1,.3,cy-150);mouth('smirk');blush(190,462,78,44,.4);blush(834,462,78,44,.4);nose()}
+  else if(k==='Cool'){ER(cx[0],-1,{rx:104,ry:112,lid:23});ER(cx[1],1,{rx:104,ry:112,lid:23});brow(cx[0],-1,.9,cy-160,116,16);brow(cx[1],1,.9,cy-160,116,16);mouth('smirk');blush(190,462,72,40,.28);blush(834,462,72,40,.28);nose()}
+  else if(k==='Freckled'){ER(cx[0],-1);ER(cx[1],1);brow(cx[0],-1);brow(cx[1],1);mouth('open');blush(190,462,86,50,.5);blush(834,462,86,50,.5);
+    g.fillStyle='rgba(176,98,62,.7)';[[132,452],[170,440],[208,452],[150,480],[190,476],[892,452],[854,440],[816,452],[874,480],[834,476]].forEach(([x,y])=>{g.beginPath();g.ellipse(x,y,7,6,0,0,7);g.fill()});nose()}
+  else{ER(cx[0],-1,{rx:106,ry:128});ER(cx[1],1,{rx:106,ry:128});brow(cx[0],-1,-.3);brow(cx[1],1,-.3);mouth('cat');blush(190,462,86,50,.5);blush(834,462,86,50,.5);   // Kitty
+    g.strokeStyle='rgba(60,40,36,.7)';g.lineWidth=6;[-1,1].forEach(s=>[-16,0,16].forEach(o=>{g.beginPath();g.moveTo(512+s*210,440+o*.6);g.lineTo(512+s*290,436+o*2.2);g.stroke()}))}
+  t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.userData.refs=0;FACEC.set(key,t);
+  return t}
+const holdTex=(c,a,b)=>{if(c.tA){c.tA.userData.refs--;if(c.tB!==c.tA)c.tB.userData.refs--}c.tA=a;c.tB=b;a.userData.refs++;if(b!==a)b.userData.refs++;
+  if(FACEC.size>48)for(const[k,v]of FACEC){if(FACEC.size<=40)break;if(!v.userData.refs){v.dispose();FACEC.delete(k)}}};   // (a face in use is never let go; unused ones, oldest first, go when there are many)
+
+/* ---- hair: drawn for a head of radius HR in head units, laid onto the model's real head surface ---- */
+let HP=null;const headPoint=(dx,dy,dz,R)=>HP(dx,dy,dz,R/HR);
+const HAIR={};
+const add=(par,geo,mat,p,rot,s)=>{const m=new THREE.Mesh(geo,mat);if(p)m.position.set(p[0],p[1],p[2]);if(rot)m.rotation.set(rot[0],rot[1],rot[2]);if(s)m.scale.set(s[0],s[1],s[2]);par.add(m);return m};
+const mb=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+// a point on the head, spherical angles: theta from the top, phi around (0 = straight ahead, + = screen right as seen from the front)
+const onHead=(th,ph,k=1.0)=>headPoint(Math.sin(th)*Math.sin(ph),Math.cos(th),Math.sin(th)*Math.cos(ph),HR*k);
+function capGeo({k=1.075,theta=1.62,tilt=.58}={}){
+  const g=new THREE.SphereGeometry(1,56,36,0,Math.PI*2,0,theta),p=g.attributes.position,v=new THREE.Vector3(),q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-tilt);
+  for(let i=0;i<p.count;i++){v.set(p.getX(i),p.getY(i),p.getZ(i)).normalize().applyQuaternion(q);const o=headPoint(v.x,v.y,v.z,HR*k);p.setXYZ(i,o[0],o[1],o[2])}
+  g.computeVertexNormals();return g}
+const lock=(par,m,pts,w,o)=>add(par,lockGeo(pts,w,o),m);
+// a clump lying along a meridian of the head from theta t0 to t1 at azimuth ph, drifting `side` sideways and lifting off the head at its tip
+function strand(par,m,ph,{t0=.3,t1=1.9,k=1.1,w=.2,out=.12,side=0,flat=.55,pow=1.4,base=.9,n=5}={}){
+  const pts=[];for(let i=0;i<=n;i++){const u=i/n;pts.push(onHead(t0+(t1-t0)*u,ph+side*u*u,k+out*u*u))}
+  return lock(par,m,pts,w,{flat,pow,base})}
+const bangs=(par,m,{len=1,w=.19,spread=.85,count=6,sweep=.07,seed=3}={})=>{const r=mb(seed);
+  for(let i=0;i<count;i++){const u=count===1?0:i/(count-1)*2-1,ph=u*spread,t1=1.0+.2*len+(r()-.5)*.16+(Math.abs(u)<.45?.0:.04);
+    strand(par,m,ph,{t0:.28,t1,k:1.1,w:w*(.9+r()*.25),out:.05,side:sweep*(.4+r()),pow:1.25,base:.95,n:5})}};
+const sides=(par,m,{len=1.75,w=.15}={})=>[-1,1].forEach(s=>strand(par,m,s*1.2,{t0:.85,t1:len,k:1.09,w,out:.06,side:s*.08,flat:.6,pow:1.3}));
+const backClumps=(par,m,{count=9,t1=2.0,w=.26,seed=7,from=1.7,to=Math.PI*2-1.7}={})=>{const r=mb(seed);
+  for(let i=0;i<count;i++){const ph=from+(to-from)*(count===1?.5:i/(count-1)),tt=t1+(r()-.5)*.2;strand(par,m,ph,{t0:.35,t1:tt,k:1.1,w:w*(.9+r()*.3),out:.1+r()*.05,side:(r()-.5)*.25,pow:1.3,base:.95})}};
+const ahoge=(par,m,h=.4,ph=.25)=>lock(par,m,[onHead(.5,ph,1.04),[.02,HR+h*.5,.26],[.1,HR+h*.92,.33],[.3,HR+h*.98,.28],[.42,HR+h*.78,.18]],.062,{flat:.7,pow:1.1,base:.55});
+const ball=(par,mat,p,r,s)=>add(par,new THREE.SphereGeometry(1,20,14),mat,p,null,s||[r,r,r]);
+const accent=c=>toon(c,{rim:.25});
+
+HAIR.Short=(head,M)=>{const m=M.hair;add(head,capGeo({theta:1.62,tilt:.58}),m);
+  backClumps(head,m,{count:9,t1:1.95,w:.26});sides(head,m);bangs(head,m,{len:.8,count:6,w:.2});ahoge(head,m,.34)};
+HAIR.Messy=(head,M)=>{const m=M.hair,r=mb(11);add(head,capGeo({theta:1.6,tilt:.55}),m);
+  for(let i=0;i<16;i++){const ph=(i/16)*Math.PI*2+(r()-.5)*.3,th0=.25+r()*.2,t1=1.0+r()*.8;
+    if(Math.abs(Math.atan2(Math.sin(ph),Math.cos(ph)))<.95&&t1>1.3)continue;
+    strand(head,m,ph,{t0:th0,t1:Math.min(t1,2.0),k:1.1,w:.26+r()*.07,out:.18+r()*.12,side:(r()-.5)*.4,pow:1.1,base:.9})}
+  bangs(head,m,{len:1.0,count:7,w:.2,sweep:.16,seed:5});sides(head,m,{len:1.6});
+  ahoge(head,m,.4,.2);lock(head,m,[onHead(.55,-.35,1.04),[-.2,HR+.2,.2],[-.5,HR+.46,.1],[-.82,HR+.46,0]],.058,{flat:.7,pow:1.1,base:.55})};
+HAIR.Buzz=(head,M)=>{const m=toon(M.hairC,{rim:.15,spec:.1,inkK:.4});add(head,capGeo({k:1.03,theta:1.5,tilt:.5}),m)};
+HAIR.Bald=()=>{};
+HAIR.Bob=(head,M)=>{const m=M.hair;add(head,capGeo({theta:1.62,tilt:.58}),m);
+  // the bowl: a rim that is high over the forehead and falls to the jaw at the sides and back, flaring a little at the bottom
+  const N=24,SG=72,pos=[],idx=[];
+  for(let j=0;j<=SG;j++){const ph=j/SG*Math.PI*2,fr=Math.abs(Math.atan2(Math.sin(ph),Math.cos(ph))),end=1.12+sm(.8,1.7,fr)*.98;
+    for(let i=0;i<=N;i++){const th=.05+i/N*(end-.05),p=onHead(th,ph,1.1),low=Math.max(0,(th-1.2)/.9),f=1+.09*Math.sin(Math.min(1,low)*Math.PI*.9)*sm(.6,1.4,fr);p[0]*=f;p[2]*=f;pos.push(p[0],p[1],p[2])}}
+  for(let j=0;j<SG;j++)for(let i=0;i<N;i++){const a=j*(N+1)+i,b=(j+1)*(N+1)+i,c=a+1,d=b+1;idx.push(a,c,b,b,c,d)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(pos.length/3*2),2));g.setIndex(idx);g.computeVertexNormals();
+  if(g.attributes.normal.getY(5)<0){g.setIndex(idx.map((v,k)=>idx[k-(k%3)+((k%3)===1?2:(k%3)===2?1:0)]));g.computeVertexNormals()}
+  add(head,g,m);
+  bangs(head,m,{len:.6,count:7,w:.23,spread:.8,sweep:.02,seed:9});ahoge(head,m,.3,.15)};
+const tail=(par,m,s,base,pts,w,tie,ribbon)=>{ball(par,accent(tie),base,.12,[.16,.16,.16]);lock(par,m,pts,w,{flat:.85,pow:1.15,base:.85,seg:26});
+  if(ribbon){const rb=accent(ribbon);[-1,1].forEach(t=>add(par,new THREE.SphereGeometry(1,16,12),rb,[base[0]+t*.1*s,base[1]+.12,base[2]+.08],[0,0,t*s*.5],[.17,.1,.07]));ball(par,rb,[base[0],base[1]+.12,base[2]+.09],0,[.06,.06,.05])}};
+HAIR.Pigtails=(head,M)=>{const m=M.hair;add(head,capGeo({theta:1.62,tilt:.58}),m);backClumps(head,m,{count:7,t1:1.7,w:.25,seed:4,from:1.9,to:Math.PI*2-1.9});sides(head,m,{len:1.5});bangs(head,m,{len:.75,count:6,w:.2});
+  [-1,1].forEach(s=>{const b=onHead(1.3,s*1.55,1.1);
+    tail(head,m,s,b,[b,[b[0]+s*.1,b[1]-.2,b[2]-.12],[b[0]+s*.2,b[1]-.62,b[2]-.18],[b[0]+s*.26,b[1]-1.05,b[2]-.1],[b[0]+s*.14,b[1]-1.4,b[2]+.05]],.27,'#ff6f91','#ff6f91')});ahoge(head,m,.28,-.2)};
+HAIR.Bun=(head,M)=>{const m=M.hair;add(head,capGeo({theta:1.62,tilt:.58}),m);backClumps(head,m,{count:9,t1:1.85,w:.26,seed:6});sides(head,m,{len:1.55});bangs(head,m,{len:.75,count:7,w:.19});
+  ball(head,m,[0,HR*1.06+.3,-.18],.46,[.5,.44,.48]);add(head,new THREE.TorusGeometry(.45,.07,10,28),accent('#f06d9b'),[0,HR*1.06+.02,-.16],[Math.PI/2-.12,0,0]);
+  [-1,1].forEach(s=>strand(head,m,Math.PI+s*.28,{t0:.5,t1:1.0,k:1.12,w:.2,out:.2,pow:1.1}))};
+HAIR.Ponytail=(head,M)=>{const m=M.hair;add(head,capGeo({theta:1.62,tilt:.58}),m);backClumps(head,m,{count:8,t1:1.55,w:.25,seed:8,from:1.9,to:Math.PI*2-1.9});sides(head,m,{len:1.5});bangs(head,m,{len:.8,count:7,w:.2,sweep:.1});
+  const b=[0,HR*.95,-HR*.95];ball(head,accent('#ffd24d'),b,.15,[.2,.17,.17]);
+  lock(head,m,[b,[0,b[1]+.28,b[2]-.35],[0,b[1]+.2,b[2]-.75],[.1,b[1]-.45,b[2]-.95],[.3,b[1]-1.1,b[2]-.7],[.2,b[1]-1.5,b[2]-.35]],.4,{flat:.7,pow:1.1,base:.9,seg:32});ahoge(head,m,.3,.1)};
+HAIR.Long=(head,M)=>{const m=M.hair;add(head,capGeo({theta:1.62,tilt:.58}),m);bangs(head,m,{len:.85,count:7,w:.2,sweep:.1});
+  // a long sheet down the back, with two locks framing the face
+  lock(head,m,[onHead(.5,Math.PI,1.08),onHead(1.4,Math.PI,1.12),[0,-.6,-HR*1.08],[0,-1.3,-HR*.95],[0,-1.95,-HR*.8]],.82,{flat:.3,pow:2.2,base:.95,seg:30});
+  [-1,1].forEach(s=>{lock(head,m,[onHead(.7,s*1.35,1.1),onHead(1.3,s*1.38,1.12),[s*HR*1.08,-.5,.1],[s*HR*1.0,-1.15,.2],[s*HR*.85,-1.6,.3]],.26,{flat:.55,pow:1.5,base:.95,seg:26})});
+  backClumps(head,m,{count:7,t1:2.1,w:.3,seed:12});ahoge(head,m,.32,.2)};
+HAIR.Curly=(head,M)=>{const m=M.hair,r=mb(21);add(head,capGeo({theta:1.6,tilt:.56,k:1.06}),m);
+  for(let i=0;i<46;i++){const th=.2+r()*1.95,ph=r()*Math.PI*2;const fr=Math.abs(Math.atan2(Math.sin(ph),Math.cos(ph)));if(fr<1.0&&th>1.25)continue;
+    const p=onHead(th,ph,1.12+r()*.12),s=.2+r()*.1;ball(head,m,p,s)}
+  for(let i=0;i<6;i++){const ph=(i/5*2-1)*.8;ball(head,m,onHead(1.05+(i%2)*.08,ph,1.14),.19)}};
+
+/* ---- clothes ---- */
+const hx=n=>'#'+(n|0).toString(16).padStart(6,'0'),CPAT=new Map();
+function cpat(kind,c1,c2){const k=kind+c1+c2;let t=CPAT.get(k);if(t)return t;
+  const cv=document.createElement('canvas');cv.width=cv.height=128;const g=cv.getContext('2d');g.fillStyle=hx(c1);g.fillRect(0,0,128,128);
+  if(kind==='plaid'){g.fillStyle=hx(c2);g.globalAlpha=.6;g.fillRect(0,0,64,128);g.fillRect(0,0,128,64);g.globalAlpha=.2;g.fillStyle='#fff';g.fillRect(94,0,4,128);g.fillRect(0,94,128,4);g.globalAlpha=1}
+  else if(kind==='dots'){g.fillStyle=hx(c2);[[32,32],[96,96]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,13,0,7);g.fill()})}
+  else{[[36,38],[96,96]].forEach(([x,y])=>{g.fillStyle='#2f9d57';g.beginPath();g.ellipse(x+20,y+16,13,5,.7,0,7);g.fill();g.beginPath();g.ellipse(x-18,y+20,12,5,-.6,0,7);g.fill();
+    g.fillStyle=hx(c2);for(let i=0;i<5;i++){const q=i*1.2566;g.beginPath();g.arc(x+Math.cos(q)*11,y+Math.sin(q)*11,9,0,7);g.fill()}g.fillStyle='#ffd34d';g.beginPath();g.arc(x,y,6,0,7);g.fill()})}
+  t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;CPAT.set(k,t);return t}
+function cprint(txt,c2,bg){const k='p'+txt+c2+bg;let t=CPAT.get(k);if(t)return t;
+  const cv=document.createElement('canvas');cv.width=128;cv.height=96;const g=cv.getContext('2d');
+  if(bg!=null){g.fillStyle=hx(bg);g.beginPath();g.roundRect(6,6,116,84,14);g.fill();g.fillStyle='#8a8a94';[[18,18],[110,18]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,3.5,0,7);g.fill()})}
+  g.fillStyle=hx(c2);g.font='800 '+(txt.length>1?50:70)+'px ui-monospace,Menlo,Consolas,monospace';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,64,52);
+  t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;CPAT.set(k,t);return t}
+// a cloth material: plain colour, or a pattern painted in 3D (so it needs no UV layout and moves with the skin). posScale: .01 on a copy of the body (it is in cm), 1 on a small rigid shape (metres)
+function cloth(c,pat,posScale=.01){
+  if(!pat)return toon(c);
+  const m=toon(0xffffff,{ink:inkOf(c,.45)}),prev=m.onBeforeCompile,tex=cpat(pat[0],c,pat[1]),pk0=m.customProgramCacheKey();m.customProgramCacheKey=()=>pk0+'|pat'+posScale;
+  m.onBeforeCompile=sh=>{prev(sh);sh.uniforms.uPat={value:tex};sh.uniforms.uRep={value:1/(pat[0]==='plaid'?.07:.05)};
+    sh.vertexShader=sh.vertexShader.replace('void main() {','varying vec3 vRest;varying vec3 vRestN;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n vRest=position*'+posScale.toFixed(4)+';vRestN=normal;');
+    sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform sampler2D uPat;uniform float uRep;varying vec3 vRest;varying vec3 vRestN;\nvoid main() {')
+      .replace('#include <map_fragment>',`#include <map_fragment>
+        vec3 bw=pow(abs(vRestN),vec3(4.0));bw/=(bw.x+bw.y+bw.z+1e-5);
+        diffuseColor.rgb=texture2D(uPat,vRest.zy*uRep).rgb*bw.x+texture2D(uPat,vRest.xz*uRep).rgb*bw.y+texture2D(uPat,vRest.xy*uRep).rgb*bw.z;`)};
+  return m}
+// a copy of the whole body pushed out by `off` metres and skinned to the same skeleton; `boxes` (up to two: [lowest y, highest y, widest |x|], metres, rest pose) say which part of it stays,
+// so hems are clean cuts however coarse the model's triangles are. The boxes are uniforms, so all the trimmed clothes share one shader. (Each trimmed material can only be used for one shell.)
+function withKeep(mat,boxes){if(mat.userData.kept)throw new Error('a clothing material can only be used for one trimmed shell');mat.userData.kept=1;const prev=mat.onBeforeCompile,ka=boxes[0],kb=boxes[1]||[1,0,0];mat.onBeforeCompile=sh=>{if(prev)prev(sh);
+  sh.uniforms.uKa={value:new THREE.Vector3(...ka)};sh.uniforms.uKb={value:new THREE.Vector3(...kb)};
+  sh.vertexShader=sh.vertexShader.replace('void main() {','varying vec3 vKeep;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n vKeep=position*0.01;');
+  sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec3 uKa;uniform vec3 uKb;varying vec3 vKeep;\nvoid main() {\n vec3 r=vKeep;if(!((r.y>uKa.x&&r.y<uKa.y&&abs(r.x)<uKa.z)||(r.y>uKb.x&&r.y<uKb.y&&abs(r.x)<uKb.z)))discard;')};
+  const pk=mat.customProgramCacheKey?mat.customProgramCacheKey():'';mat.customProgramCacheKey=()=>pk+'|keep';return mat}
+const BODYCOPY=new Map();
+function shell(c,boxes,off,mat){
+  const bg=c.mesh.geometry,key=bg.uuid+'|'+off;let geo=BODYCOPY.get(key);
+  if(!geo){geo=bg.clone();const p=geo.attributes.position,nrm=geo.attributes.normal,o=off/.01;for(let i=0;i<p.count;i++)p.setXYZ(i,p.getX(i)+nrm.getX(i)*o,p.getY(i)+nrm.getY(i)*o,p.getZ(i)+nrm.getZ(i)*o);BODYCOPY.set(key,geo)}
+  withKeep(mat,boxes);
+  const mesh=fit(new THREE.SkinnedMesh(geo,mat));mesh.bind(c.mesh.skeleton,c.mesh.bindMatrix);c.mesh.parent.add(mesh);c.shells.push(mesh);
+  const om=outlineMat(mat.userData.ink,TH/.01);withKeep(om,boxes);const ol=fit(new THREE.SkinnedMesh(geo,om));ol.bind(c.mesh.skeleton,c.mesh.bindMatrix);c.mesh.parent.add(ol);c.shells.push(ol);
+  return mesh}
+// merge a group's loose rigid parts into one mesh per material (plus an outline for each), so a person stays cheap to draw. th: outline thickness in the group's own units
+function bakeRigid(g,th){g.updateMatrixWorld(true);const inv=g.matrixWorld.clone().invert(),by=new Map(),drop=[];
+  g.traverse(o=>{if(o.isMesh)drop.push(o)});const ix=drop.every(o=>o.geometry.index);   // (stay indexed when every part is: it is a good deal fewer vertices)
+  drop.forEach(o=>{let a=by.get(o.material);if(!a)by.set(o.material,a=[]);
+    const geo=(!ix&&o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone());geo.applyMatrix4(inv.clone().multiply(o.matrixWorld));
+    for(const k of Object.keys(geo.attributes))if(k!=='position'&&k!=='normal'&&k!=='uv')geo.deleteAttribute(k);if(!geo.attributes.uv)geo.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(geo.attributes.position.count*2),2));a.push(geo)});
+  drop.forEach(o=>o.parent.remove(o));
+  by.forEach((list,mat)=>{const geo=list.length>1?mergeGeometries(list):list[0];const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=true;mesh.userData.own=1;g.add(mesh);
+    if(!mat.userData.noOutline&&th>0){const om=new THREE.Mesh(geo,outlineMat(mat.userData.ink,th));om.userData.own=1;g.add(om)}})}
+const dropKids=g=>{for(const o of g.children.slice()){g.remove(o);if(o.isMesh&&o.userData.own)o.geometry.dispose()}};
+
+// all the small plain-coloured details on every bone become ONE skinned mesh (the colours in its vertices) plus one for their outlines, so a person stays cheap to draw;
+// whatever isn't just a colour (patterns, printed badges) is baked on its bone as before
+function mergeBones(c){const sk=c.mesh.skeleton,all=[],parts=[],outs=[];
+  Object.values(c.ab).forEach(g=>{g.updateMatrixWorld(true);const inv=g.matrixWorld.clone().invert(),to=BODYINV.clone().multiply(g.userData.M),bi=sk.bones.indexOf(c.bones[g.userData.bone]);
+    g.traverse(o=>{if(o.isMesh&&o.material.userData.plain)all.push({o,m:inv.clone().multiply(o.matrixWorld),to,bi})})});
+  const ix=all.every(q=>q.o.geometry.index);
+  all.forEach(({o,m,to,bi})=>{const geo=!ix&&o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(m).applyMatrix4(to);   // -> the body mesh's own space
+    for(const k of Object.keys(geo.attributes))if(k!=='position'&&k!=='normal')geo.deleteAttribute(k);
+    const n=geo.attributes.position.count,si=new Uint16Array(n*4),sw=new Float32Array(n*4),ca=new Float32Array(n*3),ci=new Float32Array(n*3),k=o.material.color,ink=o.material.userData.ink;
+    for(let i=0;i<n;i++){si[i*4]=bi;sw[i*4]=1;ca[i*3]=k.r;ca[i*3+1]=k.g;ca[i*3+2]=k.b;ci[i*3]=ink.r;ci[i*3+1]=ink.g;ci[i*3+2]=ink.b}
+    geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));geo.setAttribute('color',new THREE.Float32BufferAttribute(ca,3));parts.push(geo);
+    const og=new THREE.BufferGeometry();for(const k2 of ['position','normal','skinIndex','skinWeight'])og.setAttribute(k2,geo.attributes[k2]);if(geo.index)og.setIndex(geo.index);og.setAttribute('color',new THREE.Float32BufferAttribute(ci,3));outs.push(og);o.parent.remove(o)});
+  Object.values(c.ab).forEach(g=>bakeRigid(g,TH));
+  const mk=(list,mat)=>{if(!list.length)return;const geo=list.length>1?mergeGeometries(list):list[0],m=new THREE.SkinnedMesh(geo,mat);m.bind(sk,c.mesh.bindMatrix);fit(m);m.userData.own=1;c.mesh.parent.add(m);c.shells.push(m)};
+  mk(parts,VCM);mk(outs,VCO)}
+// the ten outfits (OUT): the clothing is trimmed copies of the body, the details small shapes riding on bones. Bone-anchored shapes are drawn in metres on the model at rest, head ones in head units.
+function outfit(c,o){
+  const topC=o.top.c,bt=o.bot,skinTop=!!o.top.skin,H=c.hatA,G=c.gearA,AB=bn=>c.ab[bn]||(c.ab[bn]=anchor(c,bn,ZERO,1));
+  const tm=cloth(topC,o.top.pat),bm=bt.c!=null?cloth(bt.c,bt.pat):cloth(topC,o.top.pat);
+  const ad=(par,geo,mat,p,rot,s)=>{const m=new THREE.Mesh(geo,mat);if(p)m.position.set(p[0],p[1],p[2]);if(rot)m.rotation.set(rot[0],rot[1],rot[2]);if(s)m.scale.set(s[0],s[1],s[2]);par.add(m);return m};
+  const ring=(par,r,tube,p,mat,sx=1,sz=1)=>{const m=ad(par,new THREE.TorusGeometry(r,tube,10,40),mat,p,[Math.PI/2,0,0]);m.scale.set(sx,sz,1);return m};   // a ring lying flat (round the body), stretched sideways by sx and front-to-back by sz
+  const bar=(par,mat,a,b,r)=>{const d=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]),L=d.length(),m=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.001,L-2*r),4,8),mat);m.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());par.add(m);return m};
+  const trunk=AB('Spine1_03'),hips=AB('Hips_01');
+  // ---- the top
+  const off=o.long?.0055:.0042;
+  if(!skinTop)shell(c,[[o.long?.05:.077,.203,o.sl==='long'?.137:.101]],off,tm);
+  if(o.long)ring(hips,.07,.0055,[0,.052,.006],cloth(cshade(topC,.78),null),1.1,.86);
+  if(!skinTop){const rib=toon(o.hood?cshade(topC,.75):cshade(topC,.85));['RightForeArm_010','Left_ForeArm_018'].forEach((bn,i)=>{const s=i?1:-1;
+    ad(AB(bn),new THREE.TorusGeometry(o.sl==='long'?.0215:.0255,.0055,8,22),rib,[s*(o.sl==='long'?.137:.101),.1745,-.003],[0,Math.PI/2,0])})}
+  if(o.wrist!=null){const wm=toon(o.wrist);['RightForeArm_010','Left_ForeArm_018'].forEach((bn,i)=>ad(AB(bn),new THREE.TorusGeometry(.0215,.006,8,22),wm,[(i?1:-1)*.13,.1745,-.003],[0,Math.PI/2,0]))}
+  if(o.vest!=null){const vm=toon(o.vest),vd=toon(cshade(o.vest,.7));shell(c,[[.1,.14,.085],[.1,.2,.05]],off+.0035,vm);
+    ring(trunk,.078,.004,[0,.1,.012],vd,1.0,.9);const st=AB('Spine2_04');[-1,1].forEach(s=>bar(st,vd,[s*.025,.2,.062],[s*.03,.115,.088],.0035))}
+  if(o.hood){const st=AB('Spine2_04'),hm=cloth(topC,o.top.pat,1);ad(st,ellG(1,1,1,16),hm,[0,.194,-.046],null,[.062,.04,.035]);ring(st,.044,.011,[0,.193,-.003],hm,1,1.08);
+    ad(trunk,ellG(1,1,1,14),cloth(cshade(topC,.88),null),[0,.085,.0885],null,[.043,.015,.007]);const dc=toon('#f2f2f2');[-1,1].forEach(s=>bar(st,dc,[s*.016,.186,.062],[s*.017,.16,.066],.0022))}
+  if(o.print)ad(trunk,new THREE.PlaneGeometry(.062,.047),Object.assign(toon(0xffffff,{map:cprint(o.print.t,o.print.c),transparent:true,noOutline:true}),{alphaTest:.4}),[0,.125,.0825]);
+  if(o.bib)ad(trunk,new THREE.PlaneGeometry(.07,.052),Object.assign(toon(0xffffff,{map:cprint(o.bib,0x1d3557,0xffffff),transparent:true,noOutline:true}),{alphaTest:.4}),[0,.125,.0825]);
+  if(o.belt!=null){ring(hips,.078,.0055,[0,.077,.0095],toon(o.belt),1.05,.93);ad(hips,new THREE.BoxGeometry(.017,.013,.005),toon('#e6c26a'),[0,.077,.0925])}
+  // ---- bottoms
+  if(bt.t==='pants'||bt.t==='shorts')shell(c,[[bt.t==='pants'?.02:.036,.092,9]],.0036,bm);
+  if(o.cord){const cm2=toon('#f2f2f2');[-1,1].forEach(s=>bar(hips,cm2,[s*.012,.088,.083],[s*.016,.07,.087],.0025))}
+  if(bt.t==='skirt'||bt.t==='dress'){const m=cloth(bt.t==='dress'?topC:bt.c,bt.t==='dress'?o.top.pat:bt.pat,1),pts=[[.106,.0455],[.111,.0415],[.115,.0405],[.1185,.043],[.1185,.0475],[.1155,.052],[.108,.062],[.097,.076],[.086,.09],[.073,.0935],[.072,.088],[.083,.078],[.094,.064],[.103,.052]];
+    ad(hips,lathe(pts,56),m,[0,0,.0095]);if(bt.t==='skirt')ring(hips,.073,.005,[0,.09,.0095],cloth(cshade(bt.c,.8),null))}
+  if(bt.t==='bikini'){shell(c,[[.052,.083,9]],.0036,bm);shell(c,[[.114,.143,.09]],.0042,cloth(bt.c,bt.pat));const bk=cloth(bt.c,bt.pat,1);   // (the bow is a rigid shape, so its own material)
+    ad(trunk,ellG(1,1,1,10),bk,[0,.129,.084],null,[.008,.007,.005]);[-1,1].forEach(s=>ad(trunk,ellG(1,1,1,10),bk,[s*.011,.129,.085],[0,0,s*.5],[.011,.006,.004]))}
+  // ---- shoes: the lower leg and foot (a copy of the body, trimmed), plus a sole
+  const sh=o.shoe,shm=toon(sh.c),sole=toon(sh.sole??0xdddddd),toe=sh.t==='sneaker'?toon(cshade(sh.c,.92)):null,cuff=sh.cuff!=null?toon(sh.cuff):null;
+  if(sh.t==='sneaker'||sh.t==='boot')shell(c,[[-9,sh.t==='boot'?.044:.03,9]],.0046,shm);
+  [-1,1].forEach(s=>{const a=AB(s>0?'Left_Foot_029':'RightFoot_026');ad(a,ellG(1,1,1,16),sole,[s*.046,.003,.0015],null,[.029,.0035,.042]);
+    if(toe)ad(a,ellG(1,1,1,12),toe,[s*.046,.014,.026],null,[.022,.013,.018]);
+    if(sh.t==='sandal'){bar(a,shm,[s*.027,.011,.014],[s*.065,.011,.014],.0035);bar(a,shm,[s*.027,.011,-.012],[s*.065,.011,-.012],.0035)}
+    if(cuff)ring(AB(s>0?'Left_Leg_028':'RightLeg_025'),.03,.0065,[s*.046,.043,-.01],cuff)});
+  // ---- neck
+  const nk=o.neck,st2=AB('Neck_05');
+  if(nk){const m=nk.c!=null?toon(nk.c):null;
+    if(nk.t==='kerchief'){ring(st2,.043,.01,[0,.192,-.002],m,1,1.1);ad(st2,new THREE.ConeGeometry(.026,.045,3,1),m,[0,.17,.05],[Math.PI,0,0],[1,1,.4])}
+    if(nk.t==='scarf'){ring(st2,.045,.016,[0,.19,-.002],m,1,1.1);bar(st2,m,[.02,.185,.056],[.024,.14,.07],.0085).scale.z=.55}
+    if(nk.t==='collar')ring(st2,.042,.008,[0,.197,-.002],m,1,1.1);
+    if(nk.t==='lei'){const cols=['#ff6fa3','#ffb347','#fff27a','#7ad07a'].map(q=>toon(q)),sp=AB('Spine2_04');for(let i=0;i<18;i++){const a=i/18*Math.PI*2,cs=Math.cos(a);ad(sp,new THREE.SphereGeometry(.0085,10,8),cols[[0,1,2,0,3][i%5]],[Math.sin(a)*.05,.158-.03*Math.max(0,cs),.008+Math.cos(a)*.062])}}}
+  // ---- bags
+  const bk=o.back;if(bk){const m=toon(bk.c);
+    if(bk.t==='satchel'){ad(hips,ellG(1,1,1,14),m,[-.092,.07,-.004],null,[.015,.027,.033]);bar(AB('Spine2_04'),toon(cshade(bk.c,.8)),[.04,.2,.055],[-.09,.085,.03],.0045)}
+    if(bk.t==='pack'){ad(trunk,ellG(1,1,1,16),m,[0,.125,-.082],null,[.06,.07,.04]);const c2=toon(bk.c2);ad(trunk,ellG(1,1,1,12),c2,[0,.082,-.1],null,[.042,.03,.02]);[-1,1].forEach(s=>bar(trunk,c2,[s*.04,.19,.03],[s*.052,.1,.066],.005))}}
+  // ---- head wear (in head units: the head is about 0.92 across) and eyewear
+  const hw=o.head;
+  if(hw){const hc=hw.c,c2=hw.c2;
+    if(hw.t==='sunhat'||hw.t==='bucket'){const wide=hw.t==='sunhat',m=toon(hc),bm2=toon(c2??cshade(hc,.7));
+      const pts=wide?[[.001,1.28],[.5,1.24],[.9,1.08],[1.12,.84],[1.18,.66],[1.38,.6],[1.58,.52],[1.62,.48],[1.58,.46],[1.38,.53],[1.18,.56],[.001,.56]]:[[.001,1.18],[.6,1.14],[.95,.96],[1.12,.7],[1.3,.6],[1.35,.55],[1.3,.52],[1.12,.58],[.001,.58]];
+      ad(H,lathe(pts.reverse(),52),m,[0,-.08,-.08],[-.1,0,0],[1.05,1,1.05]);ad(H,new THREE.TorusGeometry(1.14,.07,10,44),bm2,[0,.64,-.08],[Math.PI/2-.1,0,0]).scale.set(1.05,1.05,1)}
+    if(hw.t==='beanie'){const m=toon(hc),pts=[];for(let i=0;i<=16;i++){const a=i/16*Math.PI/2;pts.push([Math.max(.001,1.1*Math.sin(a)),.5+.78*Math.cos(a)])}
+      ad(H,lathe(pts.reverse(),48),m,[0,-.02,-.08],[-.2,0,0],[1.05,1,1.03]);ad(H,new THREE.TorusGeometry(1.1,.13,12,44),toon(c2??hc),[0,.54,-.08],[Math.PI/2-.2,0,0]).scale.set(1.05,1.03,1);ad(H,new THREE.SphereGeometry(.2,14,12),toon(c2??'#fff'),[0,1.4,-.3])}
+    if(hw.t==='phones'){const m=toon(hc),dm=toon(c2);[-1,1].forEach(s=>{ad(H,new THREE.CylinderGeometry(.25,.25,.18,24),m,[s*1.1,-.1,0],[0,0,Math.PI/2]);ad(H,new THREE.CylinderGeometry(.18,.18,.07,24),dm,[s*1.2,-.1,0],[0,0,Math.PI/2])});
+      ad(H,new THREE.TorusGeometry(1.13,.05,10,40,Math.PI),dm,[0,-.08,0])}
+    if(hw.t==='band')ad(H,new THREE.TorusGeometry(.92,.1,10,40),toon(hc),[0,.4,-.02],[Math.PI/2-.16,0,0]).scale.set(1.12,1.04,1);
+    if(hw.t==='crown'){const cs=['#ff8fb3','#ffffff','#ffe27a','#c9a8ff','#ff8fb3','#ffffff'].map(q=>toon(q)),gm=toon('#ffd34d'),lf=toon('#3fae6a');
+      for(let i=0;i<9;i++){const a=i/9*Math.PI*2,x=Math.sin(a)*1.0,z=Math.cos(a)*.9,y=.66+(z<0?.08:0)-.05*Math.cos(a),pm=cs[i%cs.length];
+        const f=new THREE.Group();f.position.set(x,y,z-.04);f.lookAt(x*2,y+.4,z*2);for(let p=0;p<5;p++){const q=p/5*Math.PI*2;ad(f,new THREE.SphereGeometry(.08,10,8),pm,[Math.cos(q)*.1,Math.sin(q)*.1,0],null,[1,1,.6])}
+        ad(f,new THREE.SphereGeometry(.065,10,8),gm,[0,0,.03]);H.add(f);ad(H,new THREE.SphereGeometry(.065,8,6),lf,[x*.92+Math.cos(a)*.13,y-.08,z*.92-.12],null,[1.8,.6,.8])}}}
+  if(o.eye==='shades'||o.eye==='glasses'){const dark=o.eye==='shades',fr=toon(dark?'#23232b':'#2b2b36',{noOutline:true}),lens=toon(dark?'#1a1a22':'#cfeeff',{transparent:!dark,opacity:dark?1:.14,noOutline:true,spec:dark?.5:0});
+    [-1,1].forEach(s=>{const R=dark?.24:.32,x=s*.38,y=-.19;ad(G,new THREE.CircleGeometry(R,28),lens,[x,y,.9],[0,s*.25,0]).scale.y=1.04;
+      ad(G,new THREE.TorusGeometry(R,dark?.03:.02,8,32),fr,[x,y,.9],[0,s*.25,0]).scale.y=1.04});
+    ad(G,new THREE.CapsuleGeometry(.02,.12,4,6),fr,[0,-.16,.92],[0,0,Math.PI/2])}
+  mergeBones(c);bakeRigid(H,TH/HS);bakeRigid(G,TH/HS)}
+function clearOutfit(c){c.shells.forEach(m=>{if(m.parent)m.parent.remove(m);if(m.userData.own)m.geometry.dispose()});c.shells=[];
+  Object.values(c.ab).forEach(g=>{g.traverse(o=>{if(o.isMesh&&o.userData.own)o.geometry.dispose()});if(g.parent)g.parent.remove(g)});c.ab={};dropKids(c.hatA);dropKids(c.gearA)}
+
+/* ---- the model: measured once, then cloned for each person ---- */
+const ZERO=new THREE.Vector3(),IDQ=new THREE.Quaternion(),FPHI=1.9,FTHETA=1.2;
+let base=null,INFO=null,FACEG=null,BODYINV=null,BSPH=null;
+// skinned meshes are culled by a sphere round the model (in its own space, a good deal bigger than the rest pose, so any pose or detail fits) rather than one measured from whatever pose they happened to be in
+const fit=m=>{m.boundingSphere=BSPH.clone();return m};const RESTINV={},RESTQ={},RESTPQI={};
+function init(scene){base=scene;scene.updateMatrixWorld(true);
+  let body=null;scene.traverse(o=>{if(o.isSkinnedMesh&&o.geometry.attributes.position.count>500)body=o});if(!body)throw new Error('no body mesh in the model');
+  BODYINV=body.matrixWorld.clone().invert();body.computeBoundingSphere();BSPH=body.boundingSphere.clone();BSPH.radius*=1.7;
+  scene.traverse(o=>{if(o.isBone){RESTINV[o.name]=o.matrixWorld.clone().invert();const q=new THREE.Quaternion(),pq=new THREE.Quaternion();o.getWorldQuaternion(q);RESTQ[o.name]=q;if(o.parent)o.parent.getWorldQuaternion(pq);RESTPQI[o.name]=pq.invert()}});
+  ['Head_06','HeadTop_End_07','Hips_01','Spine1_03','Spine2_04','Neck_05','RightArm_09','Left_Arm_017','RightForeArm_010','Left_ForeArm_018','RightUpLeg_024','Left_UpLeg_00','RightLeg_025','Left_Leg_028','RightFoot_026','Left_Foot_029'].forEach(n=>{if(!RESTQ[n])throw new Error('the model has no bone '+n)});
+  // the head: every vertex that mostly belongs to the head bone; its centre and an exact radial map (distance to the surface in any direction), so hair and the face fit the real head
+  const names=body.skeleton.bones.map(b=>b.name),pos=body.geometry.attributes.position,si=body.geometry.attributes.skinIndex,sw=body.geometry.attributes.skinWeight,v=new THREE.Vector3(),hv=[];
+  for(let i=0;i<pos.count;i++){let best=0,bw=-1;for(let k=0;k<4;k++){const w=sw.getComponent(i,k);if(w>bw){bw=w;best=si.getComponent(i,k)}}
+    const n=names[best];if(n==='Head_06'||n==='HeadTop_End_07')hv.push(v.fromBufferAttribute(pos,i).applyMatrix4(body.matrixWorld).clone())}
+  if(hv.length<50)throw new Error('could not find the head');
+  const C=new THREE.Box3().setFromPoints(hv).getCenter(new THREE.Vector3());C.x=0;
+  const dirs=hv.map(p=>{const d=p.clone().sub(C),r=d.length();return{d:d.divideScalar(r),r}});
+  const NT=40,NP=80,grid=new Float32Array((NT+1)*NP),dv=new THREE.Vector3();
+  for(let i=0;i<=NT;i++)for(let j=0;j<NP;j++){const th=i/NT*Math.PI,ph=j/NP*Math.PI*2;dv.set(Math.sin(th)*Math.sin(ph),Math.cos(th),Math.sin(th)*Math.cos(ph));
+    const near=[];for(const q of dirs){const a=Math.acos(Math.min(1,Math.max(-1,q.d.dot(dv))));if(near.length<5||a<near[near.length-1].a){near.push({a,r:q.r});near.sort((x,y)=>x.a-y.a);if(near.length>5)near.pop()}}
+    let sr=0,sw2=0;near.forEach(q=>{const w=1/(.002+q.a*q.a);sr+=q.r*w;sw2+=w});grid[i*NP+j]=sr/sw2}
+  const rad=(dx,dy,dz)=>{const th=Math.acos(Math.min(1,Math.max(-1,dy)))/Math.PI*NT,ph=((Math.atan2(dx,dz)/(Math.PI*2)+1)%1)*NP,i=Math.min(NT-1,Math.floor(th)),j=Math.floor(ph),fi=th-i,fj=ph-j,g=(a,b)=>grid[a*NP+(b%NP)];
+    return g(i,j)*(1-fi)*(1-fj)+g(i+1,j)*fi*(1-fj)+g(i,j+1)*(1-fi)*fj+g(i+1,j+1)*fi*fj};
+  // hp: a point on the head surface (times k) for a direction, in head units (HS metres) around the head centre
+  const hp=(dx,dy,dz,k=1)=>{const l=Math.hypot(dx,dy,dz)||1;dx/=l;dy/=l;dz/=l;const r=rad(dx,dy,dz)*k/HS;return[dx*r,dy*r,dz*r]};
+  INFO={C,hp};
+  FACEG=sphereDirs(new THREE.SphereGeometry(1,56,36,Math.PI/2-FPHI/2,FPHI,Math.PI/2-.34,FTHETA),(x,y,z)=>hp(x,y,z,1.006))}
+// a group that rides on a bone, so that what is drawn in it (in units of `scale` metres, from the world point `world` on the model at rest) moves with that bone
+function anchor(c,bone,world,scale){const g=new THREE.Group(),M=new THREE.Matrix4().compose(world,IDQ,new THREE.Vector3(scale,scale,scale));g.applyMatrix4(RESTINV[bone].clone().multiply(M));g.userData.M=M;g.userData.bone=bone;c.bones[bone].add(g);return g}
+
+/* ---- one person ---- */
+function make(parent=W){
+  const root=new THREE.Group(),bodyG=new THREE.Group(),cm=new THREE.Group(),obj=SkeletonUtils.clone(base),kill=[];
+  root.add(bodyG);bodyG.add(cm);cm.add(obj);
+  let mesh=null;obj.traverse(o=>{if(o.isSkinnedMesh){if(o.geometry.attributes.position.count>500)mesh=o;else kill.push(o)}});kill.forEach(o=>o.parent.remove(o));   // (the two black capsule eyes: ours are painted)
+  const bones={};obj.traverse(o=>{if(o.isBone)bones[o.name]=o});
+  root.updateMatrixWorld(true);
+  const c={bones,mesh,cm,skin:toon('#ffd9b3',{rim:.28,inkK:.6}),ab:{},shells:[],tA:null,tB:null,M:null};
+  mesh.material=c.skin;mesh.castShadow=true;fit(mesh);
+  {const sc=mesh.matrixWorld.elements[0]||.01,ol=new THREE.SkinnedMesh(mesh.geometry,outlineMat(c.skin.userData.ink,TH/sc));ol.bind(mesh.skeleton,mesh.bindMatrix);fit(ol);mesh.parent.add(ol);c.skinOL=ol}
+  c.faceA=anchor(c,'Head_06',INFO.C,HS);c.hairA=anchor(c,'Head_06',INFO.C,HS);c.hatA=anchor(c,'Head_06',INFO.C,HS);c.gearA=anchor(c,'Head_06',INFO.C,HS);
+  c.fm=new THREE.MeshToonMaterial({gradientMap:RAMP,transparent:true,depthWrite:false,emissive:0xffffff,emissiveIntensity:.42,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+  const face=new THREE.Mesh(FACEG,c.fm);face.visible=false;c.faceA.add(face);c.face=face;
+  cm.scale.setScalar(S);   // (only now: everything above is worked out in the model's own metres)
+  parent.add(root);
+  const torso=new THREE.Group(),head=new THREE.Group(),arms=[-1,1].map(s=>{const g=new THREE.Group();g.rotation.z=s*.12;return g}),legs=[new THREE.Group(),new THREE.Group()];
+  // torso, head, arms and legs here are stand-ins the game animates the old way (angles); tick() turns them into bone rotations
+  const p={root,body:bodyG,torso,head,arms,legs,cb:c,st:{},bl:{t:2+Math.random()*2,k:0},eyes:[],sy:.31,pv:.59,rideY:1.12,rideZ:-.44,rideT:.22};
+  posePerson(p);return p}
+const eu=new THREE.Euler(),qa=new THREE.Quaternion(),qb=new THREE.Quaternion();
+// rotate a bone about the world axes (z first, then y, then x), relative to the T-pose it was made in
+function setBone(c,name,x,y,z){const b=c.bones[name];eu.set(x,y,z,'XYZ');qa.setFromEuler(eu).multiply(RESTQ[name]);qb.copy(RESTPQI[name]).multiply(qa);if(!b.quaternion.equals(qb))b.quaternion.copy(qb)}
+function dress(p,cfg){const c=p.cb,s=p.st,hairC=HAIRC[cfg.hcol][1],eye=cfg.eye|0,eyeC=EYES[eye][1];
+  if(s.skin!==cfg.skin){const sc=SKINS[cfg.skin][1],ink=inkOf(cshade(sc,.78),.6);c.skin.color.set(sc);c.skin.userData.ink=ink;c.skinOL.material.color.copy(ink)}
+  if(s.hair!==cfg.hair||s.hcol!==cfg.hcol){dropKids(c.hairA);c.M={hairC,hair:toon(hairC,{hgrad:1,rim:.2,spec:.18+.5*Math.max(0,.55-col(hairC).getHSL({}).l)/.55,inkK:.4})};
+    HP=INFO.hp;(HAIR[HAIRS[cfg.hair].n]||HAIR.Short)(c.hairA,c.M);bakeRigid(c.hairA,TH/HS)}
+  if(s.face!==cfg.face||s.eye!==eye||s.hcol!==cfg.hcol){const kind=FACES[cfg.face].n,ink='#'+inkOf(hairC,.5).getHexString(),a=faceTex(kind,eyeC,ink,false),b=kind==='Happy'?a:faceTex(kind,eyeC,ink,true);
+    holdTex(c,a,b);c.fm.map=c.fm.emissiveMap=a;c.fm.needsUpdate=true;c.face.visible=true}
+  if(s.outfit!==cfg.outfit){clearOutfit(c);outfit(c,OUT[cfg.outfit])}
+  p.st={skin:cfg.skin,hair:cfg.hair,hcol:cfg.hcol,face:cfg.face,eye,outfit:cfg.outfit}}
+// every frame: the game's angles -> bones, and a blink now and then (sometimes twice)
+// the game's arms hang straight down and swing out by an angle (.12 at rest); the model's hang a little way out (AD), which fades away as the arm is lifted, so raised arms end up where they always did
+const armDown=o=>Math.PI/2-o-(Math.PI/2-.12-AD)*(1-Math.min(1,Math.max(0,(o-.12)/1.1)));   // -> how far below horizontal the model's arm points
+function posePerson(p){const c=p.cb,A=p.arms,L=p.legs;
+  setBone(c,'RightArm_09',A[0].rotation.x,0,armDown(-A[0].rotation.z));setBone(c,'Left_Arm_017',A[1].rotation.x,0,-armDown(A[1].rotation.z));
+  setBone(c,'RightUpLeg_024',L[0].rotation.x,0,L[0].rotation.z);setBone(c,'Left_UpLeg_00',L[1].rotation.x,0,L[1].rotation.z);
+  c.cm.scale.y=S*p.torso.scale.y}
+function tick(p,dt){const c=p.cb,b=p.bl;posePerson(p);
+  b.t-=dt;if(b.t<=0){b.k=.13;b.t=2.2+Math.random()*3.8;if(Math.random()<.2)b.t=.35}if(b.k>0)b.k-=dt;
+  if(c.tA){const t=b.k>0?c.tB:c.tA;if(c.fm.map!==t)c.fm.map=c.fm.emissiveMap=t;c.fm.emissiveIntensity=.42-.28*Math.min(1,nt*1.6)}}   // (the face is lit a little from within by day, less at night)
+
+const gl=await CBP;if(!gl)return null;
+try{init(gl.scene)}catch(e){console.warn('[chibi] model not usable, using the older figures:',e);return null}
+return{make,dress,tick,hat:(p,on)=>{p.cb.hatA.visible=on}}})();
+// whichever bodies are in use: the chibi ones, or the older figures if the model could not be loaded
+const makePerson=(parent=W)=>CB?CB.make(parent):makePersonLegacy(parent),dress=(p,c)=>p.cb?CB.dress(p,c):dressLegacy(p,c),showHat=(p,on)=>p.cb?CB.hat(p,on):showHatLegacy(p,on),
+  blinkTick=(p,dt)=>p.cb?CB.tick(p,dt):blinkTickLegacy(p,dt);   // (called once a frame for everyone: blinks, and for the chibi bodies also turns the game's angles into bone rotations)
 // PPL[0] is you (named after your Google account), PPL[1] the friend; `ctl` is whichever one you are playing, the other one wanders
-const PPL=[{name:ME.name,skin:1,hair:0,hcol:1,face:0,outfit:0},{name:FRIEND.name,skin:1,hair:3,hcol:2,face:1,outfit:6}];
+const PPL=[{name:ME.name,skin:1,hair:0,hcol:1,face:0,outfit:0,eye:0},{name:FRIEND.name,skin:1,hair:3,hcol:2,face:1,outfit:6,eye:2}];
 try{const n=localStorage.getItem('myworld.friend');if(n)PPL[1].name=n}catch(_){}
 try{const j=JSON.parse(localStorage.getItem('myworld.look.friend')||'null');if(Array.isArray(j))Object.assign(PPL[1],unpackLook(j))}catch(_){}
 let ctl=0;
@@ -2645,7 +3036,7 @@ async function syncState(){applyMyName();applyMyLook();   // (what this device r
 const LKEY=u=>'myworld.look.'+(u&&u.id?u.id:'guest');   // how you look is remembered per account on this device (the friend's, for the browser)
 function saveLook(i){try{localStorage.setItem(i===0?LKEY(storage.auth&&storage.auth.user()):'myworld.look.friend',JSON.stringify(packLook(PPL[i])))}catch(_){}touchState()}
 // the preview: its own little renderer (made the first time the menu opens), so you can see your face and turn around to see your back
-const PV=(()=>{const cv=$('pvcv'),wrap=$('pvw');let R,sc,cam,rig,run=0,last=0,yaw=.5,auto=true,drag=null,cur={y:1.95,d:9.8},to={y:1.95,d:9.8},tt=0,fail=false,pend=null,hatOn=true;
+const PV=(()=>{const cv=$('pvcv'),wrap=$('pvw');let R,sc,cam,rig,run=0,last=0,yaw=.5,auto=true,drag=null,cur=CB?{y:2.1,d:9.2}:{y:1.95,d:9.8},to=CB?{y:2.1,d:9.2}:{y:1.95,d:9.8},tt=0,fail=false,pend=null,hatOn=true;
   function init(){if(R||fail)return !fail;
     try{R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){fail=true;wrap.style.display='none';return false}
     R.setClearColor(0,0);R.toneMapping=THREE.NeutralToneMapping;sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x8a9a7a,1.5));
@@ -2663,7 +3054,7 @@ const PV=(()=>{const cv=$('pvcv'),wrap=$('pvw');let R,sc,cam,rig,run=0,last=0,ya
     cam.position.set(0,cur.y+.3,cur.d);cam.lookAt(0,cur.y,0);rig.root.rotation.y=yaw;blinkTick(rig,dt);rig.torso.scale.y=1+Math.sin(tt*2.2)*.012;R.render(sc,cam)}
   return{start(){if(!init())return;if(pend){dress(rig,pend);showHat(rig,hatOn)}if(!run){last=performance.now();run=requestAnimationFrame(loop)}},
     show(c){pend=c;if(R){dress(rig,c);showHat(rig,hatOn)}},
-    focus(n){hatOn=n!=='hair';if(R)showHat(rig,hatOn);to=n==='out'?{y:1.95,d:9.8}:n==='hair'?{y:2.85,d:8.4}:{y:2.85,d:6.6}}}})();   // (the hat comes off while you pick a hair style, so you can see it)
+    focus(n){hatOn=n!=='hair';if(R)showHat(rig,hatOn);to=CB?(n==='out'?{y:2.1,d:9.2}:n==='hair'?{y:2.6,d:6.6}:{y:2.75,d:7.2}):(n==='out'?{y:1.95,d:9.8}:n==='hair'?{y:2.85,d:8.4}:{y:2.85,d:6.6})}}})();   // (the hat comes off while you pick a hair style, so you can see it)
 /* status: how you are right now, shown beside your name for everyone (not remembered between visits: you are active whenever you arrive) */
 const STATUS=[['Active','🟢'],['AFK','🕒'],['Asleep','💤'],['Working','💻']];let MYST=0;
 function setTag(el,name,st){el.textContent='';el.appendChild(document.createTextNode(name));const b=document.createElement('span');b.className=st?'sb':'sb dot';if(st)b.textContent=STATUS[st][1]+' '+STATUS[st][0];else b.title='Active';el.appendChild(b)}
@@ -2672,7 +3063,7 @@ function setLook(key,i){const c=PPL[ctl];if(c[key]===i)return;c[key]=i;dress(me,
 const mkBtn=(cls,box)=>{const b=document.createElement('button');b.type='button';b.className=cls;box.appendChild(b);return b};
 const swatches=(box,key,list)=>GRP[key]=list.map((it,i)=>{const b=mkBtn('sw',box);b.style.background=it[1];b.title=it[0];b.setAttribute('aria-label',it[0]);b.onclick=()=>setLook(key,i);return b});
 const chips=(box,key,names)=>GRP[key]=names.map((n,i)=>{const b=mkBtn('chip',box);b.textContent=n;b.onclick=()=>setLook(key,i);return b});
-swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));
+swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('sweye'),'eye',EYES);$('ocred').hidden=$('sweye').hidden=$('sweye').previousElementSibling.hidden=!CB;swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));   // (eye colour and the model credit only matter with the chibi bodies)
 GRP.outfit=OUT.map((o,i)=>{const b=mkBtn('of',ofl);b.innerHTML='<b></b><span></span><i></i>';b.children[0].textContent=o.ic;b.children[1].textContent=o.n;
   b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c!=null?o.bot.c:o.top.c)+' 50%)';b.onclick=()=>setLook('outfit',i);return b});
 const stBtns=STATUS.map((s,i)=>{const b=mkBtn('chip',$('chstat'));b.textContent=s[1]+' '+s[0];b.onclick=()=>{MYST=i;refreshPeople()};return b});
@@ -3134,22 +3525,23 @@ const RIDE_SPEED=19,atRack=()=>!riding&&nearestBike(2.4)>=0;   // (name kept: tr
 // parked beside you, ready to be ridden again; hop off back at the rack and it rolls into its own slot
 const BIKENAMES=['teal','blue','orange'],BIKECOL=['#2bb3a3','#4a7bd8','#ff7a3d'];let bikeIdx=2;
 const nearestBike=(max=1e9)=>{let bi=-1,bd=max;PARKED.forEach((b,i)=>{if(!b.g.visible)return;const d=Math.hypot(P.position.x-b.g.position.x,P.position.z-b.g.position.z);if(d<bd){bd=d;bi=i}});return bi};
+const ridePose=p=>{p.body.position.set(0,p.rideY,p.rideZ);p.body.rotation.set(p.rideT,0,0)};   // sitting on the saddle, leaning forward to the bars
 function toggleBike(){if(riding){riding=false;myBike.g.visible=false;const b=PARKED[bikeIdx],h=b.home,x=P.position.x,z=P.position.z;
     if(Math.hypot(x-RACK.x,z-RACK.z)<4.4){b.g.position.set(h.x,h.y,h.z);b.g.rotation.y=h.ry}   // back at the rack: into its slot
     else{const f=P.rotation.y,bx=x+Math.cos(f)*1.2,bz=z-Math.sin(f)*1.2;b.g.position.set(bx,groundY(bx,bz),bz);b.g.rotation.y=f}   // anywhere else: parked right beside you
     b.g.visible=true;bodyG.position.set(0,0,0);bodyG.rotation.set(0,0,0)}
   else if(atRack()){PARKED.forEach(b=>{if(!b.home)b.home={x:b.g.position.x,y:b.g.position.y,z:b.g.position.z,ry:b.g.rotation.y}});
-    standUp();bikeIdx=nearestBike(2.4);myBike.fr.color.set(BIKECOL[bikeIdx]);riding=true;myBike.g.visible=true;PARKED[bikeIdx].g.visible=false;bodyG.position.set(0,.46,-.38);bodyG.rotation.set(.28,0,0);bell()}}
+    standUp();bikeIdx=nearestBike(2.4);myBike.fr.color.set(BIKECOL[bikeIdx]);riding=true;myBike.g.visible=true;PARKED[bikeIdx].g.visible=false;ridePose(me);bell()}}
 
 /* =========================== SITTING: on a bench, a log by a campfire, a deck chair, or right down on the ground (C, the 🪑 button, or the prompt) =========================== */
 let sitting=null;   // null while standing; otherwise the seat: {kind:'ground'|'bench'|'lounge'|'swing', h: seat height, who: whoever is on it}
 const nearSeat=()=>{let b=null,bd=1.7;for(const s of SEATS){if(s.who&&s.who!=='me')continue;const w=s.sw,d=Math.hypot((w?w.x:s.x)-P.position.x,(w?w.z:s.z)-P.position.z);if(d<bd){bd=d;b=s}}return b};   // (the swing's seat moves; a seat someone's on is taken)
-const lean=(b,a,dy)=>{b.rotation.set(a,0,0);b.position.set(0,.85-.85*Math.cos(a)+dy,-.85*Math.sin(a))};   // tilt the body about the hips, so it stays on the seat
+const lean=(p,a,dy)=>{const v=p.pv,b=p.body;b.rotation.set(a,0,0);b.position.set(0,v-v*Math.cos(a)+dy,-v*Math.sin(a))};   // tilt the body about the hips (p.pv: how high they are), so it stays on the seat; p.sy is where the seat meets the body
 function sitPose(p,s,keepArm){const L=p.legs,arm=(x,z)=>p.arms.forEach((a,i)=>{if(keepArm&&i)return;a.rotation.x=x;a.rotation.z=(i?1:-1)*z});
-  if(s.kind==='ground'){lean(p.body,-.12,-.68);L.forEach((l,i)=>{l.rotation.x=-1.32;l.rotation.z=(i?1:-1)*.07});arm(.62,.36)}   // legs out on the sand, leaning back on the hands
-  else if(s.kind==='lounge'){lean(p.body,-.5,s.h-.71);L.forEach(l=>{l.rotation.x=-1.3;l.rotation.z=0});arm(.18,.3)}           // stretched out in a deck chair
-  else if(s.kind==='swing'){const S=s.sw;lean(p.body,S.th,S.h-.71);L.forEach((l,i)=>{l.rotation.x=-1.0+.38*Math.cos(S.ph);l.rotation.z=(i?1:-1)*.05});arm(-2.9,.38)}   // on the swing: hands up on the ropes, legs out going forward, tucked coming back
-  else{lean(p.body,0,s.h-.71);L.forEach((l,i)=>{l.rotation.x=-1.08;l.rotation.z=(i?1:-1)*.05});arm(-.42,.12)}}              // on a bench or a log: feet swinging, hands in the lap
+  if(s.kind==='ground'){lean(p,-.12,.03-p.sy);L.forEach((l,i)=>{l.rotation.x=-1.32;l.rotation.z=(i?1:-1)*.07});arm(.62,.36)}   // legs out on the sand, leaning back on the hands
+  else if(s.kind==='lounge'){lean(p,-.5,s.h-p.sy);L.forEach(l=>{l.rotation.x=-1.3;l.rotation.z=0});arm(.18,.3)}           // stretched out in a deck chair
+  else if(s.kind==='swing'){const S=s.sw;lean(p,S.th,S.h-p.sy);L.forEach((l,i)=>{l.rotation.x=-1.0+.38*Math.cos(S.ph);l.rotation.z=(i?1:-1)*.05});arm(-2.9,.38)}   // on the swing: hands up on the ropes, legs out going forward, tucked coming back
+  else{lean(p,0,s.h-p.sy);L.forEach((l,i)=>{l.rotation.x=-1.08;l.rotation.z=(i?1:-1)*.05});arm(-.42,.12)}}              // on a bench or a log: feet swinging, hands in the lap
 function standPose(p){p.body.position.set(0,0,0);p.body.rotation.set(0,0,0);p.legs.forEach(l=>l.rotation.z=0);p.arms.forEach((a,i)=>{a.rotation.x=0;a.rotation.z=(i?1:-1)*.12})}
 const bsit=$('bsit');
 function sitDown(){if(riding||open)return;const s=nearSeat();
@@ -3498,7 +3890,7 @@ function tick(dt,t){
     R.amt+=((R.m&&!seat?1:0)-R.amt)*Math.min(1,dt*10);R.ph+=dt*(ride?7.5:11)*R.amt;
     if(seat){const S=seat.sw,x=S?S.x:seat.x==null?R.x:seat.x,z=S?S.z:seat.z==null?R.z:seat.z;root.position.set(x,groundY(x,z),z);root.rotation.y=seat.face==null?R.r:seat.face;sitPose(g,seat)}
     else{root.position.set(R.x,groundY(R.x,R.z)+(ride?0:Math.abs(Math.sin(R.ph))*.1*R.amt),R.z);root.rotation.y=R.r;
-      if(ride){const pd=Math.sin(R.ph)*.5*R.amt,b=g.bikes[R.curBike];g.legs[0].rotation.x=-1.05+pd;g.legs[1].rotation.x=-1.05-pd;g.arms[0].rotation.x=g.arms[1].rotation.x=-1.0;g.body.position.set(0,.46,-.38);g.body.rotation.set(.28,0,0);
+      if(ride){const pd=Math.sin(R.ph)*.5*R.amt,b=g.bikes[R.curBike];g.legs[0].rotation.x=-1.05+pd;g.legs[1].rotation.x=-1.05-pd;g.arms[0].rotation.x=g.arms[1].rotation.x=-1.0;ridePose(g);
         if(b){b.crank.rotation.x=R.ph;const mvd=Math.hypot(R.x-ox,R.z-oz);b.wheels.forEach(w=>w.rotation.x+=mvd/.62)}}
       else{const sw=Math.sin(R.ph)*R.amt;g.legs[0].rotation.x=sw*.65;g.legs[1].rotation.x=-sw*.65;g.arms[0].rotation.x=-sw*.55;g.arms[1].rotation.x=sw*.55;g.torso.scale.y=1+Math.sin(t*2.2)*.012*(1-R.amt)}}
     blinkTick(g,dt)})}
