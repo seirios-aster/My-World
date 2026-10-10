@@ -7,6 +7,9 @@ create table if not exists public.world_admins (
   user_id uuid primary key references auth.users (id) on delete cascade
 );
 alter table public.world_admins enable row level security;
+-- say exactly what each kind of visitor may do (older projects hand out much more by default; the policies below would still block it, this makes it explicit)
+revoke all on public.world_admins from anon, authenticated;
+grant usage on schema public to anon, authenticated;
 grant select on public.world_admins to authenticated;
 
 -- a signed-in person can see only their own row (that is how the app knows whether to show the clock control)
@@ -22,6 +25,7 @@ create table if not exists public.world_settings (
 alter table public.world_settings enable row level security;
 insert into public.world_settings (id) values ('main') on conflict (id) do nothing;
 
+revoke all on public.world_settings from anon, authenticated;
 grant select on public.world_settings to anon, authenticated;
 grant insert, update on public.world_settings to authenticated;
 
@@ -36,5 +40,6 @@ create policy "world_settings: gm update" on public.world_settings for update to
   using      (exists (select 1 from public.world_admins a where a.user_id = auth.uid()))
   with check (exists (select 1 from public.world_admins a where a.user_id = auth.uid()));
 
--- To make someone a GM (run once, with their email):
---   insert into public.world_admins (user_id) select id from auth.users where email = 'their-email@example.com' on conflict do nothing;
+-- To make someone a GM (run once, with their email; they must have signed in to the game at least once):
+--   insert into public.world_admins (user_id) select id from auth.users where lower(email) = lower('their-email@example.com') on conflict do nothing;
+--   select * from public.world_admins;   -- must show one row per GM; no rows means the email did not match anyone
