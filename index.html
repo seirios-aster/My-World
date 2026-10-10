@@ -2292,9 +2292,9 @@ function faceTex(kind,eyeHex,inkHex,blink){const key=kind+eyeHex+inkHex+(blink?'
   else{ER(cx[0],-1,{rx:106,ry:128});ER(cx[1],1,{rx:106,ry:128});brow(cx[0],-1,-.3);brow(cx[1],1,-.3);mouth('cat');blush(190,462,86,50,.5);blush(834,462,86,50,.5);   // Kitty
     g.strokeStyle='rgba(60,40,36,.7)';g.lineWidth=6;[-1,1].forEach(s=>[-16,0,16].forEach(o=>{g.beginPath();g.moveTo(512+s*210,440+o*.6);g.lineTo(512+s*290,436+o*2.2);g.stroke()}))}
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.userData.refs=0;FACEC.set(key,t);
-  if(FACEC.size>48)for(const[kk,v]of FACEC){if(FACEC.size<=40)break;if(!v.userData.refs){v.dispose();FACEC.delete(kk)}}
   return t}
-const holdTex=(c,a,b)=>{if(c.tA){c.tA.userData.refs--;if(c.tB!==c.tA)c.tB.userData.refs--}c.tA=a;c.tB=b;a.userData.refs++;if(b!==a)b.userData.refs++};   // (a face in use is never let go)
+const holdTex=(c,a,b)=>{if(c.tA){c.tA.userData.refs--;if(c.tB!==c.tA)c.tB.userData.refs--}c.tA=a;c.tB=b;a.userData.refs++;if(b!==a)b.userData.refs++;
+  if(FACEC.size>48)for(const[k,v]of FACEC){if(FACEC.size<=40)break;if(!v.userData.refs){v.dispose();FACEC.delete(k)}}};   // (a face in use is never let go; unused ones, oldest first, go when there are many)
 
 /* ---- hair: drawn for a head of radius HR in head units, laid onto the model's real head surface ---- */
 let HP=null;const headPoint=(dx,dy,dz,R)=>HP(dx,dy,dz,R/HR);
@@ -2400,8 +2400,8 @@ function shell(c,boxes,off,mat){
   const bg=c.mesh.geometry,key=bg.uuid+'|'+off;let geo=BODYCOPY.get(key);
   if(!geo){geo=bg.clone();const p=geo.attributes.position,nrm=geo.attributes.normal,o=off/.01;for(let i=0;i<p.count;i++)p.setXYZ(i,p.getX(i)+nrm.getX(i)*o,p.getY(i)+nrm.getY(i)*o,p.getZ(i)+nrm.getZ(i)*o);BODYCOPY.set(key,geo)}
   withKeep(mat,boxes);
-  const mesh=new THREE.SkinnedMesh(geo,mat);mesh.bind(c.mesh.skeleton,c.mesh.bindMatrix);c.mesh.parent.add(mesh);c.shells.push(mesh);
-  const om=outlineMat(mat.userData.ink,TH/.01);withKeep(om,boxes);const ol=new THREE.SkinnedMesh(geo,om);ol.bind(c.mesh.skeleton,c.mesh.bindMatrix);c.mesh.parent.add(ol);c.shells.push(ol);
+  const mesh=fit(new THREE.SkinnedMesh(geo,mat));mesh.bind(c.mesh.skeleton,c.mesh.bindMatrix);c.mesh.parent.add(mesh);c.shells.push(mesh);
+  const om=outlineMat(mat.userData.ink,TH/.01);withKeep(om,boxes);const ol=fit(new THREE.SkinnedMesh(geo,om));ol.bind(c.mesh.skeleton,c.mesh.bindMatrix);c.mesh.parent.add(ol);c.shells.push(ol);
   return mesh}
 // merge a group's loose rigid parts into one mesh per material (plus an outline for each), so a person stays cheap to draw. th: outline thickness in the group's own units
 function bakeRigid(g,th){g.updateMatrixWorld(true);const inv=g.matrixWorld.clone().invert(),by=new Map(),drop=[];
@@ -2427,12 +2427,12 @@ function mergeBones(c){const sk=c.mesh.skeleton,all=[],parts=[],outs=[];
     geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));geo.setAttribute('color',new THREE.Float32BufferAttribute(ca,3));parts.push(geo);
     const og=new THREE.BufferGeometry();for(const k2 of ['position','normal','skinIndex','skinWeight'])og.setAttribute(k2,geo.attributes[k2]);if(geo.index)og.setIndex(geo.index);og.setAttribute('color',new THREE.Float32BufferAttribute(ci,3));outs.push(og);o.parent.remove(o)});
   Object.values(c.ab).forEach(g=>bakeRigid(g,TH));
-  const mk=(list,mat)=>{if(!list.length)return;const geo=list.length>1?mergeGeometries(list):list[0],m=new THREE.SkinnedMesh(geo,mat);m.bind(sk,c.mesh.bindMatrix);m.frustumCulled=false;m.userData.own=1;c.mesh.parent.add(m);c.shells.push(m)};
+  const mk=(list,mat)=>{if(!list.length)return;const geo=list.length>1?mergeGeometries(list):list[0],m=new THREE.SkinnedMesh(geo,mat);m.bind(sk,c.mesh.bindMatrix);fit(m);m.userData.own=1;c.mesh.parent.add(m);c.shells.push(m)};
   mk(parts,VCM);mk(outs,VCO)}
 // the ten outfits (OUT): the clothing is trimmed copies of the body, the details small shapes riding on bones. Bone-anchored shapes are drawn in metres on the model at rest, head ones in head units.
 function outfit(c,o){
   const topC=o.top.c,bt=o.bot,skinTop=!!o.top.skin,H=c.hatA,G=c.gearA,AB=bn=>c.ab[bn]||(c.ab[bn]=anchor(c,bn,ZERO,1));
-  const tm=cloth(topC,o.top.pat),bm=bt.t==='dress'?tm:(bt.c!=null?cloth(bt.c,bt.pat):tm);
+  const tm=cloth(topC,o.top.pat),bm=bt.c!=null?cloth(bt.c,bt.pat):cloth(topC,o.top.pat);
   const ad=(par,geo,mat,p,rot,s)=>{const m=new THREE.Mesh(geo,mat);if(p)m.position.set(p[0],p[1],p[2]);if(rot)m.rotation.set(rot[0],rot[1],rot[2]);if(s)m.scale.set(s[0],s[1],s[2]);par.add(m);return m};
   const ring=(par,r,tube,p,mat,sx=1,sz=1)=>{const m=ad(par,new THREE.TorusGeometry(r,tube,10,40),mat,p,[Math.PI/2,0,0]);m.scale.set(sx,sz,1);return m};   // a ring lying flat (round the body), stretched sideways by sx and front-to-back by sz
   const bar=(par,mat,a,b,r)=>{const d=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]),L=d.length(),m=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.001,L-2*r),4,8),mat);m.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());par.add(m);return m};
@@ -2481,7 +2481,7 @@ function outfit(c,o){
   if(hw){const hc=hw.c,c2=hw.c2;
     if(hw.t==='sunhat'||hw.t==='bucket'){const wide=hw.t==='sunhat',m=toon(hc),bm2=toon(c2??cshade(hc,.7));
       const pts=wide?[[.001,1.28],[.5,1.24],[.9,1.08],[1.12,.84],[1.18,.66],[1.38,.6],[1.58,.52],[1.62,.48],[1.58,.46],[1.38,.53],[1.18,.56],[.001,.56]]:[[.001,1.18],[.6,1.14],[.95,.96],[1.12,.7],[1.3,.6],[1.35,.55],[1.3,.52],[1.12,.58],[.001,.58]];
-      ad(H,lathe(pts,52),m,[0,-.08,-.08],[-.1,0,0],[1.05,1,1.05]);ad(H,new THREE.TorusGeometry(1.14,.07,10,44),bm2,[0,.64,-.08],[Math.PI/2-.1,0,0]).scale.set(1.05,1.05,1)}
+      ad(H,lathe(pts.reverse(),52),m,[0,-.08,-.08],[-.1,0,0],[1.05,1,1.05]);ad(H,new THREE.TorusGeometry(1.14,.07,10,44),bm2,[0,.64,-.08],[Math.PI/2-.1,0,0]).scale.set(1.05,1.05,1)}
     if(hw.t==='beanie'){const m=toon(hc),pts=[];for(let i=0;i<=16;i++){const a=i/16*Math.PI/2;pts.push([Math.max(.001,1.1*Math.sin(a)),.5+.78*Math.cos(a)])}
       ad(H,lathe(pts.reverse(),48),m,[0,-.02,-.08],[-.2,0,0],[1.05,1,1.03]);ad(H,new THREE.TorusGeometry(1.1,.13,12,44),toon(c2??hc),[0,.54,-.08],[Math.PI/2-.2,0,0]).scale.set(1.05,1.03,1);ad(H,new THREE.SphereGeometry(.2,14,12),toon(c2??'#fff'),[0,1.4,-.3])}
     if(hw.t==='phones'){const m=toon(hc),dm=toon(c2);[-1,1].forEach(s=>{ad(H,new THREE.CylinderGeometry(.25,.25,.18,24),m,[s*1.1,-.1,0],[0,0,Math.PI/2]);ad(H,new THREE.CylinderGeometry(.18,.18,.07,24),dm,[s*1.2,-.1,0],[0,0,Math.PI/2])});
@@ -2501,10 +2501,12 @@ function clearOutfit(c){c.shells.forEach(m=>{if(m.parent)m.parent.remove(m);if(m
 
 /* ---- the model: measured once, then cloned for each person ---- */
 const ZERO=new THREE.Vector3(),IDQ=new THREE.Quaternion(),FPHI=1.9,FTHETA=1.2;
-let base=null,INFO=null,FACEG=null,BODYINV=null;const RESTINV={},RESTQ={},RESTPQI={};
+let base=null,INFO=null,FACEG=null,BODYINV=null,BSPH=null;
+// skinned meshes are culled by a sphere round the model (in its own space, a good deal bigger than the rest pose, so any pose or detail fits) rather than one measured from whatever pose they happened to be in
+const fit=m=>{m.boundingSphere=BSPH.clone();return m};const RESTINV={},RESTQ={},RESTPQI={};
 function init(scene){base=scene;scene.updateMatrixWorld(true);
   let body=null;scene.traverse(o=>{if(o.isSkinnedMesh&&o.geometry.attributes.position.count>500)body=o});if(!body)throw new Error('no body mesh in the model');
-  BODYINV=body.matrixWorld.clone().invert();
+  BODYINV=body.matrixWorld.clone().invert();body.computeBoundingSphere();BSPH=body.boundingSphere.clone();BSPH.radius*=1.7;
   scene.traverse(o=>{if(o.isBone){RESTINV[o.name]=o.matrixWorld.clone().invert();const q=new THREE.Quaternion(),pq=new THREE.Quaternion();o.getWorldQuaternion(q);RESTQ[o.name]=q;if(o.parent)o.parent.getWorldQuaternion(pq);RESTPQI[o.name]=pq.invert()}});
   ['Head_06','HeadTop_End_07','Hips_01','Spine1_03','Spine2_04','Neck_05','RightArm_09','Left_Arm_017','RightForeArm_010','Left_ForeArm_018','RightUpLeg_024','Left_UpLeg_00','RightLeg_025','Left_Leg_028','RightFoot_026','Left_Foot_029'].forEach(n=>{if(!RESTQ[n])throw new Error('the model has no bone '+n)});
   // the head: every vertex that mostly belongs to the head bone; its centre and an exact radial map (distance to the surface in any direction), so hair and the face fit the real head
@@ -2535,8 +2537,8 @@ function make(parent=W){
   const bones={};obj.traverse(o=>{if(o.isBone)bones[o.name]=o});
   root.updateMatrixWorld(true);
   const c={bones,mesh,cm,skin:toon('#ffd9b3',{rim:.28,inkK:.6}),ab:{},shells:[],tA:null,tB:null,M:null};
-  mesh.material=c.skin;mesh.castShadow=true;mesh.frustumCulled=false;
-  {const sc=mesh.matrixWorld.elements[0]||.01,ol=new THREE.SkinnedMesh(mesh.geometry,outlineMat(c.skin.userData.ink,TH/sc));ol.bind(mesh.skeleton,mesh.bindMatrix);ol.frustumCulled=false;mesh.parent.add(ol);c.skinOL=ol}
+  mesh.material=c.skin;mesh.castShadow=true;fit(mesh);
+  {const sc=mesh.matrixWorld.elements[0]||.01,ol=new THREE.SkinnedMesh(mesh.geometry,outlineMat(c.skin.userData.ink,TH/sc));ol.bind(mesh.skeleton,mesh.bindMatrix);fit(ol);mesh.parent.add(ol);c.skinOL=ol}
   c.faceA=anchor(c,'Head_06',INFO.C,HS);c.hairA=anchor(c,'Head_06',INFO.C,HS);c.hatA=anchor(c,'Head_06',INFO.C,HS);c.gearA=anchor(c,'Head_06',INFO.C,HS);
   c.fm=new THREE.MeshToonMaterial({gradientMap:RAMP,transparent:true,depthWrite:false,emissive:0xffffff,emissiveIntensity:.42,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
   const face=new THREE.Mesh(FACEG,c.fm);face.visible=false;c.faceA.add(face);c.face=face;
@@ -2555,7 +2557,7 @@ function dress(p,cfg){const c=p.cb,s=p.st,hairC=HAIRC[cfg.hcol][1],eye=cfg.eye|0
     HP=INFO.hp;(HAIR[HAIRS[cfg.hair].n]||HAIR.Short)(c.hairA,c.M);bakeRigid(c.hairA,TH/HS)}
   if(s.face!==cfg.face||s.eye!==eye||s.hcol!==cfg.hcol){const kind=FACES[cfg.face].n,ink='#'+inkOf(hairC,.5).getHexString(),a=faceTex(kind,eyeC,ink,false),b=kind==='Happy'?a:faceTex(kind,eyeC,ink,true);
     holdTex(c,a,b);c.fm.map=c.fm.emissiveMap=a;c.fm.needsUpdate=true;c.face.visible=true}
-  if(s.outfit!==cfg.outfit){clearOutfit(c);outfit(c,OUT[cfg.outfit]);c.mesh.parent.children.forEach(o=>{if(o.isSkinnedMesh)o.frustumCulled=false})}
+  if(s.outfit!==cfg.outfit){clearOutfit(c);outfit(c,OUT[cfg.outfit])}
   p.st={skin:cfg.skin,hair:cfg.hair,hcol:cfg.hcol,face:cfg.face,eye,outfit:cfg.outfit}}
 // every frame: the game's angles -> bones, and a blink now and then (sometimes twice)
 // the game's arms hang straight down and swing out by an angle (.12 at rest); the model's hang a little way out (AD), which fades away as the arm is lifted, so raised arms end up where they always did
@@ -3061,7 +3063,7 @@ function setLook(key,i){const c=PPL[ctl];if(c[key]===i)return;c[key]=i;dress(me,
 const mkBtn=(cls,box)=>{const b=document.createElement('button');b.type='button';b.className=cls;box.appendChild(b);return b};
 const swatches=(box,key,list)=>GRP[key]=list.map((it,i)=>{const b=mkBtn('sw',box);b.style.background=it[1];b.title=it[0];b.setAttribute('aria-label',it[0]);b.onclick=()=>setLook(key,i);return b});
 const chips=(box,key,names)=>GRP[key]=names.map((n,i)=>{const b=mkBtn('chip',box);b.textContent=n;b.onclick=()=>setLook(key,i);return b});
-swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('sweye'),'eye',EYES);$('ocred').hidden=$('sweye').hidden=$('sweye').previousElementSibling.hidden=!CB;   // (eye colour and the model credit only matter with the chibi bodies)swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));
+swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('sweye'),'eye',EYES);$('ocred').hidden=$('sweye').hidden=$('sweye').previousElementSibling.hidden=!CB;swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));   // (eye colour and the model credit only matter with the chibi bodies)
 GRP.outfit=OUT.map((o,i)=>{const b=mkBtn('of',ofl);b.innerHTML='<b></b><span></span><i></i>';b.children[0].textContent=o.ic;b.children[1].textContent=o.n;
   b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c!=null?o.bot.c:o.top.c)+' 50%)';b.onclick=()=>setLook('outfit',i);return b});
 const stBtns=STATUS.map((s,i)=>{const b=mkBtn('chip',$('chstat'));b.textContent=s[1]+' '+s[0];b.onclick=()=>{MYST=i;refreshPeople()};return b});
