@@ -159,6 +159,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #emopick button{width:46px;height:46px;border:0;background:none;border-radius:12px;cursor:pointer;padding:7px;display:grid;place-items:center}
 #emopick button:hover,#emopick button:focus-visible{background:var(--paper-2)}
 #emopick .ae{width:30px;height:30px;margin:0;vertical-align:0}
+#ogm{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}#ogm[hidden]{display:none}#ogm small{font-weight:600;opacity:.6}
+#ogm select{width:100%;padding:7px 9px;border:2px solid var(--paper-2);border-radius:10px;background:#fff;font:700 13px var(--body);color:var(--ink)}
+#gmnote{font:600 12px var(--body);opacity:.7;min-height:1.2em}
 #ostat{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}
 #toasts{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:3;pointer-events:none;width:min(440px,calc(100vw - 130px))}
 .toast{background:var(--paper);color:var(--ink);font:600 14px/1.35 var(--body);padding:7px 14px;border-radius:16px;box-shadow:var(--shadow);max-width:100%;overflow-wrap:anywhere;animation:tin .25s ease-out;transition:opacity .6s}
@@ -302,6 +305,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
       <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
+  <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label></div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
@@ -397,6 +401,7 @@ const TZLAT={'Asia/Manila':14.6,'Asia/Singapore':1.3,'Asia/Kuala_Lumpur':3.1,'As
  'Africa/Cairo':30,'Africa/Lagos':6.5,'Africa/Nairobi':-1.3,'Africa/Johannesburg':-26.2,'Africa/Casablanca':33.6,'Australia/Sydney':-33.9,'Australia/Melbourne':-37.8,'Australia/Brisbane':-27.5,'Australia/Perth':-32,'Australia/Adelaide':-34.9,'Pacific/Auckland':-36.8,'Pacific/Honolulu':21.3,
  'America/New_York':40.7,'America/Detroit':42.3,'America/Chicago':41.9,'America/Denver':39.7,'America/Phoenix':33.4,'America/Los_Angeles':34,'America/Anchorage':61.2,'America/Toronto':43.7,'America/Vancouver':49.3,'America/Mexico_City':19.4,'America/Bogota':4.7,'America/Lima':-12,'America/Santiago':-33.4,'America/Sao_Paulo':-23.5,'America/Argentina/Buenos_Aires':-34.6,'America/Halifax':44.6};
 let LAT=15;try{const z=Intl.DateTimeFormat().resolvedOptions().timeZone;if(z in TZLAT)LAT=TZLAT[z]}catch(e){}
+const LAT0=LAT;   // (the device's own; the game clock can put the sky somewhere else)
 /* ===================================================================== */
 
 const $=id=>document.getElementById(id);
@@ -2495,6 +2500,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
     async open(){await ready;if(wclosing)await wclosing;if(fail||!sb||!user||wch)return !!wch;wkey=user.id+':'+Math.random().toString(36).slice(2,7);   // (a second tab of yours is a second character)
       const me=wch=sb.channel(cfg.room+'-world',{config:{broadcast:{self:false,ack:false},presence:{key:wkey}}});
       wch.on('broadcast',{event:'p'},m=>wfire('p',m&&m.payload));
+      wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
       wch.subscribe(st=>{if(me!==wch)return;const ok=st==='SUBSCRIBED';if(ok!==wok){wok=ok;wfire('status',ok)}if(!ok)wfire('down',st)});
@@ -2505,7 +2511,13 @@ function makeCloudAdapter(cfg,prepare,fallback){
   const profile={async load(){await ready;if(fail||!sb||!user)return undefined;const{data,error}=await sb.from(cfg.profiles).select('state').eq('user_id',user.id).maybeSingle();if(error){console.warn('[profile] could not read your saved state (nothing will be saved until this is fixed):',error.message||error);return undefined}return data?data.state:null},
     async save(state){await ready;if(fail||!sb||!user)return'retry';const{error}=await sb.from(cfg.profiles).upsert({user_id:user.id,state,updated_at:new Date().toISOString()});
       if(!error)return'ok';console.warn('[profile] could not save your state:',error.message||error);return/failed to fetch|networkerror|load failed|network request/i.test(error.message||'')?'retry':'off'}};
-  return{auth,ready,session,room:rm,world,profile,
+  /* the game clock: one row says which time zone the whole world follows ('device' = each player's own). Everyone can read it; only a GM (a row in world_admins) can change it,
+     and that is enforced by the database, not by hiding the control. See supabase-world-clock.sql. load(): the zone, undefined if it can't be read. */
+  const settings={async load(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('tz').eq('id','main').maybeSingle();
+      if(error){console.warn('[clock] could not read the game clock setting (everyone follows their own time):',error.message||error);return undefined}return data&&data.tz?data.tz:'device'},
+    async gm(){await ready;if(fail||!sb||!user)return false;const{data,error}=await sb.from('world_admins').select('user_id').eq('user_id',user.id).maybeSingle();return !error&&!!data},
+    async save(tz){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',tz,updated_at:new Date().toISOString()});if(error)throw nice(error)}};
+  return{auth,ready,session,room:rm,world,profile,settings,
     async put(file,meta){const c=await need();if(!c)return fallback.put(file,meta);
       const p=await prepare(file),id=uid(),base=user.id+'/'+id,tp=p.thumb?base+'.thumb':null,up=[];
       try{
@@ -2758,21 +2770,51 @@ $('bh').onclick=()=>setQuality(!HQ,true);
 
 /* =========================== TIME, SUN, MOON, SKY COLOURS =========================== */
 let cmode=0,dayI=0,nt=0,tmode=0,simH=0;
-const DOY0=Math.floor((Date.now()-Date.UTC(new Date().getFullYear(),0,0))/864e5);
 const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'local time';
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const clockH=()=>{const d=new Date();return d.getHours()+d.getMinutes()/60+d.getSeconds()/3600};
+/* the game clock: 'device' = every player follows their own device's time; otherwise the time zone the GM chose, the same for everybody */
+let WTZ='device',wzFmt=null;const wc={t:0,v:null};
+const tzOk=z=>{try{new Intl.DateTimeFormat('en-US',{timeZone:z});return true}catch(_){return false}};
+function wall(){const n=Date.now();if(wc.v&&n-wc.t<200)return wc.v;let v;   // (the date and time on the wall in the game's zone; worked out at most 5 times a second)
+  if(wzFmt){const o={};for(const p of wzFmt.formatToParts(n))o[p.type]=+p.value;v={y:o.year,mo:o.month,d:o.day,h:o.hour%24,mi:o.minute,s:o.second}}
+  else{const d=new Date(n);v={y:d.getFullYear(),mo:d.getMonth()+1,d:d.getDate(),h:d.getHours(),mi:d.getMinutes(),s:d.getSeconds()}}
+  wc.t=n;wc.v=v;return v}
+const clockH=()=>{const w=wall();return w.h+w.mi/60+w.s/3600};
+const doyNow=()=>{const w=wall();return Math.floor((Date.UTC(w.y,w.mo-1,w.d)-Date.UTC(w.y,0,0))/864e5)};
+const tzName=z=>z==='device'?'each player\'s own time':z.split('/').pop().replace(/_/g,' ');   // ("America/New_York" -> "New York")
+function setWorldTz(z){z=z&&z!=='device'&&tzOk(z)?z:'device';if(z===WTZ)return false;WTZ=z;
+  wzFmt=z==='device'?null:new Intl.DateTimeFormat('en-US',{timeZone:z,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'});
+  wc.v=null;LAT=z!=='device'&&Object.prototype.hasOwnProperty.call(TZLAT,z)?TZLAT[z]:LAT0;
+  try{localStorage.setItem('tambayan.wtz',z)}catch(_){}
+  const sel=document.getElementById('gmtz');if(sel){if(![...sel.options].some(o=>o.value===z)){const o=document.createElement('option');o.value=z;o.textContent=tzName(z);sel.appendChild(o)}sel.value=z}
+  if(typeof setTm==='function'&&typeof tmode==='number')setTm(tmode);return true}
 const fmt=h=>{const H=Math.floor(h)%24,M=Math.floor((h%1)*60);return(H%12||12)+':'+String(M).padStart(2,'0')+(H<12?' AM':' PM')};
-const TMI=['🕒','⏩','📌'],TMT=['Live local time ('+TZ+') - tap for time-lapse','Time-lapse (a day in 2 min) - tap for live time','Time frozen for the Orion view - tap for live time'];
-function setTm(m){tmode=m;$('bn').textContent=TMI[m];$('bn').title=TMT[m]}
-setTm(0);$('bn').onclick=()=>setTm(tmode===0?1:0);
-const curDoy=()=>dayI?Math.round((dayI-1)*30.4+15):DOY0,sunY=h=>Math.sin((h-6)/12*Math.PI)*.85,orionH=d=>(((12+5.6-(d-80)*24/365.25)%24)+24)%24;
+const TMI=['🕒','⏩','📌'],tmTip=m=>['Live '+(WTZ==='device'?'local time ('+TZ+')':'game time ('+tzName(WTZ)+')')+' - tap for time-lapse','Time-lapse (a day in 2 min) - tap for live time','Time frozen for the Orion view - tap for live time'][m];
+function setTm(m){tmode=m;$('bn').textContent=TMI[m];$('bn').title=tmTip(m)}
+setTm(0);try{setWorldTz(localStorage.getItem('tambayan.wtz'))}catch(_){}   // (the last clock we knew, so the first picture is already right)
+$('bn').onclick=()=>setTm(tmode===0?1:0);
+const curDoy=()=>dayI?Math.round((dayI-1)*30.4+15):doyNow(),sunY=h=>Math.sin((h-6)/12*Math.PI)*.85,orionH=d=>(((12+5.6-(d-80)*24/365.25)%24)+24)%24;
 // Orion jump: freeze the clock when Orion crosses the southern meridian (upright, Sirius below), face south and look up
-$('bq').onclick=()=>{if(sunY(orionH(curDoy()))>-.12){for(let i=1;i<=12;i++){dayI=((dayI||new Date().getMonth()+1)-1+i)%12+1;if(sunY(orionH(curDoy()))<=-.12)break}}
+$('bq').onclick=()=>{if(sunY(orionH(curDoy()))>-.12){for(let i=1;i<=12;i++){dayI=((dayI||wall().mo)-1+i)%12+1;if(sunY(orionH(curDoy()))<=-.12)break}}
   $('bd').title='Sky for mid-'+(dayI?MON[dayI-1]:'today');simH=orionH(curDoy());setTm(2);cmode=0;$('bc').style.opacity=1;yaw=Math.PI;pitch=-1.17};
 $('bc').onclick=()=>{cmode=1-cmode;$('bc').style.opacity=cmode?.55:1;$('bc').title=cmode?'Stars only (as in real life) - tap for lines and names':'Constellation lines and names - tap for stars only'};
 $('bg').onclick=()=>{pitch=pitch<0?.72:-1.15;yaw=Math.PI};
 $('bd').onclick=()=>{dayI=(dayI+1)%13;$('bd').title=dayI?'Sky for mid-'+MON[dayI-1]+' - tap for next month':'Sky for today - tap to step through the months'};
+/* The GM picks the game's time zone; it lives in one database row. Everybody reads it when they arrive, whenever the GM nudges the world channel (a tiny 'tz' message that only says
+   "look again": the real value always comes from the database, so nobody can fake it) and every minute and a half as a safety net. */
+const GMZ=[['device',"Each player's own device time (everyone different)"],['America/New_York','US Eastern - Georgia, New York'],['America/Chicago','US Central - Texas, Illinois'],['America/Denver','US Mountain - Colorado, Utah'],['America/Phoenix','Arizona'],['America/Los_Angeles','US Pacific - California, Washington'],['America/Anchorage','Alaska'],['Pacific/Honolulu','Hawaii'],['America/Toronto','Toronto'],['America/Mexico_City','Mexico City'],['America/Bogota','Bogota'],['America/Lima','Lima'],['Europe/London','London'],['Europe/Paris','Paris, Berlin, Madrid'],['Europe/Istanbul','Istanbul'],['Europe/Moscow','Moscow'],['Africa/Cairo','Cairo'],['Africa/Lagos','Lagos'],['Africa/Johannesburg','Johannesburg'],['Asia/Kolkata','India'],['Asia/Bangkok','Bangkok, Jakarta'],['Asia/Manila','Philippines'],['Asia/Singapore','Singapore, Kuala Lumpur'],['Asia/Hong_Kong','Hong Kong'],['Asia/Shanghai','China'],['Asia/Seoul','Korea'],['Asia/Tokyo','Japan'],['Australia/Sydney','Sydney, Melbourne'],['Australia/Perth','Perth'],['Pacific/Auckland','New Zealand']];
+const SET=storage.settings;let clockSeen=false,lastPull=0;
+async function pullClock(){if(!SET)return;lastPull=Date.now();let z;try{z=await SET.load()}catch(_){return}if(z===undefined)return;
+  const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
+async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;if(gm)$('gmtz').value=WTZ}
+if(SET){const sel=$('gmtz'),note=t=>{$('gmnote').textContent=t};
+  GMZ.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});sel.value=WTZ;
+  sel.onchange=async()=>{const z=sel.value;note('Saving...');
+    try{await SET.save(z);setWorldTz(z);clockSeen=true;try{storage.world.send('tz',{})}catch(_){}note(z==='device'?'Saved: everyone follows their own device time':'Saved: everyone is now on '+tzName(z)+' time')}
+    catch(e){note((e&&e.message)||'Could not save');pullClock()}};
+  storage.ready.then(()=>{gmSync();pullClock()});storage.auth.onChange(()=>{gmSync();pullClock()});
+  storage.world.on('tz',()=>{if(Date.now()-lastPull>2000)pullClock()});storage.world.on('status',ok=>{if(ok)pullClock()});
+  setInterval(()=>{if(!document.hidden)pullClock()},90000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastPull>15000)pullClock()})}
 // local sidereal time = (day-of-year offset from the March equinox) + (local solar time - 12h)
 function skyRot(h){const doy=curDoy(),th=(((doy-80)*24/365.25+(h-12))%24+24)%24*Math.PI/12,f=LAT*Math.PI/180,sn=Math.sin(th),cs=Math.cos(th),sf=Math.sin(f),cf=Math.cos(f);
   sky.matrix.set(-sn,cs,0,cam.position.x, cf*cs,cf*sn,sf,cam.position.y, sf*cs,sf*sn,-cf,cam.position.z, 0,0,0,1);/* north celestial pole toward -z */sky.matrixWorldNeedsUpdate=true}
@@ -2791,7 +2833,8 @@ let SUNSW=1;const _fw=new THREE.Vector3();
 const faceCam=(g,d,k)=>{g.children[0].quaternion.copy(cam.quaternion);g.scale.setScalar(k*Math.max(_fw.dot(d),.25))};
 function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=clamp(cam.position.y/500,0,.4);HORIZON.constant=-(cam.position.y-160*dip)}   // (the horizon you see from up high is a little below eye level)
 /* ---- shooting stars + meteor showers: a small pool of glowing point-trails in the night sky ----
-   normal nights: one every ~25-50 s.  About 1 night in 4 is a shower: bursts of streaks from a radiant, one every ~2-5 s, with lulls between.
+   Every device works out the SAME streaks from the real clock (nothing is sent over the network), so players together see the same ones at the same moments.
+   normal nights: one somewhere in the sky every ~15 s.  About 1 night in 4 is a shower: bursts of streaks from a radiant (16 s on, 14 s off).
    Rates ease up toward midnight and taper off toward dawn. ~1 in 30 is a slow bright fireball. */
 const MET_N=6,MET_T=16,metG=new THREE.Group();W.add(metG);
 const metPos=new Float32Array(MET_N*MET_T*3),metCol=new Float32Array(MET_N*MET_T*4),metSz=new Float32Array(MET_N*MET_T);
@@ -2804,35 +2847,42 @@ const metMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blendin
   fragmentShader:`varying vec4 vc;varying float vh;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(vc.rgb,vc.a*smoothstep(0.,22.,vh)*(1.-d*1.8));}`});
 {const o=new THREE.Points(metGeo,metMat);o.frustumCulled=false;o.renderOrder=-3;metG.add(o)}
 const MET=Array.from({length:MET_N},()=>({on:false,age:0,life:1,sp:.4,big:false,d:new THREE.Vector3(),t:new THREE.Vector3()}));
-const MS={t:10,shower:false,burst:0,nightOn:false,sayCd:0,rad:new THREE.Vector3()},_mc=new THREE.Vector3(),_mu=new THREE.Vector3(),_mr=new THREE.Vector3();
-const rndUnit=v=>v.set(Math.random()*2-1,Math.random()*2-1,Math.random()*2-1).normalize();
+const MS={k:0,q:[],shower:false,nightOn:false,sayCd:0,rad:new THREE.Vector3()},_mc=new THREE.Vector3(),_mu=new THREE.Vector3(),_mr=new THREE.Vector3();
+// a seeded random sequence (same seed -> same numbers on every device); Math.random() would give every player their own sky
+const mhash=(a,b)=>{let h=Math.imul(a^0x9e3779b9,0x85ebca6b)^Math.imul((b+0x7f4a7c15)|0,0xc2b2ae35);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;h=Math.imul(h,0x297a2d39);return(h^h>>>15)>>>0};
+const mrng=a=>()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296};
+const showerOn=n=>mhash(n,77)/4294967296<.25;                                        // 1 night in 4
+const nightId=()=>{const w=wall();return Math.floor(Date.UTC(w.y,w.mo-1,w.d,w.h,w.mi,w.s)/864e5-.5)};   // changes at noon, so a whole night has one id
+function radiantFor(n,out){const r=mrng(mhash(n,5)),el=(50+r()*20)*Math.PI/180,az=r()*6.283;return out.set(Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az))}
+// what, if anything, streaks across the sky during second k of night n. The same numbers are drawn in the same order whether or not there is a streak.
+function metEvent(k,n,pk){const r=mrng(mhash(k,n)),sh=showerOn(n),p=(sh?((k%30)<16?.29:0):.07)*(.7+.6*pk);
+  const u=r(),at=k*1000+r()*1000,big=r()<1/30,a=r(),b=r(),g=[r()*2-1,r()*2-1,r()*2-1],neg=r(),lf=r(),sp=r();
+  return u<p?{at,big,a,b,g,neg,lf,sp,sh,n}:null}
 function metSnd(big,vol){if(!AC||mute||AC.state!=='running')return;const t=AC.currentTime,dur=big?1.7:.75,n=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
   n.buffer=A.wn;n.loop=true;f.type='bandpass';f.Q.value=1.2;f.frequency.setValueAtTime(5200,t);f.frequency.exponentialRampToValueAtTime(1400,t+dur);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime((big?.07:.035)*vol,t+dur*.2);g.gain.exponentialRampToValueAtTime(.0004,t+dur);n.connect(f);f.connect(g);g.connect(amb);n.start(t);n.stop(t+dur+.05);
   const o=AC.createOscillator(),og=AC.createGain();o.type='sine';o.frequency.setValueAtTime(2700,t);o.frequency.exponentialRampToValueAtTime(3600,t+.35);
   og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.012*vol,t+.02);og.gain.exponentialRampToValueAtTime(.0003,t+.5);o.connect(og);og.connect(amb);o.start(t);o.stop(t+.55)}
-function metSpawn(big){const m=MET.find(q=>!q.on);if(!m)return;cam.getWorldDirection(_mc);
-  let ok=false;
-  for(let i=0;i<8&&!ok;i++){
-    if(MS.shower){const a=(8+Math.random()*28)*Math.PI/180;rndUnit(_mu).cross(MS.rad).normalize();   // start = radiant moved a bit sideways, travelling straight away from it
-      m.d.copy(MS.rad).multiplyScalar(Math.cos(a)).addScaledVector(_mu,Math.sin(a));m.t.copy(MS.rad).multiplyScalar(-Math.sin(a)).addScaledVector(_mu,Math.cos(a))}
-    else{if(Math.random()<.65){m.d.copy(_mc).addScaledVector(rndUnit(_mr),.7).normalize()}else{const el=(18+Math.random()*55)*Math.PI/180,az=Math.random()*6.283;m.d.set(Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az))}
-      rndUnit(_mu).cross(m.d).normalize();if(_mu.y>0&&Math.random()<.8)_mu.negate();m.t.copy(_mu)}
-    ok=m.d.y>.22}                                                                                // start well above the horizon
-  if(!ok)return;
-  m.big=big;m.age=0;m.life=big?1.6+Math.random()*.6:.6+Math.random()*.45;m.sp=big?.18+Math.random()*.08:.3+Math.random()*.2;m.on=true;
-  const vis=m.d.dot(_mc)>.3;
+function metSpawn(e){const m=MET.find(q=>!q.on);if(!m)return;
+  if(e.sh){const rad=radiantFor(e.n,_mr),al=(8+e.a*28)*Math.PI/180;_mu.set(e.g[0],e.g[1],e.g[2]).normalize().cross(rad).normalize();   // start = radiant moved a bit sideways, travelling straight away from it
+    m.d.copy(rad).multiplyScalar(Math.cos(al)).addScaledVector(_mu,Math.sin(al));m.t.copy(rad).multiplyScalar(-Math.sin(al)).addScaledVector(_mu,Math.cos(al))}
+  else{const el=(18+e.a*55)*Math.PI/180,az=e.b*6.283;m.d.set(Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az));
+    _mu.set(e.g[0],e.g[1],e.g[2]).normalize().cross(m.d).normalize();if(_mu.y>0&&e.neg<.8)_mu.negate();m.t.copy(_mu)}
+  if(!(m.d.y>.22)||!isFinite(m.t.x+m.t.y+m.t.z))return;                                          // start well above the horizon
+  const big=e.big;m.big=big;m.age=0;m.life=big?1.6+e.lf*.6:.6+e.lf*.45;m.sp=big?.18+e.sp*.08:.3+e.sp*.2;m.on=true;
+  cam.getWorldDirection(_mc);const vis=m.d.dot(_mc)>.3;   // (what only I notice stays mine: the sound, and my friend's remark)
   if(vis){metSnd(big,big?1:.8);if(MS.sayCd<=0&&FR.sayT<=0&&Math.random()<(big?.7:MS.shower?.2:.4)){FR.say='Shooting star! Make a wish ✨';FR.sayT=3.6;MS.sayCd=25}}}
 function meteorTick(dt){
   metMat.uniforms.pr.value=pixelRatio();MS.sayCd-=dt;
-  const night=nt>.6&&HQ;
-  if(night&&!MS.nightOn){MS.nightOn=true;MS.shower=Math.random()<.25;MS.burst=MS.shower?4:0;MS.t=3+Math.random()*6;
-    if(MS.shower){const el=(50+Math.random()*20)*Math.PI/180,az=Math.random()*6.283;MS.rad.set(Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az));toast('','Meteor shower tonight 🌠',true)}}
+  const night=nt>.6&&HQ,n=nightId();
+  if(night&&!MS.nightOn){MS.nightOn=true;MS.shower=showerOn(n);if(MS.shower){radiantFor(n,MS.rad);toast('','Meteor shower tonight 🌠',true)}}
   else if(nt<.3)MS.nightOn=false;
-  if(night){MS.t-=dt;if(MS.t<=0){const h=(simH+12)%24,pk=Math.sin(Math.PI*clamp((h-6)/12,0,1));
-    metSpawn(Math.random()<1/30);
-    if(MS.shower){if(--MS.burst<=0){MS.burst=3+(Math.random()*4|0);MS.t=8+Math.random()*12}else MS.t=(2+Math.random()*3)/(.6+.8*pk)}
-    else MS.t=(25+Math.random()*25)/(.7+.6*pk)}}
+  if(night){const T=Date.now(),k1=Math.floor(T/1000);
+    if(!MS.k||k1-MS.k>5){MS.k=k1;MS.q.length=0}                                                  // just arrived (or the tab was asleep): start from now, don't replay the past
+    const h=(simH+12)%24,pk=Math.sin(Math.PI*clamp((h-6)/12,0,1));
+    while(MS.k<k1){MS.k++;const e=metEvent(MS.k,n,pk);if(e)MS.q.push(e)}
+    for(let i=MS.q.length-1;i>=0;i--){const e=MS.q[i];if(e.at<=T){MS.q.splice(i,1);if(T-e.at<350)metSpawn(e)}}}
+  else{MS.k=0;MS.q.length=0}
   let any=false;const fade=clamp(nt*2,0,1);
   MET.forEach((m,i)=>{const b=i*MET_T;
     if(m.on){m.age+=dt;if(m.age>=m.life)m.on=false;else any=true}
@@ -3459,7 +3509,7 @@ return{dbg,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,tex
 if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
 if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.style.cssText="position:fixed;left:8px;top:96px;z-index:60;margin:0;padding:6px 9px;background:rgba(20,18,30,.8);color:#d6ffe8;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;border-radius:8px;pointer-events:none;max-width:78vw;white-space:pre-wrap";document.body.appendChild(d);
   setInterval(()=>{const g=MP.dbg(),S=storage.session,A=storage.auth&&storage.auth.user();
-    d.textContent=['signed in: '+(A?'yes':'no (guest)'),'session: '+(S?S.state():'n/a'),'world: '+(g?(g.conn?'connected':'NOT connected'):'n/a'),
+    d.textContent=['signed in: '+(A?'yes':'no (guest)'),'session: '+(S?S.state():'n/a'),'world: '+(g?(g.conn?'connected':'NOT connected'):'n/a'),'game clock: '+(WTZ==='device'?'each device\'s own ('+TZ+')':WTZ)+(SET?'':' (not available)'),
       g&&g.pres?'presence updates in the last 30 s: '+g.pres.used+' of '+g.pres.max+' allowed'+(g.pres.waiting?', '+g.pres.waiting+' waiting':'')+'; times brought back: '+g.rc.n+(g.rc.last?' (last: '+g.rc.last+')':''):'',g?'server lists '+g.listed+' other(s); showing '+g.shown+' ('+g.withPos+' with a position)':'',...(g?g.peers.map(x=>'   '+x):[]),
       g&&g.drops.bad?'unusable position messages: '+g.drops.bad+' e.g. '+g.drops.last:'','my heading: '+P.rotation.y.toFixed(2)+' rad','saved state: '+PST].filter(Boolean).join('\n')},1000)}
 
