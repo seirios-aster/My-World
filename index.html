@@ -50,8 +50,12 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #tools.min>*:not(#bcar){display:none!important}
 #tools .txt{font-size:12px;letter-spacing:.02em}
 #clk{background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 9px;font:700 11px var(--body);font-variant-numeric:tabular-nums;box-shadow:var(--shadow);white-space:nowrap}
-@media (max-height:600px){
-  #tools{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;max-width:min(62vw,430px)}
+@media (max-height:600px){   /* a phone on its side: the buttons are one row, from the caret leftwards (as far as the full-screen button), and the caret stays put in the corner */
+  #tools{flex-direction:row;flex-wrap:nowrap;justify-content:flex-end;align-items:center;left:calc(64px + env(safe-area-inset-left,0px));padding-right:45px;gap:5px;overflow-x:auto;scrollbar-width:none;pointer-events:none}
+  #tools::-webkit-scrollbar{display:none}
+  #tools>*{pointer-events:auto;flex:0 0 auto}
+  #tools .round{width:36px;height:36px;font-size:16px}
+  #bcar{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px))}
   #clk{align-self:center}
 }
 @media (min-height:601px) and (max-height:720px){#tools{gap:5px}#tools .round{width:36px;height:36px;font-size:16px}#tools .txt{font-size:11px}}   /* small phones: the column clears the zoom buttons */
@@ -211,6 +215,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #map{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:140px;height:140px;border-radius:16px;border:3px solid var(--paper);box-shadow:var(--shadow);background:var(--paper-2)}
 #zoom{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
 #zoom .round{width:44px;height:44px;font-size:24px}
+#acts{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
+#acts .round{width:44px;height:44px}#acts svg{width:24px;height:24px}
 
 #panel{position:fixed;inset:0;background:var(--scrim);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
 #card{background:var(--paper);color:var(--ink);border-radius:20px;width:min(580px,100%);max-height:100%;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 50px rgba(20,16,40,.4);user-select:text;-webkit-user-select:text;box-sizing:border-box}
@@ -283,7 +289,6 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="tools">
   <button class="round" id="bcar" title="Hide or show the buttons" aria-label="Hide buttons" aria-expanded="true"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="round" id="bo" title="Character" aria-label="Character">🧑</button>
-  <button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit">🪑</button>
   <button class="round" id="bn" aria-label="Time of day">🕒</button>
   <button class="round" id="bs" title="Sound" aria-label="Sound">🔊</button>
   <button class="round" id="bc" title="Constellation lines and names - tap for stars only" aria-label="Constellation lines">✨</button>
@@ -352,6 +357,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 
 <div id="chat"><input id="chatin" maxlength="80" placeholder="Say something to everyone here…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button type="button" class="round em" id="chatem" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">🙂</button><button type="button" class="round" id="chatgo" aria-label="Send">➤</button><button type="button" class="round x" id="chatx" aria-label="Close">✕</button><div id="emopick" role="group" aria-label="Emoji"></div></div>
 <canvas id="map" width="280" height="280"></canvas>
+<div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
 <div id="zoom"><button class="round" id="zi" aria-label="Zoom in">+</button><button class="round" id="zo" aria-label="Zoom out">−</button></div>
 <div id="panel"><div id="card"><div id="hd"><h2 id="t"></h2><span><button class="ib" id="mx" title="Maximize" aria-label="Maximize">⤢</button><button class="ib" id="x" title="Close" aria-label="Close">✕</button></span></div><p id="d"></p><div id="viewer"><button class="nv" id="pv" aria-label="Previous">‹</button><div id="media"></div><div id="mload" role="status" aria-label="Loading"><i></i></div><button class="nv" id="nx" aria-label="Next">›</button><div id="mact"><button type="button" class="ma" id="macc" hidden></button><button type="button" class="ma" id="madd">📷 Add photo/video</button><button type="button" class="ma" id="mdel" aria-label="Remove photo or video" title="Remove">🗑</button></div><div id="mmsg" role="status"></div></div><div id="cap"></div><div id="thumbs"></div></div></div>
 
@@ -368,7 +374,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11e';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11f';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2449,7 +2455,7 @@ let yaw=0,pitch=.72,sid=null,lid=null,lp=null;
 // keys are tracked by physical key (e.code) so modifiers can't desync press/release; anything that can swallow a keyup clears input
 function clearInput(){for(const k in keys)keys[k]=false;sv={x:0,z:0};sid=null;st=null;lid=null;lp=null}
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.metaKey){clearInput();return}keys[e.code]=true;const k=(e.key||'').toLowerCase();
-  if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
+  if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(e.code==='Space'&&!open){e.preventDefault();if(!e.repeat)doJump()}if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
   if(e.key==='+'||e.key==='=')zm(.8);if(e.key==='-')zm(1.25)});
 addEventListener('keyup',e=>{if(e.target&&e.target.tagName==='INPUT')return;keys[e.code]=false;if(e.key==='Meta')clearInput()});
 addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput()});
@@ -3336,7 +3342,7 @@ const RIDE_SPEED=19,atRack=()=>!riding&&nearestBike(2.4)>=0;   // (name kept: tr
 const BIKENAMES=['teal','blue','orange'],BIKECOL=['#2bb3a3','#4a7bd8','#ff7a3d'];let bikeIdx=2;
 const nearestBike=(max=1e9)=>{let bi=-1,bd=max;PARKED.forEach((b,i)=>{if(!b.g.visible)return;const d=Math.hypot(P.position.x-b.g.position.x,P.position.z-b.g.position.z);if(d<bd){bd=d;bi=i}});return bi};
 const ridePose=p=>{p.body.position.set(0,p.rideY,p.rideZ);p.body.rotation.set(p.rideT,0,0)};   // sitting on the saddle, leaning forward to the bars
-function toggleBike(){if(riding){riding=false;myBike.g.visible=false;const b=PARKED[bikeIdx],h=b.home,x=P.position.x,z=P.position.z;
+function toggleBike(){JUMP.y=JUMP.v=0;if(riding){riding=false;myBike.g.visible=false;const b=PARKED[bikeIdx],h=b.home,x=P.position.x,z=P.position.z;
     if(Math.hypot(x-RACK.x,z-RACK.z)<4.4){b.g.position.set(h.x,h.y,h.z);b.g.rotation.y=h.ry}   // back at the rack: into its slot
     else{const f=P.rotation.y,bx=x+Math.cos(f)*1.2,bz=z-Math.sin(f)*1.2;b.g.position.set(bx,groundY(bx,bz),bz);b.g.rotation.y=f}   // anywhere else: parked right beside you
     b.g.visible=true;bodyG.position.set(0,0,0);bodyG.rotation.set(0,0,0)}
@@ -3353,13 +3359,22 @@ function sitPose(p,s,keepArm){const L=p.legs,arm=(x,z)=>p.arms.forEach((a,i)=>{i
   else if(s.kind==='swing'){const S=s.sw;lean(p,S.th,S.h-p.sy);L.forEach((l,i)=>{l.rotation.x=-1.0+.38*Math.cos(S.ph);l.rotation.z=(i?1:-1)*.05});arm(-2.9,.38)}   // on the swing: hands up on the ropes, legs out going forward, tucked coming back
   else{lean(p,0,s.h-p.sy);L.forEach((l,i)=>{l.rotation.x=-1.08;l.rotation.z=(i?1:-1)*.05});arm(-.42,.12)}}              // on a bench or a log: feet swinging, hands in the lap
 function standPose(p){p.body.position.set(0,0,0);p.body.rotation.set(0,0,0);p.legs.forEach(l=>l.rotation.z=0);p.arms.forEach((a,i)=>{a.rotation.x=0;a.rotation.z=(i?1:-1)*.12})}
-const bsit=$('bsit');
+// a hop of one fixed height, a little over the bridge rails (about 1.1 high), so you can hop over them (Space, or the button)
+const JUMP={y:0,v:0},JUMP_H=1.5,GRAV=26;
+function doJump(){if(sitting||riding||open||JUMP.y>0)return;JUMP.v=Math.sqrt(2*GRAV*JUMP_H);JUMP.y=.001}
+const bsit=$('bsit'),bjump=$('bjump');
+// plain one-colour icons (like the ones in games): a figure sitting down / standing up, and a jump arrow
+const ICON=b=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+b+'</svg>',
+  I_SIT=ICON('<circle cx="8" cy="5" r="2.3" fill="currentColor" stroke="none"/><path d="M8 8.6v6.2h7.6M15.6 14.8V21M8 11.2l5 2.6"/><path d="M4 21h5"/>'),
+  I_STAND=ICON('<circle cx="12" cy="4.6" r="2.3" fill="currentColor" stroke="none"/><path d="M12 8.2v7M7.8 10.6l4.2-1.6 4.2 1.6M12 15.2l-3 5.8M12 15.2l3 5.8"/>'),
+  I_JUMP=ICON('<path d="M12 17V5.5M6.5 11l5.5-5.5 5.5 5.5M7 21h10"/>');
+bsit.innerHTML=I_SIT;bjump.innerHTML=I_JUMP;
 function sitDown(){if(riding||open)return;const s=nearSeat();
   if(s){P.position.x=s.x;P.position.z=s.z;P.rotation.y=s.face;sitting=s;s.who='me'}else sitting={kind:'ground'};   // a seat close by: sit on it, facing the way it faces
-  bsit.textContent='🧍';bsit.title='Stand up · C'}
-function standUp(){if(!sitting)return;sitting.who=null;sitting=null;standPose(me);bsit.textContent='🪑';bsit.title='Sit down (on a bench or chair if one is close) · C'}
+  bsit.innerHTML=I_STAND;bsit.title='Stand up · C';JUMP.y=JUMP.v=0}
+function standUp(){if(!sitting)return;sitting.who=null;sitting=null;standPose(me);bsit.innerHTML=I_SIT;bsit.title='Sit down (on a bench or chair if one is close) · C'}
 const sitToggle=()=>sitting?standUp():sitDown();
-bsit.onclick=sitToggle;
+bsit.onclick=sitToggle;bjump.onclick=doJump;
 function buildRaceText(){const font=s=>'600 '+s+'px Fredoka, Nunito, system-ui, sans-serif';
   RACE_NUMS.forEach((m,i)=>{m.map=canvasTex(128,128,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='#fbfaf6';g.font=font(108);g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),w/2,h/2+6)});m.needsUpdate=true});
   [1.05,.72,.48].forEach((hh,i)=>{const col=['#d9a21b','#8f96a3','#b06a30'][i],H2=Math.round(hh*200);
@@ -3735,7 +3750,7 @@ function frame(){
     if(ok(nx,nz)){P.position.x=nx;P.position.z=nz}else if(ok(nx,P.position.z))P.position.x=nx;else if(ok(P.position.x,nz))P.position.z=nz;
     let dr=Math.atan2(dx,dz)-P.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));P.rotation.y+=dr*Math.min(1,dt*14);if(P.rotation.y>6.3||P.rotation.y<-6.3)P.rotation.y=wrapA(P.rotation.y)}
   if(!sitting)BL.forEach(b=>{const dx=P.position.x-b.x,dz=P.position.z-b.z,d=Math.hypot(dx,dz);if(d<b.r){P.position.x=b.x+dx/d*b.r;P.position.z=b.z+dz/d*b.r}});
-  if(!sitting)BLS.forEach(b=>{const ax=b.a[0],az=b.a[2],ex=b.b[0]-ax,ez=b.b[2]-az,t=clamp(((P.position.x-ax)*ex+(P.position.z-az)*ez)/(ex*ex+ez*ez),0,1),qx=ax+ex*t,qz=az+ez*t,dx=P.position.x-qx,dz=P.position.z-qz,d=Math.hypot(dx,dz);
+  if(!sitting&&JUMP.y<1.1)BLS.forEach(b=>{const ax=b.a[0],az=b.a[2],ex=b.b[0]-ax,ez=b.b[2]-az,t=clamp(((P.position.x-ax)*ex+(P.position.z-az)*ez)/(ex*ex+ez*ez),0,1),qx=ax+ex*t,qz=az+ez*t,dx=P.position.x-qx,dz=P.position.z-qz,d=Math.hypot(dx,dz);
     if(d<b.r&&d>1e-6){P.position.x=qx+dx/d*b.r;P.position.z=qz+dz/d*b.r}});   // bridge rails
   const moved=Math.hypot(P.position.x-ox,P.position.z-oz);
   // walk cycle (or pedalling, on a bike)
@@ -3745,7 +3760,8 @@ function frame(){
     myBike.crank.rotation.x=walkPh;myBike.wheels.forEach(w=>w.rotation.x+=moved/.62)}
   else{const sw=Math.sin(walkPh)*walkAmt;legs[0].rotation.x=sw*.65;legs[1].rotation.x=-sw*.65;arms[0].rotation.x=-sw*.55;arms[1].rotation.x=sw*.55}
   torso.scale.y=1+Math.sin(t*2.2)*.012*(1-walkAmt);
-  P.position.y=groundY(P.position.x,P.position.z)+(riding?0:Math.abs(Math.sin(walkPh))*.1*walkAmt);
+  if(JUMP.y>0){JUMP.v-=GRAV*dt;JUMP.y+=JUMP.v*dt;if(JUMP.y<=0){JUMP.y=0;JUMP.v=0}}   // (in the air)
+  P.position.y=groundY(P.position.x,P.position.z)+(riding?0:Math.abs(Math.sin(walkPh))*.1*walkAmt)+JUMP.y;
   if(sitting&&sitting.sw){const S=sitting.sw;P.position.x=S.x;P.position.z=S.z;P.position.y=groundY(S.x,S.z);P.rotation.y=sitting.face}   // riding the swing
   if(sitting)sitPose(me,sitting);
   frTick(dt);dogTick(dt);blinkTick(me,dt);blinkTick(fr,dt);MP.tick(dt,t);
