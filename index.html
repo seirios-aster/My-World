@@ -374,7 +374,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11m';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11n';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2966,7 +2966,7 @@ myname.addEventListener('change',saveMyName);myname.addEventListener('keydown',e
 const hasLook=u=>{try{return !!localStorage.getItem(LKEY(u))}catch(_){return false}};
 // the first time (no saved look on this device or in the account): pick the knight or the princess. Each starts with its own hair colour (black / white) and eyes.
 const DEFHAIR=()=>[0,HAIRC.length-1];
-function pairUp(){if(!CB||CB.genders<2)return;const g=1-(PPL[0].gender|0),f=PPL[1];if((f.gender|0)===g)return;if(f.hcol===DEFHAIR()[1-g])f.hcol=DEFHAIR()[g];f.gender=g;f.outfit=g?0:1;saveLook(1)}   // (a princess for a male you, the Dev hoodie for a female you)   // the friend is always the other gender from you (you pick yours; theirs follows)
+function pairUp(){if(!CB||CB.genders<2)return;const g=1-(PPL[0].gender|0),f=PPL[1],o=g?0:1;if((f.gender|0)===g&&f.outfit===o)return;if(f.gender!==g&&f.hcol===DEFHAIR()[1-g])f.hcol=DEFHAIR()[g];f.gender=g;f.outfit=o;saveLook(1)}   // the friend is always the other gender from you (you pick yours; theirs follows), and always in that gender's own look: the princess if she is a girl, the Dev if he is a boy
 function askCharacter(){if(!CB||CB.genders<2)return;const el=$('pick');if(!el.hidden)return;el.hidden=false;
   el.onclick=e=>{const b=e.target.closest('.pkc');if(!b)return;const g=+b.dataset.g;Object.assign(PPL[0],{gender:g,outfit:0,hcol:DEFHAIR()[g],eye:g?1:0});pairUp();el.hidden=true;dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);saveLook(0);refreshPeople()}}
 function applyMyLook(){const u=storage.auth&&storage.auth.user();let j=null;try{j=JSON.parse(localStorage.getItem(LKEY(u))||'null')}catch(_){}
