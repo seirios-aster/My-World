@@ -383,7 +383,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11u';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11v';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -3793,7 +3793,7 @@ function frame(){
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
-  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'🧍 Stand up'+(touch?'':'  ·  C'):nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
+  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'':nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
   pr.style.display=ptx&&!open?'block':'none';if(ptx&&pr.textContent!==ptx)pr.textContent=ptx;
   ringMat.opacity=.55+.3*Math.sin(t*2.4);
   // sky life
