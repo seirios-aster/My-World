@@ -56,6 +56,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 }
 @media (min-height:601px) and (max-height:720px){#tools{gap:5px}#tools .round{width:36px;height:36px;font-size:16px}#tools .txt{font-size:11px}}   /* small phones: the column clears the zoom buttons */
 #outfits{position:fixed;right:calc(60px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));background:var(--paper);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;box-shadow:var(--shadow);color:var(--ink);z-index:2;max-height:calc(100vh - 120px);overflow:auto;width:min(310px,calc(100vw - 84px - env(safe-area-inset-right,0px)));box-sizing:border-box}
+#oclose{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:50%;background:var(--paper-2);color:var(--ink);font:700 16px var(--body);cursor:pointer}
 #ohd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 6px 8px;border-bottom:2px solid var(--paper-2);margin-bottom:4px}
 #who{font:600 14px var(--display);white-space:nowrap}
 #swap{border:0;border-radius:999px;background:var(--paper-2);padding:6px 10px;font:700 12px var(--body);color:var(--ink);cursor:pointer;white-space:nowrap}
@@ -300,7 +301,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen">⛶</button>
 <div id="coords" title="Tap to copy"></div>
 <div id="lap" role="status" aria-live="polite"></div>
-<div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="swap"></button></div>
+<div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="swap"></button><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
       <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Gender</div><div class="chips" id="chgender"></div><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div><div class="lbl">Eye colour</div><div class="sws" id="sweye"></div></div>
@@ -366,7 +367,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11c';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11d';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2273,9 +2274,9 @@ const CFG=[
   outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO]},
  {id:'princess',S:1.55,EYEY:1.32,pre:/^PR_/,ARM:[[-.33,.80,0],[.33,.80,0]],LEG:[[-.12,.36,.02],[.12,.36,.02]],sy:.47,pv:.56,ride:[1.05,-.42,.22],
   head:['Blush','Brow','Ear','Eye','Hair','Head','Iris','Lash','LashA','Mouth','Nose','Pupil','Shine','Shine2',...TIARA],arm:['Cuff','Hand','Puff','Sleeve'],leg:['Leg','Shoe'],
-  skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},print:[0,.70,.255],
+  skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},recolor:{PR_Dress:'#fbf9ff',PR_Dress2:'#ebe6f5'},print:[0,.70,.255],
   dv:{body:[[.001,.34],[.26,.34],[.30,.39],[.31,.52],[.29,.70],[.25,.84],[.19,.93],[.001,.98]],hem:[.355,.29],pocket:[0,.5,.24],hood:[.955,.19],blob:[0,.99,-.17],str:[.05,.9,.16,.06,.68,.22],A:[.34,.84,0],B:[.43,.57,.02],ar:[.105,.088],la:[.12,.52,.02],lb:[.12,.13,.02],lr:[.095,.08],ph:{cx:.80,cy:1.30,bx:.78,by:.86}},
-  outfits:[{n:'Princess',ic:'👑',top:{c:0xb591e6},bot:{c:0x7d45be}},DEVO]}];
+  outfits:[{n:'Princess',ic:'👑',top:{c:0xfbf9ff},bot:{c:0xd5c9ee}},DEVO]}];
 const MC=new Map();   // merged meshes already made (the same for everyone), by name
 // the model's own geometry as plain (not interleaved) float attributes: just positions, normals and the index
 function plain(g){const o=new THREE.BufferGeometry();for(const k of ['position','normal']){const a=g.attributes[k],n=a.count,f=new Float32Array(n*3);for(let i=0;i<n;i++){f[i*3]=a.getX(i);f[i*3+1]=a.getY(i);f[i*3+2]=a.getZ(i)}o.setAttribute(k,new THREE.Float32BufferAttribute(f,3))}
@@ -2290,7 +2291,7 @@ function catalog(g,scene){const m=CFG[g];scene.updateMatrixWorld(true);const par
     const limb=m.head.includes(base)?'head':m.arm.includes(base)?'arm'+side:m.leg.includes(base)?'leg'+side:'torso';
     if(/^arm/.test(limb))geo.translate(-m.ARM[side][0],-m.ARM[side][1],-m.ARM[side][2]);else if(/^leg/.test(limb))geo.translate(-m.LEG[side][0],-m.LEG[side][1],-m.LEG[side][2]);
     if(role==='eye'||role==='eyefix'||role==='shine')geo.translate(0,-m.EYEY,0);
-    parts.push({base,side,limb,role,geo,rgb:mat.color.clone(),gl:GLOSS[mat.name]??.3})});
+    parts.push({base,side,limb,role,geo,rgb:m.recolor&&m.recolor[mat.name]?col(m.recolor[mat.name]):mat.color.clone(),gl:GLOSS[mat.name]??.3})});
   if(!parts.length||!skin||!hair)throw new Error('the '+m.id+' model has no parts');
   m.parts=parts;m.skinBase=skin;m.hairBase=hair}
 const rel=(c,b)=>new THREE.Color(Math.min(1.3,c.r/b.r),Math.min(1.3,c.g/b.g),Math.min(1.3,c.b/b.b));   // a colour relative to a base colour (skin and hair take the person's colour times this)
@@ -2871,6 +2872,10 @@ function refreshPeople(){const c=PPL[ctl];
   $('who').textContent='Playing as '+c.name;$('swap').textContent='👫 Be '+PPL[1-ctl].name;PV.show(c);
   if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
 $('bo').onclick=()=>{of.style.display=of.style.display==='flex'?'none':'flex';if(of.style.display==='flex')PV.start()};
+// the menu closes with its x, by tapping anywhere outside it, or with Escape
+const closeMenu=()=>{of.style.display='none'};$('oclose').onclick=closeMenu;
+document.addEventListener('pointerdown',e=>{if(of.style.display==='flex'&&!of.contains(e.target)&&!$('bo').contains(e.target))closeMenu()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&of.style.display==='flex')closeMenu()});
 $('swap').onclick=swapPeople;
 // ---- chat: send-only. Messages go to everyone who has the world open right now (nothing is stored or listed).
 // The sender sees a speech bubble over their character; everyone else gets a short-lived toast.
