@@ -16,13 +16,14 @@
   --hi:#fff1dc;           /* a picked card */
   --glass:rgba(255,250,240,.92);   /* floating pills over the world */
   --veil:rgba(242,234,219,.55);
+  --see:50%;              /* how solid the chat bar, messages and speech bubbles are (the rest is see-through) */
   --pvw:radial-gradient(ellipse at 50% 85%,#e6f3d9 0,#cfe6f2 70%);
   --shadow:0 4px 14px rgba(32,26,48,.28);
   --display:'Fredoka','Nunito',ui-rounded,system-ui,sans-serif;
   --body:'Nunito',ui-rounded,system-ui,sans-serif;
   color-scheme:light;
 }
-:root[data-theme=dark]{--paper:#262833;--paper-2:#363846;--ink:#f2f2f7;--ink-soft:#a9abbd;--scrim:rgba(0,0,0,.6);--shadow:0 3px 12px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.08);--field:#1c1e28;--hi:#3b3652;--glass:rgba(38,40,51,.92);--veil:rgba(28,30,40,.55);--pvw:radial-gradient(ellipse at 50% 85%,#2d3b36 0,#262c44 70%);color-scheme:dark}
+:root[data-theme=dark]{--see:35%;--paper:#262833;--paper-2:#363846;--ink:#f2f2f7;--ink-soft:#a9abbd;--scrim:rgba(0,0,0,.6);--shadow:0 3px 12px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.08);--field:#1c1e28;--hi:#3b3652;--glass:rgba(38,40,51,.92);--veil:rgba(28,30,40,.55);--pvw:radial-gradient(ellipse at 50% 85%,#2d3b36 0,#262c44 70%);color-scheme:dark}
 :root[data-theme=dark] .of i{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
 html,body{height:100%;margin:0;overflow:hidden;background:#a9d8f0;color:var(--ink);font-family:var(--body);user-select:none;-webkit-user-select:none}
 #world{position:fixed;inset:0;display:block;touch-action:none;outline:none}
@@ -287,6 +288,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #loading b{display:block;font:600 44px var(--display);color:#fff;text-shadow:0 2px 12px rgba(30,60,90,.35)}
 #loading span{font:700 15px var(--body);color:#2f5368}
 @media (prefers-reduced-motion:reduce){#loading,#hud{transition:none}}
+/* see-through chat bar, messages and speech bubbles (last, so it wins over their plain backgrounds) */
+#chat,.toast,#mysay,.rsay,#say{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
+#mysay::after,.rsay::after{border-top-color:color-mix(in srgb,var(--paper) var(--see),transparent)}
 </style>
 
 <div id="loading"><div><b>Tambayan</b><span id="loadmsg">Planting the trees…</span></div></div>
@@ -359,7 +363,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
  <div id="gnote">Your photos and videos stay private to your account.</div>
 </div></div>
 
-<div id="chat"><input id="chatin" maxlength="80" placeholder="Say something to everyone here…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button type="button" class="round em" id="chatem" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">🙂</button><button type="button" class="round" id="chatgo" aria-label="Send">➤</button><button type="button" class="round x" id="chatx" aria-label="Close">✕</button><div id="emopick" role="group" aria-label="Emoji"></div></div>
+<div id="chat"><input id="chatin" maxlength="80" placeholder="Say something to everyone here…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button type="button" class="round em" id="chatem" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">🙂</button><div id="emopick" role="group" aria-label="Emoji"></div></div>
 <canvas id="map" width="280" height="280"></canvas>
 <div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
 <div id="zoom"><button class="round" id="zi" aria-label="Zoom in">+</button><button class="round" id="zo" aria-label="Zoom out">−</button></div>
@@ -379,7 +383,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11q';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11r';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2941,7 +2945,6 @@ function sendChat(){const t=clean(chatIn.value).slice(0,80);if(!t||!room)return;
   closeChat()}
 $('bchat').onclick=()=>chatEl.style.display==='flex'?closeChat():openChat();
 cv.addEventListener('pointerdown',()=>{if(chatEl.style.display==='flex'&&!chatIn.value.trim())closeChat()});
-$('chatgo').onclick=sendChat;$('chatx').onclick=closeChat;
 chatIn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendChat()}else if(e.key==='Escape'){if(emoPick.classList.contains('on'))emoShow(false);else closeChat()}});
 let roomHooked=null;
 function useRoom(r){room=r;$('bchat').hidden=false;if(roomHooked===r)return;roomHooked=r;
