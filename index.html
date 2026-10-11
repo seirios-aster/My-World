@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta http-equiv="Cache-Control" content="no-cache"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Tambayan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -83,6 +83,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #mnl,#fnl{display:flex;flex-direction:column;gap:4px;padding:8px 6px 4px;margin-top:4px;border-top:2px solid var(--paper-2);font:700 12px var(--body);color:var(--ink-soft)}
 #myname,#fname{font:600 15px var(--display);border:2px solid var(--paper-2);border-radius:9px;padding:6px 8px;color:var(--ink);background:#fff;min-width:0;width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 #onames{display:flex;flex-direction:column}
+#obuild{font:600 11px/1.4 var(--body);opacity:.55;padding:8px 6px 0;margin-top:4px;border-top:2px solid var(--paper-2)}
 @media (max-height:600px){   /* a phone on its side: the preview stays beside the choices, and the names sit side by side */
   #outfits{width:min(560px,calc(100vw - 92px - env(safe-area-inset-right,0px)));max-height:calc(100vh - 56px)}
   #obody{flex-direction:row;align-items:flex-start}
@@ -307,7 +308,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
   <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
-  <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label></div></div>
+  <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
+  <div id="obuild"></div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
@@ -362,7 +364,8 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb'),get('models/princess/princess-chibi.glb')])})();
+const BUILD='2026-10-11b';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
 // Your places. media = a photo/video as a data: URI (leave it out for a placeholder tile)
@@ -2848,6 +2851,7 @@ const mkBtn=(cls,box)=>{const b=document.createElement('button');b.type='button'
 const swatches=(box,key,list)=>GRP[key]=list.map((it,i)=>{const b=mkBtn('sw',box);b.style.background=it[1];b.title=it[0];b.setAttribute('aria-label',it[0]);b.onclick=()=>setLook(key,i);return b});
 const chips=(box,key,names)=>GRP[key]=names.map((n,i)=>{const b=mkBtn('chip',box);b.textContent=n;b.onclick=()=>setLook(key,i);return b});
 chips($('chgender'),'gender',['Male','Female']);swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('sweye'),'eye',EYES);swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));
+$('obuild').textContent='Build '+BUILD+' · '+(CB?(CB.genders>1?'knight + princess':'knight only (the princess did not load)'):'older figures (the models did not load)');
 $('sweye').hidden=$('sweye').previousElementSibling.hidden=!CB;$('chgender').hidden=$('chgender').previousElementSibling.hidden=!(CB&&CB.genders>1);   // (eye colour and gender are only for the chibis)
 if(CB)['chface','chhair'].forEach(i=>{$(i).hidden=$(i).previousElementSibling.hidden=true});   // (the knight has the one face and the one hairstyle, so only colours to pick)
 GRP.outfit=OUTFITS.map((o,i)=>{const b=mkBtn('of',ofl);b.innerHTML='<b></b><span></span><i></i>';b.children[0].textContent=o.ic;b.children[1].textContent=o.n;
