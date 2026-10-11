@@ -2884,7 +2884,7 @@ function refreshPeople(){const c=PPL[ctl];
   if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)'});   // (the first outfit is the knight's armour or the princess's gown)
   Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
-  $('who').textContent='Playing as '+c.name;PV.show(c);
+  $('who').textContent=c.name;PV.show(c);
   if(document.activeElement!==dname)dname.value=dogName;if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
 $('bo').onclick=()=>{of.style.display=of.style.display==='flex'?'none':'flex';if(of.style.display==='flex')PV.start()};
 // the menu closes with its x, by tapping anywhere outside it, or with Escape
