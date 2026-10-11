@@ -370,11 +370,12 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {SVGLoader} from 'three/addons/loaders/SVGLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11j';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11k';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2266,7 +2267,7 @@ const PRINT=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createEl
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t}})();
 
 /* ---- the two models (the parts, pivots and Dev outfit of each; every person is built from one of them, by gender) ---- */
-const DEVO={n:'Dev',ic:'💻',top:{c:0x3b3f7a},bot:{c:0x4a5b7d}},TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
+const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
 // how shiny each of the models' materials is (metals are mirror-like; clearcoat leathers, hair, boots and eyes glossy; skin barely)
 const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9,
   PR_Dress:.35,PR_Dress2:.35,PR_Gem:.8,PR_Lace:.1,PR_Skin:.22,PR_Blush:.1,PR_Brow:.1,PR_Eye:.9,PR_Hair:.6,PR_Iris:.8,PR_Lash:.3,PR_Mouth:.3,PR_Nose:.25,PR_Shine:.3,PR_Silver:.88,PR_Pearl:.6,PR_Shoe:.6};
@@ -2311,20 +2312,29 @@ const eyeOf=(g,role)=>CFG[g].parts.filter(q=>q.role===role).map(q=>({geo:paint(q
 const fixedOf=(g,limb,dev)=>{const m=CFG[g];return m.parts.filter(q=>q.limb===limb&&q.role==='fixed'&&(!dev||m.dev[q.base])).map(q=>part(q.geo.clone(),dev?m.dev[q.base]:q.rgb,q.gl))};
 const hatOf=g=>CFG[g].parts.filter(q=>q.role==='hat').map(q=>part(q.geo.clone(),q.rgb,q.gl));
 /* ---- the Dev: a hoodie, pants and headphones (model units, then cut by limb) ---- */
-function devParts(g,limb){const m=CFG[g],d=m.dv,navy=0x3b3f7a,dark=cshade(navy,.78),out=[];
+// the GitHub mark (Octicons mark-github, 16x16), as flat shapes bent to follow the back of the hoodie
+const GHMARK=(()=>{let sh=null;return()=>{if(!sh)sh=SVGLoader.createShapes(new SVGLoader().parse('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>').paths[0]);return sh}})();
+function ghDecal(d,y,w){const g=new THREE.ShapeGeometry(GHMARK(),6),pr=d.body;let r=pr[pr.length-1][0];   // (the hoodie's radius at height y, from its profile)
+  for(let i=1;i<pr.length;i++)if(y<=pr[i][1]){const a=pr[i-1],b=pr[i],t=(y-a[1])/(b[1]-a[1]||1);r=a[0]+(b[0]-a[0])*Math.min(Math.max(t,0),1);break}
+  const k=w/16,xr=r,zr=r*.84,P=g.attributes.position;
+  for(let i=0;i<P.count;i++){const x=(P.getX(i)-8)*k,yy=(8-P.getY(i))*k;P.setXYZ(i,x,y+yy,-(zr*Math.sqrt(Math.max(1-(x*x)/(xr*xr),.04))+.012))}
+  g.computeVertexNormals();const N=g.attributes.normal;for(let i=0;i<N.count;i++)N.setXYZ(i,N.getX(i),N.getY(i),-Math.abs(N.getZ(i)));   // (facing backwards)
+  const ix=g.index;for(let i=0;i<ix.count;i+=3){const t=ix.getX(i+1);ix.setX(i+1,ix.getX(i+2));ix.setX(i+2,t)}   // (and wound to face backwards)
+  return g}
+function devParts(g,limb){const m=CFG[g],d=m.dv,navy=0x25272e,dark=cshade(navy,.78),out=[];
   if(limb==='torso'){const e=lathe(d.body,44);e.scale(1,1,.84);out.push(part(e,navy));
     out.push(part(new THREE.TorusGeometry(d.hem[1],.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0],0),dark));
-    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));
+    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));out.push(part(ghDecal(d,.7,.2),0xeceef3,.05));
     out.push(part(new THREE.TorusGeometry(d.hood[1],.07,10,32).rotateX(Math.PI/2-.25).translate(0,d.hood[0],-.02),navy),part(ellG(.23,.15,.12,d.blob),navy));
     [-1,1].forEach(s=>out.push(part(tube([s*d.str[0],d.str[1],d.str[2]],[s*d.str[3],d.str[4],d.str[5]],.016,.016,8),'#f2f2f2')))}
   if(/^arm/.test(limb)){const i=limb==='arm0'?0:1,s=i?1:-1,A=[s*d.A[0],d.A[1],d.A[2]],B=[s*d.B[0],d.B[1],d.B[2]];
     out.push(part(tube(A,B,d.ar[0],d.ar[1]),navy),part(ellG(d.ar[0],d.ar[0],d.ar[0],A),navy),part(ringAt(B,[B[0]-A[0],B[1]-A[1],B[2]-A[2]],d.ar[1]+.001,.022),dark));
     out.forEach(q=>q.geo.translate(-m.ARM[i][0],-m.ARM[i][1],-m.ARM[i][2]))}
   if(/^leg/.test(limb)){const i=limb==='leg0'?0:1,s=i?1:-1,P=m.LEG[i];
-    out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),0x4a5b7d));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
+    out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),0x383b47));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
   return out}
-// headphones: yellow cups, a dark band over the hair
-function phonesParts(g){const p=CFG[g].dv.ph,y=0xf5c542,d=0x2b2b36,o=[];
+// headphones: silver cups, a dark band over the hair
+function phonesParts(g){const p=CFG[g].dv.ph,y=0xc4c8d2,d=0x2b2b36,o=[];
   [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
   const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
 
