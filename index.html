@@ -83,6 +83,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #mnl,#fnl{display:flex;flex-direction:column;gap:4px;padding:8px 6px 4px;margin-top:4px;border-top:2px solid var(--paper-2);font:700 12px var(--body);color:var(--ink-soft)}
 #myname,#fname{font:600 15px var(--display);border:2px solid var(--paper-2);border-radius:9px;padding:6px 8px;color:var(--ink);background:#fff;min-width:0;width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 #onames{display:flex;flex-direction:column}
+#pick{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(20,24,40,.55);padding:16px;box-sizing:border-box}#pkbox{background:var(--paper);color:var(--ink);border-radius:20px;padding:22px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow)}#pkbox h2{margin:0 0 4px;font:700 22px var(--display)}#pkbox p{margin:0 0 14px;font:600 14px var(--body);opacity:.7}#pkrow{display:flex;gap:12px}.pkc{flex:1;border:3px solid transparent;border-radius:16px;background:var(--paper-2);padding:14px 8px;cursor:pointer;font:700 17px var(--body);color:var(--ink);display:flex;flex-direction:column;gap:2px;align-items:center}.pkc b{font-size:44px}.pkc small{opacity:.6;font-weight:600}.pkc:hover,.pkc:focus-visible{border-color:var(--sun)}
 #obuild{font:600 11px/1.4 var(--body);opacity:.55;padding:8px 6px 0;margin-top:4px;border-top:2px solid var(--paper-2)}
 @media (max-height:600px){   /* a phone on its side: the preview stays beside the choices, and the names sit side by side */
   #outfits{width:min(560px,calc(100vw - 92px - env(safe-area-inset-right,0px)));max-height:calc(100vh - 56px)}
@@ -312,6 +313,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <div id="obuild"></div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
+<div id="pick" role="dialog" aria-modal="true" aria-labelledby="pktitle" hidden><div id="pkbox"><h2 id="pktitle">Choose your character</h2><p>You can change it any time in the character menu.</p><div id="pkrow"><button type="button" class="pkc" data-g="0"><b>⚔️</b><span>Knight</span><small>Male</small></button><button type="button" class="pkc" data-g="1"><b>👑</b><span>Princess</span><small>Female</small></button></div></div></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
 <svg class="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
  <defs>
@@ -364,7 +366,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11b';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11c';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -1984,7 +1986,7 @@ const mDark=new THREE.MeshBasicMaterial({color:'#1d1b22'}),mBlush=new THREE.Mesh
   mWhite=new THREE.MeshBasicMaterial({color:'#ffffff'}),mMouth=new THREE.MeshBasicMaterial({color:'#9c4a44'}),
   mIn=new THREE.MeshBasicMaterial({color:'#6b2b30'}),mTongue=new THREE.MeshBasicMaterial({color:'#ff8d8d'});
 const SKINS=[['Porcelain','#ffe3d0'],['Fair','#ffd9b3'],['Golden','#f1c27d'],['Tan','#e0ac84'],['Caramel','#c68642'],['Bronze','#a46a3c'],['Brown','#8d5524'],['Deep','#5e3a22']];
-const HAIRC=[['Black','#241c1c'],['Espresso','#3b2a20'],['Brown','#5e3622'],['Auburn','#9a4a24'],['Ginger','#c8602a'],['Honey','#d9a74a'],['Blonde','#ecd081'],['Platinum','#efe6d0'],['Silver','#a9aeb8'],['Rose','#f06d9b'],['Lilac','#a07ae0'],['Sky','#4f8fe8']];
+const HAIRC=[['Black','#241c1c'],['Espresso','#3b2a20'],['Brown','#5e3622'],['Auburn','#9a4a24'],['Ginger','#c8602a'],['Honey','#d9a74a'],['Blonde','#ecd081'],['Platinum','#efe6d0'],['Silver','#a9aeb8'],['Rose','#f06d9b'],['Lilac','#a07ae0'],['Sky','#4f8fe8'],['White','#f4f1ea']];
 const EYES=[['Black','#17110f'],['Brown','#7a4a2a'],['Hazel','#9a7a2e'],['Green','#3f9a5a'],['Teal','#2fa3a8'],['Blue','#3f7fd8'],['Violet','#8a5ad8'],['Rose','#d85a8a'],['Grey','#7a8494']];
 const hex6=n=>'#'+n.toString(16).padStart(6,'0'),shade=(c,f)=>new THREE.Color(c).multiplyScalar(f).getHex();
 // shared geometry: every person is built from the same few shapes
@@ -2364,7 +2366,7 @@ const OUTFITS=CB?CB.outfits[0]:OUT;   // how many outfits there are to pick from
 const makePerson=(parent=W)=>CB?CB.make(parent):makePersonLegacy(parent),dress=(p,c)=>p.cb?CB.dress(p,c):dressLegacy(p,c),showHat=(p,on)=>p.cb?CB.hat(p,on):showHatLegacy(p,on),
   blinkTick=(p,dt)=>p.cb?CB.tick(p,dt):blinkTickLegacy(p,dt);   // (called once a frame for everyone: blinks, and for the chibi bodies also turns the game's angles into bone rotations)
 // PPL[0] is you (named after your Google account), PPL[1] the friend; `ctl` is whichever one you are playing, the other one wanders
-const PPL=[{name:ME.name,skin:1,hair:0,hcol:0,face:0,outfit:0,eye:0,gender:0},{name:FRIEND.name,skin:0,hair:3,hcol:4,face:1,outfit:CB?0:6,eye:1,gender:CB&&CB.genders>1?1:0}];
+const PPL=[{name:ME.name,skin:1,hair:0,hcol:0,face:0,outfit:0,eye:0,gender:0},{name:FRIEND.name,skin:0,hair:3,hcol:CB?HAIRC.length-1:4,face:1,outfit:CB?0:6,eye:1,gender:CB&&CB.genders>1?1:0}];
 try{const n=localStorage.getItem('myworld.friend');if(n)PPL[1].name=n}catch(_){}
 try{const j=JSON.parse(localStorage.getItem('myworld.look.friend')||'null');if(Array.isArray(j))Object.assign(PPL[1],unpackLook(j))}catch(_){}
 let ctl=0;
@@ -2812,14 +2814,15 @@ function stateIn(s,u){const put=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}
   if(fn){PPL[1].name=fn;put('myworld.friend',fn)}
   applyMyName();applyMyLook();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople();restorePos(s)}
 async function syncState(){applyMyName();applyMyLook();   // (what this device remembers, straight away)
-  const A=storage.auth,u=A&&A.user();cloud=false;
+  const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;
   const local=()=>{let j=null;try{j=JSON.parse(localStorage.getItem(POSK(u))||'null')}catch(_){}restorePos(j)};
-  if(!u||!storage.profile){PST=u?'no cloud profile here':'guest: kept on this device only';local();return}
+  if(!u||!storage.profile){PST=u?'no cloud profile here':'guest: kept on this device only';local();if(!had)askCharacter();return}
   PST='reading your saved state...';let s;try{s=await storage.profile.load()}catch(_){s=undefined}
   if(!(A.user()&&A.user().id===u.id))return;   // (signed out, or switched, while it loaded)
   if(s===undefined){PST='CANNOT READ your saved state (see the [profile] message in the console)';local();return}   // can't be read (offline, or no table yet): this device's copy, and nothing written over theirs
   if(s&&typeof s==='object')stateIn(s,u);else local();
-  cloud=true;PST=s?'loaded':'nothing saved yet: creating your row';if(!s)touchState(true)}   // an account with nothing saved yet: save what you have
+  cloud=true;PST=s?'loaded':'nothing saved yet: creating your row';
+  if(!had&&!(s&&Array.isArray(s.look)))askCharacter();else if(!s)touchState(true)}   // an account with nothing saved yet: ask who they want to be (that choice is what gets saved), else save what you have
 const LKEY=u=>'myworld.look.'+(u&&u.id?u.id:'guest');   // how you look is remembered per account on this device (the friend's, for the browser)
 function saveLook(i){try{localStorage.setItem(i===0?LKEY(storage.auth&&storage.auth.user()):'myworld.look.friend',JSON.stringify(packLook(PPL[i])))}catch(_){}touchState()}
 // the preview: its own little renderer (made the first time the menu opens), so you can see your face and turn around to see your back
@@ -2846,7 +2849,8 @@ const PV=(()=>{const cv=$('pvcv'),wrap=$('pvw');let R,sc,cam,rig,run=0,last=0,ya
 const STATUS=[['Active','🟢'],['AFK','🕒'],['Asleep','💤'],['Working','💻']];let MYST=0;
 function setTag(el,name,st){el.textContent='';el.appendChild(document.createTextNode(name));const b=document.createElement('span');b.className=st?'sb':'sb dot';if(st)b.textContent=STATUS[st][1]+' '+STATUS[st][0];else b.title='Active';el.appendChild(b)}
 const GRP={};   // key -> its buttons, so the one you are wearing can be marked
-function setLook(key,i){const c=PPL[ctl];if(c[key]===i)return;c[key]=i;dress(me,c);saveLook(ctl);refreshPeople()}
+function setLook(key,i){const c=PPL[ctl];if(c[key]===i)return;c[key]=i;if(key==='gender'&&c.hcol===DEFHAIR()[1-i])c.hcol=DEFHAIR()[i];   // (the hair colour follows, if it was still the other one's default)
+  dress(me,c);saveLook(ctl);refreshPeople()}
 const mkBtn=(cls,box)=>{const b=document.createElement('button');b.type='button';b.className=cls;box.appendChild(b);return b};
 const swatches=(box,key,list)=>GRP[key]=list.map((it,i)=>{const b=mkBtn('sw',box);b.style.background=it[1];b.title=it[0];b.setAttribute('aria-label',it[0]);b.onclick=()=>setLook(key,i);return b});
 const chips=(box,key,names)=>GRP[key]=names.map((n,i)=>{const b=mkBtn('chip',box);b.textContent=n;b.onclick=()=>setLook(key,i);return b});
@@ -2936,8 +2940,13 @@ function applyMyName(){const u=storage.auth&&storage.auth.user();let v='';try{v=
 const saveMyName=()=>{const u=storage.auth&&storage.auth.user(),v=myname.value.replace(/\s+/g,' ').trim().slice(0,16);
   try{if(v)localStorage.setItem(NK(u),v);else localStorage.removeItem(NK(u))}catch(_){}applyMyName();touchState()};
 myname.addEventListener('change',saveMyName);myname.addEventListener('keydown',e=>{if(e.key==='Enter'){saveMyName();myname.blur()}else if(e.key==='Escape')myname.blur()});
+const hasLook=u=>{try{return !!localStorage.getItem(LKEY(u))}catch(_){return false}};
+// the first time (no saved look on this device or in the account): pick the knight or the princess. Each starts with its own hair colour (black / white) and eyes.
+const DEFHAIR=()=>[0,HAIRC.length-1];
+function askCharacter(){if(!CB||CB.genders<2)return;const el=$('pick');if(!el.hidden)return;el.hidden=false;
+  el.onclick=e=>{const b=e.target.closest('.pkc');if(!b)return;const g=+b.dataset.g;Object.assign(PPL[0],{gender:g,outfit:0,hcol:DEFHAIR()[g],eye:g?1:0});el.hidden=true;dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);saveLook(0);refreshPeople()}}
 function applyMyLook(){const u=storage.auth&&storage.auth.user();let j=null;try{j=JSON.parse(localStorage.getItem(LKEY(u))||'null')}catch(_){}
-  if(Array.isArray(j)){Object.assign(PPL[0],unpackLook(j));dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople()}else if(u)saveLook(0)}   // (an account with no saved look keeps the one you have)
+  if(Array.isArray(j)){Object.assign(PPL[0],unpackLook(j));dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople()}}   // (an account with no saved look keeps the one you have; a first-timer is asked who they want to be, and that is saved)
 applyMyName();applyMyLook();
 storage.ready.then(syncState);if(storage.auth)storage.auth.onChange(()=>syncState());
 if(storage.session)storage.session.onChange(()=>{if(storage.session.active())flushState()});   // (a save held back while this tab was still checking for another session)   // signed in (or out): take that account's state
