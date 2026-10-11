@@ -47,7 +47,6 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 #bo img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-#swap[hidden]{display:none}
 #bcar svg{transition:transform .25s}#tools.min #bcar svg{transform:rotate(180deg)}
 #tools.min>*:not(#bcar){display:none!important}
 #tools .txt{font-size:12px;letter-spacing:.02em}
@@ -64,7 +63,6 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #oclose{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:50%;background:var(--paper-2);color:var(--ink);font:700 16px var(--body);cursor:pointer}
 #ohd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 6px 8px;border-bottom:2px solid var(--paper-2);margin-bottom:4px}
 #who{font:600 14px var(--display);white-space:nowrap}
-#swap{border:0;border-radius:999px;background:var(--paper-2);padding:6px 10px;font:700 12px var(--body);color:var(--ink);cursor:pointer;white-space:nowrap}
 #obody,#octl{display:flex;flex-direction:column;gap:8px}
 #pvw{position:relative;height:176px;flex:none;border-radius:12px;overflow:hidden;touch-action:none;background:radial-gradient(ellipse at 50% 85%,#e6f3d9 0,#cfe6f2 70%)}
 #pvcv{width:100%;height:100%;display:block;cursor:grab}
@@ -307,7 +305,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen">⛶</button>
 <div id="coords" title="Tap to copy"></div>
 <div id="lap" role="status" aria-live="polite"></div>
-<div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="swap"></button><button type="button" id="oclose" aria-label="Close">✕</button></div>
+<div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
       <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Gender</div><div class="chips" id="chgender"></div><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div><div class="lbl">Eye colour</div><div class="sws" id="sweye"></div></div>
@@ -376,7 +374,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11l';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11m';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2418,7 +2416,7 @@ function frGoSit(b){const os=b.opts.filter(o=>!(o.seat&&o.seat.who));if(!os.leng
   FR.goSit=o;FR.goB=b;FR.path=o.path.map(p=>[p[0],p[1]]);FR.k=0;FR.exit=[...o.path.slice(0,-1).reverse(),TG.N[b.n].slice()];return true}   // exit: back out the way she came
 const FR={mode:'idle',path:[],k:0,wait:4,greet:0,cool:3,prev:'idle',dest:-1,ph:0,amt:0,say:'',sayT:0,chk:0,cx:0,cz:0};
 let frOn=true;   // the friend is only there while you are the only one online
-function frShow(on){frOn=on;fr.root.visible=on;$('swap').hidden=!on;frUnseat();FR.exit=null;Object.assign(FR,{mode:'idle',wait:2.5,cool:4,sayT:0});
+function frShow(on){frOn=on;fr.root.visible=on;frUnseat();FR.exit=null;Object.assign(FR,{mode:'idle',wait:2.5,cool:4,sayT:0});
   if(on){const q=P.position,f=[[3.2,-2.4],[-3.2,-2.4],[0,-3.6],[0,3.6]].find(o=>walkable(q.x+o[0],q.z+o[1]));if(f)fr.root.position.set(q.x+f[0],groundY(q.x+f[0],q.z+f[1]),q.z+f[1]);DOG.reset=1}}   // (and she comes back beside you)
 function frUnseat(){if(FR.sit!=null){FR.sit=null;standPose(fr)}if(FR.seat){FR.seat.who=null;FR.seat=null}FR.goSit=null}
 function frPlan(){frUnseat();const ex=FR.exit||[];FR.exit=null;const q=fr.root.position,here=ex.length?TG.near(...ex[ex.length-1]):TG.near(q.x,q.z);let opts=HANG.filter(h=>h.n!==FR.dest);
@@ -2457,10 +2455,6 @@ function frTick(dt){const q=fr.root.position,pp=P.position,dP=Math.hypot(pp.x-q.
   fr.arms[1].rotation.z=FR.mode==='greet'?2.5+Math.sin(t*12)*.35:.12;if(FR.mode==='greet')fr.arms[1].rotation.x=0;
   q.y=groundY(q.x,q.z)+Math.abs(Math.sin(FR.ph))*.1*FR.amt;
   if(FR.sit!=null&&(FR.mode==='idle'||FR.mode==='greet')){if(FR.seat)fr.root.rotation.y=FR.seat.face;sitPose(fr,FR.seat||{kind:'ground'},FR.mode==='greet')}}   // sitting on the sand (she still waves)
-// swap who you play: you take over the other person (and their spot); the one you leave carries on wandering
-function swapPeople(){if(riding)toggleBike();if(LAP.on)cancelLap('Lap cancelled: you swapped');standUp();frUnseat();FR.exit=null;
-  ctl=1-ctl;dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);const a=P.position.clone(),r=P.rotation.y;P.position.copy(fr.root.position);P.rotation.y=fr.root.rotation.y;
-  fr.root.position.copy(a);fr.root.rotation.y=r;Object.assign(FR,{mode:'idle',wait:2.5,cool:4,sayT:0});DOG.reset=1;refreshPeople()}
 
 
 /* =========================== INPUT =========================== */
@@ -2800,7 +2794,7 @@ mdel.onclick=async()=>{if(mbusy||!cur)return;const s=cur,i=ci,it=s.items[i];if(!
   try{await storage.remove(it.mid);applyRec(it,null);msg('')}catch(e){msg(e&&e.message||"Couldn't remove it",true)}
   mbusy=false;if(cur===s)refreshItem(i)};
 
-// the character menu: skin, face, hair and outfit for whoever you are playing (the outfit is clothes only), swap who you play, and the names
+// the character menu: skin, face, hair and outfit for whoever you are playing (the outfit is clothes only), and the names
 const of=$('outfits'),ofl=$('oflist'),fname=$('fname'),myname=$('myname'),tagP=$('tagP'),tagN=$('tagN'),tagD=$('tagD'),dname=$('dname'),sayEl=$('say');let dogName=DOGDEF;try{dogName=localStorage.getItem('myworld.dog')||DOGDEF}catch(_){}tagD.textContent=dogName;   // (the dog's name: yours to change)
 /* ---- your state follows your account: look, names, the friend, who you play and where you stand. This device keeps a copy (so a guest, or no network, still gets it back);
    a signed-in account also keeps it in the cloud, so a new device or a cleared browser starts where you left off. Nothing is written to the cloud until what is saved there
@@ -2823,7 +2817,6 @@ setInterval(()=>savePos(false),5000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){savePos(true);flushState()}});addEventListener('pagehide',()=>{savePos(true);flushState()});
 // back to where you were, once per visit: only onto ground that can be walked on, and the friend beside you
 function restorePos(src){if(posDone)return;posDone=true;if(!src||typeof src!=='object')return;
-  if((src.ctl===0||src.ctl===1)&&src.ctl!==ctl)swapPeople();
   const q=src.pos;if(!q||![q.x,q.z,q.r].every(Number.isFinite)||!walkable(q.x,q.z))return;
   P.position.set(q.x,groundY(q.x,q.z),q.z);P.rotation.y=wrapA(q.r);
   const f=[[3.2,-2.4],[-3.2,-2.4],[0,-3.6],[0,3.6]].find(o=>walkable(q.x+o[0],q.z+o[1]));
@@ -2887,18 +2880,18 @@ const stBtns=STATUS.map((s,i)=>{const b=mkBtn('chip',$('chstat'));b.textContent=
 const TABS=['face','hair','out'];
 function tab(n){TABS.forEach(t=>{const on=t===n;$('t_'+t).classList.toggle('on',on);$('t_'+t).setAttribute('aria-selected',on);$('p_'+t).classList.toggle('on',on)});PV.focus(n)}
 TABS.forEach(t=>$('t_'+t).onclick=()=>tab(t));tab('out');
-function refreshPeople(){const c=PPL[ctl];if(CB&&CB.genders>1)$('chgender').hidden=$('chgender').previousElementSibling.hidden=ctl===1;   // (when you are the friend, your gender is the opposite of the other one's, so it isn't yours to change)
+function refreshPeople(){const c=PPL[ctl];
   if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)'});   // (the first outfit is the knight's armour or the princess's gown)
   Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
-  $('who').textContent='Playing as '+c.name;$('swap').textContent='👫 Be '+PPL[1-ctl].name;PV.show(c);
+  $('who').textContent='Playing as '+c.name;PV.show(c);
   if(document.activeElement!==dname)dname.value=dogName;if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
 $('bo').onclick=()=>{of.style.display=of.style.display==='flex'?'none':'flex';if(of.style.display==='flex')PV.start()};
 // the menu closes with its x, by tapping anywhere outside it, or with Escape
 const closeMenu=()=>{of.style.display='none'};$('oclose').onclick=closeMenu;
 document.addEventListener('pointerdown',e=>{if(of.style.display==='flex'&&!of.contains(e.target)&&!$('bo').contains(e.target))closeMenu()});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&of.style.display==='flex')closeMenu()});
-$('swap').onclick=swapPeople;
+
 // ---- chat: send-only. Messages go to everyone who has the world open right now (nothing is stored or listed).
 // The sender sees a speech bubble over their character; everyone else gets a short-lived toast.
 const chatEl=$('chat'),chatIn=$('chatin'),toasts=$('toasts'),mySay=$('mysay');let room=null,mySayUntil=0,lastSend=0;
@@ -3829,7 +3822,7 @@ if(HOMEP.redrawPlate)HOMEP.redrawPlate();buildSigns();buildSummitSign();buildRac
 // all but the ground, the people, Awaw, the bikes, the grass and the flowers
 {const skip=new Set([grass.material,flowers.material]);[me.root,fr.root,dog.root,myBike.g,...PARKED.map(b=>b.g)].forEach(r=>r.traverse(o=>{if(o.material)skip.add(o.material)}));
   W.traverse(o=>{if(!o.isMesh||o.userData.noOcc)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m&&m.isMeshStandardMaterial&&!skip.has(m))occFade(m)})})}
-window.__world={footstep,surfaceAt,AU:()=>({AC,master,amb,A,TUN}),DOG,dog,dogTick,petDog,dogNear,dogClear,HEARTS,OCC,homeLift,HOMELIFT,houseY,BL,BLS,crossWall,W,key,water,EAGLE,SWING,SUNPT,SUNSETWAY,SUNOPTS,frGoSit,LH2,LH2X,EBP,EBWAY,ISL,RAMP,BARP,LHWAY,LHTOP,isletH,barH,polyNear,SEATS,LHS,BOATS,westD,sitDown,standUp,sitToggle,sitState:()=>sitting,nearSeat,GYM,CT,LH,PIER,LHX,GYMP,VB,SPOTS,platY,birds,FITWAY,SANDWAY,MILLWAY,wheelView,nearFalls,HOME,HOMEWAY,YARD,WALLS,HOMEP,LAKE,BRIDGES,PADS,frTick,fr,FR,PPL,swapPeople,TG,WHEEL,wheelG,R1,RROCKS,nearR,lapTick,groundAt,TREES,ROCKS,TRK,trkProj,trkPt,sdTrack,LAP,best,toggleBike,riding:()=>riding,PLATS,POD,RACK,LSRC,POOL,PARKED,CROWD,inWorld,RIV,RWL,RW,iFall,iLake,BRIDGE,riverNear,inRiver,deckY,groundY,LANTS,LAMPPOS,P,H,slope:slopeAt,ROUTES,PEAKS,TRAIL,walkable,zoom:z=>{zoom=z;zs=z},look:(y,p)=>{yaw=y;pitch=p},setTime:h=>{simH=h;setTm(2)},state:()=>({yaw,pitch,nt,simH,HQ})};
+window.__world={footstep,surfaceAt,AU:()=>({AC,master,amb,A,TUN}),DOG,dog,dogTick,petDog,dogNear,dogClear,HEARTS,OCC,homeLift,HOMELIFT,houseY,BL,BLS,crossWall,W,key,water,EAGLE,SWING,SUNPT,SUNSETWAY,SUNOPTS,frGoSit,LH2,LH2X,EBP,EBWAY,ISL,RAMP,BARP,LHWAY,LHTOP,isletH,barH,polyNear,SEATS,LHS,BOATS,westD,sitDown,standUp,sitToggle,sitState:()=>sitting,nearSeat,GYM,CT,LH,PIER,LHX,GYMP,VB,SPOTS,platY,birds,FITWAY,SANDWAY,MILLWAY,wheelView,nearFalls,HOME,HOMEWAY,YARD,WALLS,HOMEP,LAKE,BRIDGES,PADS,frTick,fr,FR,PPL,TG,WHEEL,wheelG,R1,RROCKS,nearR,lapTick,groundAt,TREES,ROCKS,TRK,trkProj,trkPt,sdTrack,LAP,best,toggleBike,riding:()=>riding,PLATS,POD,RACK,LSRC,POOL,PARKED,CROWD,inWorld,RIV,RWL,RW,iFall,iLake,BRIDGE,riverNear,inRiver,deckY,groundY,LANTS,LAMPPOS,P,H,slope:slopeAt,ROUTES,PEAKS,TRAIL,walkable,zoom:z=>{zoom=z;zs=z},look:(y,p)=>{yaw=y;pitch=p},setTime:h=>{simH=h;setTm(2)},state:()=>({yaw,pitch,nt,simH,HQ})};
 frame();
 </script>
 
