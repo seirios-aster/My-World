@@ -289,7 +289,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #loading span{font:700 15px var(--body);color:#2f5368}
 @media (prefers-reduced-motion:reduce){#loading,#hud{transition:none}}
 /* see-through chat bar, messages and speech bubbles (last, so it wins over their plain backgrounds) */
-#chat,.toast,#mysay,.rsay,#say{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
+#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#vol{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
 #mysay::after,.rsay::after{border-top-color:color-mix(in srgb,var(--paper) var(--see),transparent)}
 </style>
 
@@ -383,7 +383,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11t';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11u';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -1231,10 +1231,10 @@ const HOMEP={};   // where the little things are (for the coordinates panel)
 /* ---------------- places: plaza ring, post, floating sign, little props ---------------- */
 const ringMat=new THREE.MeshBasicMaterial({color:'#ffd23f',transparent:true,opacity:.8,depthWrite:false});
 const SIGNS=[],MARKS=[];
-function signTexture(s){const c=document.createElement('canvas');c.width=640;c.height=180;const g=c.getContext('2d');
-  g.fillStyle='rgba(40,30,60,.25)';g.beginPath();g.roundRect(10,14,620,154,44);g.fill();
-  g.fillStyle='#fffaf0';g.beginPath();g.roundRect(6,6,620,150,44);g.fill();
-  g.fillStyle='#2d2a35';g.font='600 72px Fredoka, Nunito, system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(s.emoji+' '+s.name,316,84);
+function signTexture(s){const dk=document.documentElement.dataset.theme==='dark',c=document.createElement('canvas');c.width=640;c.height=180;const g=c.getContext('2d');   // the banner follows the theme and is see-through like the other panels (50% solid light, 35% dark)
+  g.fillStyle='rgba(40,30,60,.18)';g.beginPath();g.roundRect(10,14,620,154,44);g.fill();
+  g.fillStyle=dk?'rgba(38,40,51,.35)':'rgba(255,250,240,.5)';g.beginPath();g.roundRect(6,6,620,150,44);g.fill();
+  g.fillStyle=dk?'#f2f2f7':'#2d2a35';g.font='600 72px Fredoka, Nunito, system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(s.emoji+' '+s.name,316,84);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}
 function buildSigns(){SPOTS.forEach(s=>{const y=H(s.x,s.z);
   const hug=(g,lift)=>{g.rotateX(-Math.PI/2);const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,H(s.x+p.getX(i),s.z+p.getZ(i))-y+lift);return g};
@@ -1245,7 +1245,7 @@ function buildSigns(){SPOTS.forEach(s=>{const y=H(s.x,s.z);
   const beam=new THREE.Mesh(new THREE.CylinderGeometry(.55,1.5,7,20,1,true),new THREE.MeshBasicMaterial({color:'#ffd23f',transparent:true,opacity:.16,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));beam.position.y=3.5;mk.add(beam);
   const disc=new THREE.Mesh(hug(new THREE.RingGeometry(.02,2.6,40,6),.08),new THREE.MeshBasicMaterial({color:'#ffd23f',transparent:true,opacity:.14,depthWrite:false,blending:THREE.AdditiveBlending}));mk.add(disc);
   MARKS.push({gem,core,beam,y:4.7});
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:signTexture(s),depthWrite:false}));sp.scale.set(8,2.25,1);sp.position.set(s.x,y+7.5,s.z);sp.renderOrder=3;W.add(sp);SIGNS.push({sp,y:y+7.5})})}
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:signTexture(s),depthWrite:false}));sp.scale.set(8,2.25,1);sp.position.set(s.x,y+7.5,s.z);sp.renderOrder=3;W.add(sp);SIGNS.push({sp,y:y+7.5,s})})}
 // beach umbrella + towel, hiking tent
 {const b=SPOTS[1],x=b.x+5.5,z=b.z+3.5,y=H(x,z);
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,4.8,6),std('#f5f0e6'));pole.position.set(x,y+2.4,z);pole.rotation.z=.12;pole.castShadow=true;W.add(pole);
@@ -2971,7 +2971,7 @@ tagN.onclick=()=>{of.style.display='flex';PV.start();const i=ctl===0?fname:mynam
 const NK=u=>'myworld.name.'+(u&&u.id?u.id:'guest');
 const authName=u=>(u&&(u.first||String(u.name||'').trim().split(/\s+/)[0]))||'';
 const USERIC=IC.user;
-{const b=$('bth'),set=d=>{if(d)document.documentElement.dataset.theme='dark';else delete document.documentElement.dataset.theme;b.innerHTML=d?IC.sun:IC.moon;b.title=d?'Light theme':'Dark theme';b.setAttribute('aria-label',b.title);try{localStorage.setItem('tambayan.theme',d?'dark':'light')}catch(_){}};
+{const b=$('bth'),set=d=>{if(d)document.documentElement.dataset.theme='dark';else delete document.documentElement.dataset.theme;b.innerHTML=d?IC.sun:IC.moon;b.title=d?'Light theme':'Dark theme';b.setAttribute('aria-label',b.title);SIGNS.forEach(o=>{if(o.s){o.sp.material.map.dispose();o.sp.material.map=signTexture(o.s);o.sp.material.needsUpdate=true}});try{localStorage.setItem('tambayan.theme',d?'dark':'light')}catch(_){}};
   set(document.documentElement.dataset.theme==='dark');b.onclick=()=>set(document.documentElement.dataset.theme!=='dark')}   // light or dark for the whole page (remembered on this device; light to begin with)
 function applyMyPhoto(u){const b=$('bcar'),p=(u&&/^https:\/\//.test(u.photo||''))?u.photo:'';if(b.dataset.ph===p)return;b.dataset.ph=p;if(!p){b.innerHTML=USERIC;return}const im=new Image();im.alt='';im.referrerPolicy='no-referrer';im.onerror=()=>{if(b.dataset.ph===p){b.dataset.ph='';b.innerHTML=USERIC}};im.onload=()=>{if(b.dataset.ph===p){b.textContent='';b.appendChild(im)}};im.src=p}
 function applyMyName(){const u=storage.auth&&storage.auth.user();applyMyPhoto(u);let v='';try{v=localStorage.getItem(NK(u))||''}catch(_){}
