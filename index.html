@@ -2200,17 +2200,28 @@ const S=1.55,TH=.014,EYEY=1.35;   // model units -> game units; outline thicknes
 const ARM=[[-.33,.87,0],[.33,.87,0]],LEG=[[-.23,.44,.04],[.23,.44,.04]];   // shoulder and hip pivots: [0] is the -x side (what the game calls arms[0] and legs[0])
 const ARMP=['UpperArm','Pauldron','PauldronRim','Lame1','Lame2','Vambrace','VambPlate','Glove','Fingers'],LEGP=['Tasset','Greave','Boot','BootCuff'],HEADP=['Head','Lid','Ear','Nose','Mouth','Hair','Brow','Eye','Shine','Shine2'];
 /* ---- colours and shading ---- */
+const ENVK={value:1},ENVSUN={value:new THREE.Vector3(.4,.8,.5)};   // shared by every material: how much light there is to reflect (day 1, night low) and where the sun is
 const col=c=>new THREE.Color(c),cshade=(c,k)=>col(c).multiplyScalar(k);
 const inkOf=(c,k=.42)=>{const o=col(c),h={};o.getHSL(h);o.setHSL(h.h,Math.min(1,h.s*1.05+.05),Math.max(.05,h.l*k));return o};   // the outline colour: the part's own colour, much darker (looks drawn, not black)
 const sm=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
 const RAMP=(()=>{const n=96,d=new Uint8Array(n*4);for(let i=0;i<n;i++){const x=i/(n-1),b=Math.round(Math.min(1,.60+.24*sm(.36,.46,x)+.16*sm(.66,.76,x))*255);d.set([b,b,b,255],i*4)}   // a soft 3-tone anime ramp
   const t=new THREE.DataTexture(d,n,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return t})();
+// gloss: a sky-and-ground picture to reflect (no texture: it is worked out per pixel from the reflection direction), a mirror-like reflection for metal (gloss above .7), a faint edge reflection and a glint of the sun for everything else
+const GLSL_ENV=`uniform float uEnvK;uniform vec3 uSun;varying float vGl;
+vec3 envCol(vec3 d){float y=d.y;vec3 sky=mix(vec3(.80,.88,.98),vec3(.34,.56,.92),smoothstep(0.,.9,y)),gnd=mix(vec3(.50,.46,.36),vec3(.14,.22,.10),smoothstep(0.,-.8,y));
+  return mix(gnd,sky,smoothstep(-.1,.1,y))+vec3(1.,.95,.85)*pow(max(dot(d,normalize(vec3(.35,.85,.4))),0.),12.)*.9;}
+`;
+const GLSL_GLOSS=`{vec3 rw=inverseTransformDirection(reflect(-vv,vn),viewMatrix);float ndv=clamp(dot(vn,vv),0.,1.),F=pow(1.-ndv,4.),metal=smoothstep(.68,.8,vGl);
+  float refl=mix(vGl*(.05+.5*F),.5+.42*F,metal)*uEnvK;vec3 tint=mix(vec3(1.),diffuseColor.rgb*1.5+.12,metal);
+  outgoingLight=mix(outgoingLight,envCol(rw)*tint,clamp(refl,0.,.9));
+  float gl=pow(max(dot(rw,normalize(uSun+vec3(0.,.15,0.))),0.),mix(70.,34.,metal))*vGl*uEnvK;outgoingLight+=vec3(1.,.96,.88)*gl*mix(1.1,.6,metal);}`;
 function toon(color,o={}){
   const m=new THREE.MeshToonMaterial({color:col(color),gradientMap:RAMP,map:o.map||null,transparent:!!o.transparent,opacity:o.opacity??1,vertexColors:!!o.vc});
   const rim=o.rim??.22,spec=o.spec??0,hy=o.hy||[-1.3,.95];
-  m.onBeforeCompile=sh=>{sh.uniforms.uRim={value:rim};sh.uniforms.uSpec={value:spec};
+  m.onBeforeCompile=sh=>{sh.uniforms.uRim={value:rim};sh.uniforms.uSpec={value:spec};sh.uniforms.uEnvK=ENVK;sh.uniforms.uSun=ENVSUN;
+    if(o.gl)sh.vertexShader=sh.vertexShader.replace('void main() {','attribute float gloss;varying float vGl;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n vGl=gloss;');
     if(o.hgrad)sh.vertexShader=sh.vertexShader.replace('void main() {','varying float vHY;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n vHY=position.y;');
-    sh.fragmentShader=sh.fragmentShader.replace('void main() {',(o.hgrad?'varying float vHY;\n':'')+'uniform float uRim;uniform float uSpec;\nvoid main() {')
+    sh.fragmentShader=sh.fragmentShader.replace('void main() {',(o.hgrad?'varying float vHY;\n':'')+(o.gl?GLSL_ENV:'')+'uniform float uRim;uniform float uSpec;\nvoid main() {')
       .replace('#include <opaque_fragment>',`
         vec3 vn=normalize(vNormal);vec3 vv=normalize(vViewPosition);
         float fr=pow(1.0-clamp(dot(vn,vv),0.0,1.0),2.4);
@@ -2218,31 +2229,34 @@ function toon(color,o={}){
         float band=smoothstep(.60,.68,vn.y)*(1.0-smoothstep(.78,.86,vn.y));
         outgoingLight+=uSpec*band*mix(vec3(1.0),diffuseColor.rgb*1.7,.4);
         ${o.hgrad?'outgoingLight*=mix(.74,1.06,smoothstep('+hy[0].toFixed(2)+','+hy[1].toFixed(2)+',vHY));':''}
+        ${o.gl?GLSL_GLOSS:''}
         #include <opaque_fragment>`)};
-  m.customProgramCacheKey=()=>'toon'+(o.hgrad?'H'+hy.join():'')+(o.vc?'V':'');
+  m.customProgramCacheKey=()=>'toon'+(o.hgrad?'H'+hy.join():'')+(o.vc?'V':'')+(o.gl?'G':'');
   m.userData.ink=o.ink?col(o.ink):inkOf(color,o.inkK);return m}
 // the inverted-hull outline: the same shape drawn inside out, pushed out along its normals (vc: the ink colour is in the vertices)
 function outlineMat(ink,th,vc){const m=new THREE.MeshBasicMaterial({color:ink,side:THREE.BackSide,vertexColors:!!vc});
   m.onBeforeCompile=sh=>{sh.uniforms.uTh={value:th};sh.vertexShader=sh.vertexShader.replace('void main() {','uniform float uTh;\nvoid main() {').replace('#include <begin_vertex>','#include <begin_vertex>\n transformed += normalize(normal) * uTh;')};m.customProgramCacheKey=()=>'outline';return m}
-const VCM=toon(0xffffff,{vc:true,spec:.22,rim:.18}),VCO=outlineMat(0xffffff,TH,true),WHITE=new THREE.MeshBasicMaterial({color:0xffffff});   // (shared by everyone: the colours are in the vertices)
+const VCM=toon(0xffffff,{vc:true,gl:true,rim:.12}),VCO=outlineMat(0xffffff,TH,true),WHITE=new THREE.MeshBasicMaterial({color:0xffffff});   // (shared by everyone: the colours are in the vertices)
 /* ---- shapes (model units) ---- */
 const lathe=(pts,seg=40)=>{const g=new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),seg);g.computeVertexNormals();return g};
 const ellG=(rx,ry,rz,p,seg=20)=>{const g=new THREE.SphereGeometry(1,seg,Math.round(seg*.7));g.scale(rx,ry,rz);return g.translate(p[0],p[1],p[2])};
 // a tapered tube from a to b (radius r0 at a, r1 at b)
 const tube=(a,b,r0,r1,seg=20)=>{const d=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]),g=new THREE.CylinderGeometry(r1,r0,d.length(),seg,1);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()));return g.translate((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2)};
 const ringAt=(p,dir,r,tube2)=>{const g=new THREE.TorusGeometry(r,tube2,10,32);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...dir).normalize()));return g.translate(p[0],p[1],p[2])};
-const paint=(g,c)=>{const k=col(c),n=g.attributes.position.count,a=new Float32Array(n*3);for(let i=0;i<n;i++){a[i*3]=k.r;a[i*3+1]=k.g;a[i*3+2]=k.b}g.setAttribute('color',new THREE.Float32BufferAttribute(a,3));return g};
-const wash=g=>{for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal'&&k!=='color')g.deleteAttribute(k);if(!g.attributes.normal)g.computeVertexNormals();return g};
+const paint=(g,c,gl=0)=>{const k=col(c),n=g.attributes.position.count,a=new Float32Array(n*3);for(let i=0;i<n;i++){a[i*3]=k.r;a[i*3+1]=k.g;a[i*3+2]=k.b}g.setAttribute('color',new THREE.Float32BufferAttribute(a,3));g.setAttribute('gloss',new THREE.Float32BufferAttribute(new Float32Array(n).fill(gl),1));return g};
+const wash=g=>{for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal'&&k!=='color'&&k!=='gloss')g.deleteAttribute(k);if(!g.attributes.normal)g.computeVertexNormals();return g};
 // parts [{geo (with a colour attribute), ink: Color}] -> one geometry (colours in the vertices) and one for its outline (the ink colours)
 function bake(list){const geos=list.map(q=>wash(q.geo.clone())),outs=list.map(q=>{const g=q.geo,o=new THREE.BufferGeometry(),n=g.attributes.position.count,a=new Float32Array(n*3);o.setAttribute('position',g.attributes.position);o.setAttribute('normal',g.attributes.normal);
     for(let i=0;i<n;i++){a[i*3]=q.ink.r;a[i*3+1]=q.ink.g;a[i*3+2]=q.ink.b}o.setAttribute('color',new THREE.Float32BufferAttribute(a,3));if(g.index)o.setIndex(g.index);return o});
   const ix=geos.every(g=>g.index),fix=g=>!ix&&g.index?g.toNonIndexed():g;return{geo:mergeGeometries(geos.map(fix)),ogeo:mergeGeometries(outs.map(fix))}}
-const part=(geo,c,k)=>({geo:paint(geo,c),ink:inkOf(c,k||.42)});   // (one coloured part, from a hex or a Color)
+const part=(geo,c,gl=.08,k)=>({geo:paint(geo,c,gl),ink:inkOf(c,k||.42)});   // (one coloured part, from a hex or a Color)
 /* ---- the print on the Dev's hoodie ---- */
 const PRINT=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createElement('canvas');cv.width=128;cv.height=96;const g=cv.getContext('2d');g.fillStyle='#f5c542';g.font='800 56px ui-monospace,Menlo,Consolas,monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('</>',64,52);
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t}})();
 
 /* ---- the model, cut into parts (once) ---- */
+// how shiny each of the model's materials is (metals are mirror-like; its clearcoat leathers, hair and boots glossy; skin barely)
+const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9};
 let PARTS=null,SKINBASE=null;const MC=new Map();   // MC: merged meshes already made (the same for everyone), by name
 function catalog(scene){scene.updateMatrixWorld(true);PARTS=[];const skin=new THREE.Color();
   scene.traverse(o=>{if(!o.isMesh||!o.geometry.attributes.position)return;const nm=o.name.replace(/^CK_/,'').replace(/\.\d+$/,''),side=/_L$/.test(nm)?0:/_R$/.test(nm)?1:-1,base=nm.replace(/_[LR]$/,''),m=o.material;
@@ -2251,7 +2265,7 @@ function catalog(scene){scene.updateMatrixWorld(true);PARTS=[];const skin=new TH
     const limb=HEADP.includes(base)?'head':ARMP.includes(base)?'arm'+side:LEGP.includes(base)?'leg'+side:'torso';
     if(limb==='arm0'||limb==='arm1')geo.translate(-ARM[side][0],-ARM[side][1],-ARM[side][2]);if(limb==='leg0'||limb==='leg1')geo.translate(-LEG[side][0],-LEG[side][1],-LEG[side][2]);
     if(limb==='head'&&base==='Eye'||base==='Shine'||base==='Shine2')geo.translate(0,-EYEY,0);
-    PARTS.push({base,side,limb,geo,rgb:m.color.clone()})});
+    PARTS.push({base,side,limb,geo,rgb:m.color.clone(),gl:GLOSS[m.name]??.3})});
   SKINBASE=skin;if(!PARTS.length||!SKINBASE.r)throw new Error('the knight model has no parts')}
 // the model's own geometry as plain (not interleaved) float attributes: just positions, normals and the index
 function plain(g){const o=new THREE.BufferGeometry();for(const k of ['position','normal']){const a=g.attributes[k],n=a.count,f=new Float32Array(n*3);for(let i=0;i<n;i++){f[i*3]=a.getX(i);f[i*3+1]=a.getY(i);f[i*3+2]=a.getZ(i)}o.setAttribute(k,new THREE.Float32BufferAttribute(f,3))}
@@ -2261,8 +2275,8 @@ const roleOf=q=>q.base==='Head'||q.base==='Lid'||q.base==='Fingers'||q.base==='E
 const tint=q=>new THREE.Color(Math.min(1.3,q.rgb.r/SKINBASE.r),Math.min(1.3,q.rgb.g/SKINBASE.g),Math.min(1.3,q.rgb.b/SKINBASE.b));
 // merged geometry for (limb, role) of the model as made, cached
 function merged(key,pick){let m=MC.get(key);if(!m){const list=pick();m=list.length?bake(list):null;MC.set(key,m)}return m}
-const fixedOf=(limb,outfit)=>PARTS.filter(q=>q.limb===limb&&roleOf(q)==='fixed'&&(outfit==='knight'||q.base==='Boot'||q.base==='BootCuff')).map(q=>{const c=outfit==='dev'?(q.base==='Boot'?'#f4f4f4':'#d9d4c8'):q.rgb;return part(q.geo.clone(),c)});
-const skinOf=limb=>PARTS.filter(q=>q.limb===limb&&roleOf(q)==='skin').map(q=>({geo:paint(q.geo.clone(),tint(q)),ink:new THREE.Color(1,1,1)}));
+const fixedOf=(limb,outfit)=>PARTS.filter(q=>q.limb===limb&&roleOf(q)==='fixed'&&(outfit==='knight'||q.base==='Boot'||q.base==='BootCuff')).map(q=>{const c=outfit==='dev'?(q.base==='Boot'?'#f4f4f4':'#d9d4c8'):q.rgb;return part(q.geo.clone(),c,q.gl)});
+const skinOf=limb=>PARTS.filter(q=>q.limb===limb&&roleOf(q)==='skin').map(q=>({geo:paint(q.geo.clone(),tint(q),q.gl),ink:new THREE.Color(1,1,1)}));
 const roleList=(role,fn)=>PARTS.filter(q=>q.limb==='head'&&roleOf(q)===role).map(q=>fn(q));
 /* ---- the Dev: a hoodie, pants and headphones, made to fit the knight (model units, then cut by limb) ---- */
 function devParts(limb){const navy=0x3b3f7a,dark=cshade(navy,.78),pants=0x4a5b7d,out=[];
@@ -2280,21 +2294,21 @@ function devParts(limb){const navy=0x3b3f7a,dark=cshade(navy,.78),pants=0x4a5b7d
   return out}
 // headphones: yellow cups, a dark band over the hair
 function phonesParts(){const y=0xf5c542,d=0x2b2b36,o=[],cy=1.36;
-  [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*.74,cy,0),y),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*.82,cy,0),d))});
-  const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(.74,.9,.74);o.push(part(b.translate(0,cy,0),d));return o}
+  [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*.74,cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*.82,cy,0),d,.4))});
+  const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(.74,.9,.74);o.push(part(b.translate(0,cy,0),d,.4));return o}
 const OUTFITS=[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},{n:'Dev',ic:'💻',top:{c:0x3b3f7a},bot:{c:0x4a5b7d}}];
 
 /* ---- one person ---- */
 function make(parent=W){
-  const root=new THREE.Group(),bodyG=new THREE.Group(),cm=new THREE.Group(),skin=toon('#ffd9b3',{vc:true,rim:.28,inkK:.6}),hair=toon('#241c1c',{hgrad:1,hy:[1,2.2],rim:.2,spec:.25,inkK:.4}),eye=toon('#17110f',{rim:.1,spec:.8});
+  const root=new THREE.Group(),bodyG=new THREE.Group(),cm=new THREE.Group(),skin=toon('#ffd9b3',{vc:true,gl:true,rim:.16,inkK:.6}),hair=toon('#241c1c',{hgrad:1,gl:true,hy:[1,2.2],rim:.12,inkK:.4}),eye=toon('#17110f',{gl:true,rim:.05});
   root.add(bodyG);bodyG.add(cm);cm.scale.setScalar(S);
   const c={cm,skin,hair,eye,skinOL:outlineMat(skin.userData.ink,TH),hairOL:outlineMat(hair.userData.ink,TH),out:[],eyeG:new THREE.Group(),hatG:new THREE.Group()};
   const add=(par,mesh,cast=true)=>{mesh.castShadow=cast;par.add(mesh);return mesh};
   const addM=(par,m,mat,omat)=>{if(!m)return;add(par,new THREE.Mesh(m.geo,mat));if(omat)add(par,new THREE.Mesh(m.ogeo,omat),false)};
   const mk=(par,key,pick,mat,omat)=>addM(par,merged(key,pick),mat,omat);
   // the head and the hands never change; skin, hair and eyes are this person's own materials
-  mk(cm,'skin|head',()=>skinOf('head'),skin,c.skinOL);mk(cm,'hair',()=>roleList('hair',q=>({geo:paint(q.geo.clone(),0xffffff),ink:new THREE.Color(1,1,1)})),hair,c.hairOL);
-  c.eyeG.position.y=EYEY;cm.add(c.eyeG);mk(c.eyeG,'eye',()=>roleList('eye',q=>({geo:paint(q.geo.clone(),0xffffff),ink:new THREE.Color(0,0,0)})),eye,null);
+  mk(cm,'skin|head',()=>skinOf('head'),skin,c.skinOL);mk(cm,'hair',()=>roleList('hair',q=>({geo:paint(q.geo.clone(),0xffffff,q.gl),ink:new THREE.Color(1,1,1)})),hair,c.hairOL);
+  c.eyeG.position.y=EYEY;cm.add(c.eyeG);mk(c.eyeG,'eye',()=>roleList('eye',q=>({geo:paint(q.geo.clone(),0xffffff,q.gl),ink:new THREE.Color(0,0,0)})),eye,null);
   mk(c.eyeG,'shine',()=>roleList('shine',q=>({geo:paint(q.geo.clone(),0xffffff),ink:new THREE.Color(0,0,0)})),WHITE,null);
   cm.add(c.hatG);
   const arms=[0,1].map(i=>{const g=new THREE.Group(),k=new THREE.Group();g.position.set(...ARM[i]);k.rotation.z=i?-.12:.12;g.add(k);g.rotation.z=i?.12:-.12;cm.add(g);g.userData.k=k;mk(k,'skin|arm'+i,()=>skinOf('arm'+i),skin,c.skinOL);return g});
@@ -2318,7 +2332,7 @@ function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=(cfg.outfit|0)>0?1:0;
 // every frame: a blink now and then (sometimes twice: the eyes squash flat), and a slow breath
 function tick(p,dt){const c=p.cb,b=p.bl;
   b.t-=dt;if(b.t<=0){b.k=.13;b.t=2.2+Math.random()*3.8;if(Math.random()<.2)b.t=.35}if(b.k>0)b.k-=dt;
-  c.eyeG.scale.y=b.k>0?.12:1;c.cm.scale.y=S*p.torso.scale.y}
+  c.eyeG.scale.y=b.k>0?.12:1;c.cm.scale.y=S*p.torso.scale.y;ENVK.value=Math.max(.12,1-.85*nt);ENVSUN.value.copy(sdir)}
 
 const gl=await CBP;if(!gl)return null;
 try{catalog(gl.scene)}catch(e){console.warn('[knight] model not usable, using the older figures:',e);return null}
