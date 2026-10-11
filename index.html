@@ -383,7 +383,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11w';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11y';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -714,7 +714,7 @@ function groundColor(x,z,h,out){
   const sn=sstep(22.5,25.5,h+(n-.5)*5+gul*6-rdg*4)*(1-sstep(.82,1.05,s))*sstep(17,19.5,h);
   GC.rock=rk*(1-sn);GC.snow=sn*sstep(7,11,Math.hypot(x-SPOTS[0].x,z-SPOTS[0].z));   // no snow on the Hiking campsite
   const d=Math.max(x-coastX(z),westD(x,z)),sand=sstep(-23,-17,d+(n2-.5)*4)*(1-sstep(2.5,5,h));
-  out.lerp(C.sand,sand).lerp(C.wet,sstep(.95,.3,h)*sand).lerp(x<-150?cSea.copy(C.sand).lerp(C.seabed,sstep(-.8,-5,h)):C.seabed,sstep(.1,-1.4,h));   // (off the west coast the floor stays pale sand, for clear water)
+  out.lerp(C.sand,sand).lerp(C.wet,sstep(.95,.3,h)*sand).lerp(cSea.copy(C.sand).lerp(C.seabed,sstep(-.8,-5,h)),sstep(.1,-1.4,h));   // (the sea floor stays pale sand off both coasts, for clear water)
   if(inBarBB(x,z)){const bb=polyNear(BARP,x,z);out.lerp(cSea.copy(C.sand).multiplyScalar(1.03+n2*.05),(1-sstep(1.1,2.4,bb.d))*sstep(.14,.3,h)*.9)}   // the sandbar: bright dry sand along its top
   const rv=riverNear(x,z);
   if(rv){const w=rAt(rv.R.W,rv.f),bed=1-sstep(w-.7,w+.15,rv.d),wet=1-sstep(w,w+1.7,rv.d);   // pebbly riverbed under the water, dark damp banks
@@ -800,9 +800,11 @@ const water=new THREE.Mesh((()=>{const g=new THREE.PlaneGeometry(1500,900,300,18
     vec3 n=normalize(vN+vec3(n1.x+n2.x,0.,n1.y+n2.y)*.16);
     vec3 V=normalize(cameraPosition-vW);
     float fres=pow(clamp(1.-dot(n,V),0.,1.),4.);
-    float wst=step(vW.x,-40.);   // the west sea, off Sunset Beach (it keeps its sparkles and the sunlit sand patterns)
+    float wst=1.;   // both seas get the clear, tropical look (turquoise shallows, sparkles, sunlit patterns on the sand), as the west sea always had
     vec3 base=mix(uShallow,uDeep,smoothstep(.15,5.,depth));
-    vec3 col=base*uLight*(.6+.4*max(dot(n,uLightDir),0.));   // (both seas now share the east sea's depth colours)
+    vec3 bw=mix(vec3(.55,.92,.86),vec3(.16,.79,.78),smoothstep(.05,1.3,depth));                      // pale aqua over the sand, turquoise,
+    bw=mix(bw,vec3(.09,.56,.8),smoothstep(1.1,3.4,depth));bw=mix(bw,vec3(.05,.3,.58),smoothstep(3.,7.5,depth));   // azure, then deep sapphire further out
+    vec3 col=mix(base,bw,wst)*uLight*(.6+.4*max(dot(n,uLightDir),0.));
     vec2 cp=vW.xz*1.3+vec2(n1.x+n2.y,n1.y-n2.x)*1.1;float c1=sin(cp.x*1.9+sin(cp.y*1.4+uTime*.8)*1.7+uTime*.6),c2=sin(cp.y*1.7+sin(cp.x*1.2-uTime*.7)*1.6-uTime*.5);
     col+=vec3(.82,1.,.95)*pow(max(1.-abs(c1*c2),0.),10.)*(1.-smoothstep(.25,2.2,depth))*smoothstep(.02,.2,depth)*.24*uLight*wst;   // sunlight dancing on the sandy bottom (warped by the ripples, so never a pattern)
     col=mix(col,mix(uSkyHor,uSkyTop,.3),fres*.6);
@@ -810,11 +812,10 @@ const water=new THREE.Mesh((()=>{const g=new THREE.PlaneGeometry(1500,900,300,18
     vec3 n3=texture2D(uN,vW.xz*.21+vec2(uTime*.05,-uTime*.04)).xyz*2.-1.;
     col+=uLightCol*pow(max(dot(reflect(-V,normalize(vN+vec3(n1.x+n3.x,0.,n1.y+n3.y)*.35)),uLightDir),0.),900.)*5.*wst;   // glitter: tiny sparkles of sun on the ripples
     float shore=1.-smoothstep(0.,.5,depth);
-    float ds=depth*mix(1.,.5,wst);   // (the west shore drops away faster, so its foam bands are spread wider to look like the east's)
-    float lines=smoothstep(.62,.95,sin(ds*7.-uTime*1.5+n1.x*2.5)*.5+.5)*(1.-smoothstep(.25,1.5,ds));
+    float lines=smoothstep(.62,.95,sin(depth*7.-uTime*1.5+n1.x*2.5)*.5+.5)*(1.-smoothstep(.25,1.5,depth));
     float foam=clamp(shore*.9+lines*.55,0.,1.)*(.78+.22*n2.y);
     col=mix(col,vec3(.96,.98,1.)*max(uLight,.18),foam);
-    float alpha=max(mix(.5,.97,smoothstep(.05,2.6,depth)),foam);
+    float alpha=max(mix(mix(.5,.36,wst),.97,smoothstep(.05,mix(2.6,3.2,wst),depth)),foam);   // (clearer in the shallows)
     col=mix(col,fogColor,smoothstep(fogNear,fogFar,vFog));
     gl_FragColor=vec4(col,alpha);}`}));
 water.position.set(0,0,0);water.renderOrder=1;W.add(water);
@@ -2275,8 +2276,8 @@ const PRINT=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createEl
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t}})();
 
 /* ---- the two models (the parts, pivots and Dev outfit of each; every person is built from one of them, by gender) ---- */
-const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},SUNO={n:'Sunny',ic:'🐱',top:{c:0xf2b84b},bot:{c:0x5a7cb0}},
-  SUNV={id:'sunny',top:0xf2b84b,bot:0x5a7cb0,hat:'ears',hatc:0xf4ead0,hatc2:0xf2a6b5}   /* the Sunny outfit: a yellow hoodie, denim, cat ears (the Dev's colours are the plain defaults) */,TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
+const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},SUNO={n:'Sunny',ic:'🌻',top:{c:0xf2b84b},bot:{c:0x5a7cb0}},
+  SUNV={id:'sunny',top:0xf2b84b,bot:0x5a7cb0}   /* the Sunny outfit: a yellow hoodie and denim (the Dev's colours are the plain defaults) */,TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
 // how shiny each of the models' materials is (metals are mirror-like; clearcoat leathers, hair, boots and eyes glossy; skin barely)
 const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9,
   PR_Dress:.35,PR_Dress2:.35,PR_Gem:.8,PR_Lace:.1,PR_Skin:.22,PR_Blush:.1,PR_Brow:.1,PR_Eye:.9,PR_Hair:.6,PR_Iris:.8,PR_Lash:.3,PR_Mouth:.3,PR_Nose:.25,PR_Shine:.3,PR_Silver:.88,PR_Pearl:.6,PR_Shoe:.6};
@@ -2344,9 +2345,6 @@ function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.
     out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),bot));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
   return out}
 // headphones: silver cups, a dark band over the hair
-// cat ears on a thin band (the Sunny outfit)
-function earsParts(g,V){const p=CFG[g].dv.ph,o=[],c=V.hatc,c2=V.hatc2,b=new THREE.TorusGeometry(1,.04,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),c,.1));
-  [-1,1].forEach(s=>{const e=new THREE.ConeGeometry(.17,.34,4);e.rotateZ(-s*.3).translate(s*p.bx*.55,p.cy+p.by*.8+.18,0);o.push(part(e,c,.1));const i=new THREE.ConeGeometry(.09,.2,4);i.rotateZ(-s*.3).translate(s*p.bx*.55,p.cy+p.by*.8+.14,.04);o.push(part(i,c2,.1))});return o}
 function phonesParts(g){const p=CFG[g].dv.ph,y=0xc4c8d2,d=0x2b2b36,o=[];
   [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
   const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
@@ -2375,7 +2373,7 @@ function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,V=oi===2?SUNV:{},key=
     if(oi===1&&limb==='torso'){const pr=new THREE.Mesh(new THREE.PlaneGeometry(.2,.15),Object.assign(toon(0xffffff,{map:PRINT(),transparent:true}),{alphaTest:.4}));pr.position.set(...m.print);par.add(pr)}
     c.out.push(...par.children.slice(before))}
   c.hatG.children.slice().forEach(o=>c.hatG.remove(o));
-  mkM(c.hatG,key+'hat',()=>oi===2?earsParts(g,SUNV):dev?phonesParts(g):hatOf(g),VCM,VCO)}
+  mkM(c.hatG,key+'hat',()=>oi===2?[]:dev?phonesParts(g):hatOf(g),VCM,VCO)}
 function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=Math.min(Math.max(cfg.outfit|0,0),2),g=(cfg.gender|0)>0&&CFG[1].parts?1:0;
   if(c.g!==g){assemble(p,g);s.oi=undefined}
   if(s.skin!==cfg.skin){const sc=SKINS[cfg.skin][1],ink=inkOf(cshade(sc,.78),.6);c.skin.color.set(sc);c.skinOL.color.copy(ink)}
