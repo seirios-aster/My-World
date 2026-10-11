@@ -37,6 +37,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #prompt{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--paper);color:var(--ink);padding:12px 22px;border-radius:999px;border:0;display:none;cursor:pointer;font:600 17px var(--display);box-shadow:var(--shadow);white-space:nowrap;z-index:1}
 @media (max-width:560px){#prompt{bottom:calc(var(--mh,140px) + 26px + env(safe-area-inset-bottom,0px))}}   /* clear of the minimap on phones */
 
+#tools,#bfs,#bchat,#zoom,#acts,#clk,#map,#vol{--paper:#262833;--paper-2:#363846;--ink:#f2f2f7;--shadow:0 3px 12px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.08)}   /* the little buttons are dark, with light icons */
 .round{width:40px;height:40px;border:0;border-radius:50%;background:var(--paper);color:var(--ink);font-size:18px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);display:grid;place-items:center;padding:0;line-height:1}
 #bchat{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));z-index:2}
 #bfs{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:2}
@@ -52,7 +53,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #tools .txt{font-size:12px;letter-spacing:.02em}
 #clk{position:fixed;left:calc(26px + var(--mh,140px) + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:40px;box-sizing:border-box;text-align:center;padding:3px 9px;background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 9px;font:700 11px var(--body);font-variant-numeric:tabular-nums;box-shadow:var(--shadow);white-space:nowrap}
 @media (max-height:600px){   /* a phone on its side: the buttons are one row, from the caret leftwards (as far as the full-screen button), and the caret stays put in the corner */
-  #tools{flex-direction:row;flex-wrap:nowrap;justify-content:flex-end;align-items:center;left:calc(64px + env(safe-area-inset-left,0px));padding-right:45px;gap:5px;overflow-x:auto;scrollbar-width:none;pointer-events:none}
+  #tools{flex-direction:row-reverse;flex-wrap:nowrap;justify-content:flex-start;align-items:center;left:calc(64px + env(safe-area-inset-left,0px));padding-right:45px;gap:5px;overflow-x:auto;scrollbar-width:none;pointer-events:none}
   #tools::-webkit-scrollbar{display:none}
   #tools>*{pointer-events:auto;flex:0 0 auto}
   #tools .round{width:36px;height:36px;font-size:16px}
@@ -286,20 +287,20 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="hud"></div>
 <button id="prompt" type="button"></button>
 <div id="tools">
-  <button class="round" id="bcar" title="Hide or show the buttons" aria-label="Hide buttons" aria-expanded="true"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
-  <button class="round" id="bo" title="Character" aria-label="Character"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
-  <button class="round" id="bn" aria-label="Time of day">🕒</button>
-  <button class="round" id="bs" title="Sound" aria-label="Sound">🔊</button>
-  <button class="round" id="bc" title="Constellation lines and names - tap for stars only" aria-label="Constellation lines">✨</button>
-  <button class="round" id="bx" hidden title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates">📍</button>
+  <button class="round" id="bcar" title="Hide or show the buttons" aria-label="Hide buttons" aria-expanded="true"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8.6" r="4"/><path d="M4.6 20.5c.7-3.6 3.8-5.6 7.4-5.6s6.7 2 7.4 5.6z"/></svg></button>
+  <button class="round" id="bo" title="Character" aria-label="Character"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8.6" r="4"/><path d="M4.6 20.5c.7-3.6 3.8-5.6 7.4-5.6s6.7 2 7.4 5.6z"/></svg></button>
+  <button class="round" id="bn" aria-label="Time of day"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg></button>
+  <button class="round" id="bs" title="Sound" aria-label="Sound"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button>
+  <button class="round" id="bc" title="Constellation lines and names - tap for stars only" aria-label="Constellation lines"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" stroke-width="1.5"/></svg></button>
+  <button class="round" id="bx" hidden title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
   <button class="round txt" id="bh" aria-label="Graphics quality">HD</button>
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
 <div id="clk"></div>
-<div id="vol" role="group" aria-label="Volume"><button type="button" class="round" id="vmute" aria-label="Mute">🔊</button><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Volume"><span id="vpc">85%</span></div>
+<div id="vol" role="group" aria-label="Volume"><button type="button" class="round" id="vmute" aria-label="Mute"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Volume"><span id="vpc">85%</span></div>
 <div id="fsmsg" role="status"></div>
-<button class="round" id="bchat" title="Send a message to everyone here · Enter" aria-label="Send a message" hidden>💬</button>
-<button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen">⛶</button>
+<button class="round" id="bchat" title="Send a message to everyone here · Enter" aria-label="Send a message" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.7 7L4 20.5l1.6-4.6A8 8 0 1 1 21 12z"/><circle cx="8.6" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="15.4" cy="12" r=".6" fill="currentColor"/></svg></button>
+<button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 <div id="coords" title="Tap to copy"></div>
 <div id="lap" role="status" aria-live="polite"></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
@@ -371,7 +372,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11o';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11p';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -419,6 +420,7 @@ const LAT0=LAT;   // (the device's own; the game clock can put the sky somewhere
 /* ===================================================================== */
 
 const $=id=>document.getElementById(id);
+const IC={"user": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"currentColor\"><circle cx=\"12\" cy=\"8.6\" r=\"4\"/><path d=\"M4.6 20.5c.7-3.6 3.8-5.6 7.4-5.6s6.7 2 7.4 5.6z\"/></svg>", "clock": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3.2 2\"/></svg>", "ff": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 6l8 6-8 6zM12 6l8 6-8 6z\"/></svg>", "pinned": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 3h6l-1 6 3 3v2H7v-2l3-3z\"/><path d=\"M12 14v7\"/></svg>", "v0": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z\"/><path d=\"M16 9.5l5 5M21 9.5l-5 5\"/></svg>", "v1": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z\"/></svg>", "v2": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z\"/><path d=\"M15.8 9.2a4 4 0 0 1 0 5.6\"/></svg>", "v3": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z\"/><path d=\"M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11\"/></svg>", "spark": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z\"/><path d=\"M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z\" stroke-width=\"1.5\"/></svg>", "pin": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/></svg>", "fs": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"/></svg>", "fsx": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg>", "chat": "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a8 8 0 0 1-11.7 7L4 20.5l1.6-4.6A8 8 0 1 1 21 12z\"/><circle cx=\"8.6\" cy=\"12\" r=\".6\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"12\" r=\".6\" fill=\"currentColor\"/><circle cx=\"15.4\" cy=\"12\" r=\".6\" fill=\"currentColor\"/></svg>"};   // the button icons: one colour, so they take the button's text colour
 const TEX=window.TEX;
 document.title=APP.name;$('gtitle').textContent=APP.name;{const lb=$('loading').querySelector('b');if(lb)lb.textContent=APP.name}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -2527,7 +2529,7 @@ const touch=matchMedia('(pointer: coarse)').matches;
     const man={name:APP.name,short_name:APP.short,start_url:location.href.split('#')[0],display:'fullscreen',display_override:['fullscreen','standalone'],orientation:'landscape',background_color:'#a9d8f0',theme_color:'#a9d8f0'};
     const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));document.head.appendChild(l)}catch(e){}
   const lockLand=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{})}catch(e){}};
-  const sync=()=>{const on=!!fsEl();btn.textContent=on?'✕':'⛶';btn.title=on?'Exit full screen':'Full screen (landscape on phones)';setTimeout(resize,150);setTimeout(resize,600)};
+  const sync=()=>{const on=!!fsEl();btn.innerHTML=on?IC.fsx:IC.fs;btn.title=on?'Exit full screen':'Full screen (landscape on phones)';setTimeout(resize,150);setTimeout(resize,600)};
   document.addEventListener('fullscreenchange',()=>{sync();if(!fsEl()){try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}}});
   document.addEventListener('webkitfullscreenchange',sync);
   addEventListener('orientationchange',()=>{setTimeout(resize,200);setTimeout(resize,700)});
@@ -2953,7 +2955,7 @@ tagN.onclick=()=>{of.style.display='flex';PV.start();const i=ctl===0?fname:mynam
 // your name follows your Google account (first name). Rename yourself in the character menu: it's remembered for that account on this device; clear it to go back to the Google name.
 const NK=u=>'myworld.name.'+(u&&u.id?u.id:'guest');
 const authName=u=>(u&&(u.first||String(u.name||'').trim().split(/\s+/)[0]))||'';
-const USERIC=$('bo').innerHTML;
+const USERIC=IC.user;
 function applyMyPhoto(u){const b=$('bcar'),p=(u&&/^https:\/\//.test(u.photo||''))?u.photo:'';if(b.dataset.ph===p)return;b.dataset.ph=p;if(!p){b.innerHTML=USERIC;return}const im=new Image();im.alt='';im.referrerPolicy='no-referrer';im.onerror=()=>{if(b.dataset.ph===p){b.dataset.ph='';b.innerHTML=USERIC}};im.onload=()=>{if(b.dataset.ph===p){b.textContent='';b.appendChild(im)}};im.src=p}
 function applyMyName(){const u=storage.auth&&storage.auth.user();applyMyPhoto(u);let v='';try{v=localStorage.getItem(NK(u))||''}catch(_){}
   const g=authName(u).slice(0,16);myCustom=v;PPL[0].name=ME.name=v||g||'Explorer';myname.placeholder=g||'Explorer';
@@ -3005,8 +3007,8 @@ function setWorldTz(z){z=z&&z!=='device'&&tzOk(z)?z:'device';if(z===WTZ)return f
   syncSel();
   if(typeof setTm==='function'&&typeof tmode==='number')setTm(tmode);return true}
 const fmt=h=>{const H=Math.floor(h)%24,M=Math.floor((h%1)*60);return(H%12||12)+':'+String(M).padStart(2,'0')+(H<12?' AM':' PM')};
-const TMI=['🕒','⏩','📌'],tmTip=m=>['Live '+(WTZ==='device'?'local time ('+TZ+')':'game time ('+tzName(WTZ)+')')+' - tap for time-lapse','Time-lapse (a day in 2 min) - tap for live time','Time frozen for the Orion view - tap for live time'][m];
-function setTm(m){tmode=m;$('bn').textContent=TMI[m];$('bn').title=tmTip(m)}
+const TMI=[IC.clock,IC.ff,IC.pinned],tmTip=m=>['Live '+(WTZ==='device'?'local time ('+TZ+')':'game time ('+tzName(WTZ)+')')+' - tap for time-lapse','Time-lapse (a day in 2 min) - tap for live time','Time frozen for the Orion view - tap for live time'][m];
+function setTm(m){tmode=m;$('bn').innerHTML=TMI[m];$('bn').title=tmTip(m)}
 setTm(0);try{setWorldTz(localStorage.getItem('tambayan.wtz'))}catch(_){}   // (the last clock we knew, so the first picture is already right)
 $('bn').onclick=()=>setTm(tmode===0?1:0);
 const curDoy=()=>dayI?Math.round((dayI-1)*30.4+15):doyNow()+clockH()/24,sunY=h=>Math.sin((h-6)/12*Math.PI)*.85,orionH=d=>(((12+5.6-(d-80)*24/365.25)%24)+24)%24;
@@ -3155,7 +3157,7 @@ function snd(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext
 addEventListener('pointerdown',snd);addEventListener('keydown',snd);
 // volume: tap the speaker for a slider (and a mute button); the level is remembered
 let VOL=.85,MUTED=false;try{const v=localStorage.getItem('myworld.vol');if(v!=null&&v!==''&&!isNaN(+v))VOL=clamp(+v,0,1);MUTED=localStorage.getItem('myworld.muted')==='1'}catch(_){}
-function applyVol(){mute=MUTED||VOL<.01;const ic=mute?'🔇':VOL<.34?'🔈':VOL<.7?'🔉':'🔊';$('bs').textContent=ic;$('vmute').textContent=ic;$('vsl').value=Math.round(VOL*100);$('vpc').textContent=mute?'off':Math.round(VOL*100)+'%';
+function applyVol(){mute=MUTED||VOL<.01;const ic=mute?IC.v0:VOL<.34?IC.v1:VOL<.7?IC.v2:IC.v3;$('bs').innerHTML=ic;$('vmute').innerHTML=ic;$('vsl').value=Math.round(VOL*100);$('vpc').textContent=mute?'off':Math.round(VOL*100)+'%';
   if(master&&AC)master.gain.setTargetAtTime(mute?0:VOL*VOL,AC.currentTime,.05);try{localStorage.setItem('myworld.vol',String(VOL));localStorage.setItem('myworld.muted',MUTED?'1':'0')}catch(_){}}
 {const vp=$('vol');let vt=0;const arm=()=>{clearTimeout(vt);vt=setTimeout(()=>{vp.style.display='none'},4500)};
   const hideV=()=>{vp.style.display='none';clearTimeout(vt)};
