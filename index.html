@@ -55,7 +55,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 #bcar img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-#bx[hidden]{display:none}
+#bx[hidden],.of[hidden]{display:none}
 #tools.min>*:not(#bcar){display:none!important}
 #tools .txt{font-size:12px;letter-spacing:.02em}
 #clk{position:fixed;left:calc(26px + var(--mh,140px) + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:40px;box-sizing:border-box;text-align:center;padding:3px 9px;background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 9px;font:700 11px var(--body);font-variant-numeric:tabular-nums;box-shadow:var(--shadow);white-space:nowrap}
@@ -383,7 +383,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11r';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11s';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2276,7 +2276,8 @@ const PRINT=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createEl
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t}})();
 
 /* ---- the two models (the parts, pivots and Dev outfit of each; every person is built from one of them, by gender) ---- */
-const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
+const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},SUNO={n:'Sunny',ic:'🐱',top:{c:0xf2b84b},bot:{c:0x5a7cb0}},
+  SUNV={id:'sunny',top:0xf2b84b,bot:0x5a7cb0,hat:'ears',hatc:0xf4ead0,hatc2:0xf2a6b5}   /* the Sunny outfit: a yellow hoodie, denim, cat ears (the Dev's colours are the plain defaults) */,TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
 // how shiny each of the models' materials is (metals are mirror-like; clearcoat leathers, hair, boots and eyes glossy; skin barely)
 const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9,
   PR_Dress:.35,PR_Dress2:.35,PR_Gem:.8,PR_Lace:.1,PR_Skin:.22,PR_Blush:.1,PR_Brow:.1,PR_Eye:.9,PR_Hair:.6,PR_Iris:.8,PR_Lash:.3,PR_Mouth:.3,PR_Nose:.25,PR_Shine:.3,PR_Silver:.88,PR_Pearl:.6,PR_Shoe:.6};
@@ -2288,12 +2289,12 @@ const CFG=[
   head:['Head','Lid','Ear','Nose','Mouth','Hair','Brow','Eye','Shine','Shine2'],arm:['UpperArm','Pauldron','PauldronRim','Lame1','Lame2','Vambrace','VambPlate','Glove','Fingers'],leg:['Tasset','Greave','Boot','BootCuff'],
   skin:['Head','Lid','Fingers','Ear','Nose','Mouth'],hair:['Hair','Brow'],eye:['Eye'],eyefix:[],shine:['Shine','Shine2'],hat:[],dev:{Boot:'#f4f4f4',BootCuff:'#d9d4c8'},print:[0,.72,.28],
   dv:{body:[[.001,.33],[.27,.33],[.31,.38],[.315,.55],[.30,.75],[.25,.90],[.19,.97],[.001,1.0]],hem:[.345,.30],pocket:[0,.5,.245],hood:[.99,.2],blob:[0,1.0,-.2],str:[.06,.95,.19,.07,.72,.235],A:[.34,.90,0],B:[.45,.45,.02],ar:[.115,.092],la:[.23,.50,.04],lb:[.215,.19,.03],lr:[.115,.092],ph:{cx:.74,cy:1.36,bx:.74,by:.9}},
-  outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO]},
+  outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO,SUNO]},
  {id:'princess',S:1.55,EYEY:1.32,pre:/^PR_/,ARM:[[-.33,.80,0],[.33,.80,0]],LEG:[[-.12,.36,.02],[.12,.36,.02]],sy:.47,pv:.56,ride:[1.05,-.42,.22],
   head:['Blush','Brow','Ear','Eye','Hair','Head','Iris','Lash','LashA','Mouth','Nose','Pupil','Shine','Shine2',...TIARA],arm:['Cuff','Hand','Puff','Sleeve'],leg:['Leg','Shoe'],
   skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},recolor:{PR_Dress:'#fbf9ff',PR_Dress2:'#ebe6f5',PR_Lace:'#fcfaff',PR_Shoe:'#f6f3fa'},print:[0,.70,.255],
   dv:{body:[[.001,.34],[.26,.34],[.30,.39],[.31,.52],[.29,.70],[.25,.84],[.19,.93],[.001,.98]],hem:[.355,.29],pocket:[0,.5,.24],hood:[.955,.19],blob:[0,.99,-.17],str:[.05,.9,.16,.06,.68,.22],A:[.34,.84,0],B:[.43,.57,.02],ar:[.105,.088],la:[.12,.52,.02],lb:[.12,.13,.02],lr:[.095,.08],ph:{cx:.80,cy:1.30,bx:.78,by:.86}},
-  outfits:[{n:'Princess',ic:'👑',top:{c:0xfbf9ff},bot:{c:0xd5c9ee}},DEVO]}];
+  outfits:[{n:'Princess',ic:'👑',top:{c:0xfbf9ff},bot:{c:0xd5c9ee}},DEVO,SUNO]}];
 const MC=new Map();   // merged meshes already made (the same for everyone), by name
 // the model's own geometry as plain (not interleaved) float attributes: just positions, normals and the index
 function plain(g){const o=new THREE.BufferGeometry();for(const k of ['position','normal']){const a=g.attributes[k],n=a.count,f=new Float32Array(n*3);for(let i=0;i<n;i++){f[i*3]=a.getX(i);f[i*3+1]=a.getY(i);f[i*3+2]=a.getZ(i)}o.setAttribute(k,new THREE.Float32BufferAttribute(f,3))}
@@ -2330,19 +2331,23 @@ function ghDecal(d,y,w){const g=new THREE.ShapeGeometry(GHMARK(),6),pr=d.body;le
   g.computeVertexNormals();const N=g.attributes.normal;for(let i=0;i<N.count;i++)N.setXYZ(i,N.getX(i),N.getY(i),-Math.abs(N.getZ(i)));   // (facing backwards)
   const ix=g.index;for(let i=0;i<ix.count;i+=3){const t=ix.getX(i+1);ix.setX(i+1,ix.getX(i+2));ix.setX(i+2,t)}   // (and wound to face backwards)
   return g}
-function devParts(g,limb){const m=CFG[g],d=m.dv,navy=0x25272e,dark=cshade(navy,.78),out=[];
+function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.bot??0x383b47,dark=cshade(navy,.78),out=[];
   if(limb==='torso'){const e=lathe(d.body,44);e.scale(1,1,.84);out.push(part(e,navy));
     out.push(part(new THREE.TorusGeometry(d.hem[1],.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0],0),dark));
-    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));out.push(part(ghDecal(d,.7,.2),0xeceef3,.05));
+    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));if(!V.id)out.push(part(ghDecal(d,.7,.2),0xeceef3,.05));   // (the GitHub mark is the Dev's)
+   
     out.push(part(new THREE.TorusGeometry(d.hood[1],.07,10,32).rotateX(Math.PI/2-.25).translate(0,d.hood[0],-.02),navy),part(ellG(.23,.15,.12,d.blob),navy));
     [-1,1].forEach(s=>out.push(part(tube([s*d.str[0],d.str[1],d.str[2]],[s*d.str[3],d.str[4],d.str[5]],.016,.016,8),'#f2f2f2')))}
   if(/^arm/.test(limb)){const i=limb==='arm0'?0:1,s=i?1:-1,A=[s*d.A[0],d.A[1],d.A[2]],B=[s*d.B[0],d.B[1],d.B[2]];
     out.push(part(tube(A,B,d.ar[0],d.ar[1]),navy),part(ellG(d.ar[0],d.ar[0],d.ar[0],A),navy),part(ringAt(B,[B[0]-A[0],B[1]-A[1],B[2]-A[2]],d.ar[1]+.001,.022),dark));
     out.forEach(q=>q.geo.translate(-m.ARM[i][0],-m.ARM[i][1],-m.ARM[i][2]))}
   if(/^leg/.test(limb)){const i=limb==='leg0'?0:1,s=i?1:-1,P=m.LEG[i];
-    out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),0x383b47));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
+    out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),bot));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
   return out}
 // headphones: silver cups, a dark band over the hair
+// cat ears on a thin band (the Sunny outfit)
+function earsParts(g,V){const p=CFG[g].dv.ph,o=[],c=V.hatc,c2=V.hatc2,b=new THREE.TorusGeometry(1,.04,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),c,.1));
+  [-1,1].forEach(s=>{const e=new THREE.ConeGeometry(.17,.34,4);e.rotateZ(-s*.3).translate(s*p.bx*.55,p.cy+p.by*.8+.18,0);o.push(part(e,c,.1));const i=new THREE.ConeGeometry(.09,.2,4);i.rotateZ(-s*.3).translate(s*p.bx*.55,p.cy+p.by*.8+.14,.04);o.push(part(i,c2,.1))});return o}
 function phonesParts(g){const p=CFG[g].dv.ph,y=0xc4c8d2,d=0x2b2b36,o=[];
   [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
   const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
@@ -2365,14 +2370,14 @@ function assemble(p,g){const c=p.cb,m=CFG[g],keep=new Set([...p.arms,...p.legs])
   mkM(c.eyeG,g+'|eye',()=>eyeOf(g,'eye'),c.eye,null);mkM(c.eyeG,g+'|eyefix',()=>eyeOf(g,'eyefix'),VCM,null);mkM(c.eyeG,g+'|shine',()=>eyeOf(g,'shine'),WHITE,null);
   for(const l of ['arm0','arm1','leg0','leg1'])mkM(c.limbs[l],g+'|skin|'+l,()=>skinOf(g,l),c.skin,c.skinOL);
   p.sy=m.sy;p.pv=m.pv;[p.rideY,p.rideZ,p.rideT]=m.ride}
-function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,key=g+(dev?'|dev|':'|main|');c.out.forEach(o=>o.parent&&o.parent.remove(o));c.out=[];
+function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,V=oi===2?SUNV:{},key=g+(oi===2?'|sun|':dev?'|dev|':'|main|');c.out.forEach(o=>o.parent&&o.parent.remove(o));c.out=[];
   for(const limb of ['torso','arm0','arm1','leg0','leg1']){const par=c.limbs[limb],before=par.children.length;
-    mkM(par,key+limb,()=>[...fixedOf(g,limb,dev),...(dev?devParts(g,limb):[])],VCM,VCO);
-    if(dev&&limb==='torso'){const pr=new THREE.Mesh(new THREE.PlaneGeometry(.2,.15),Object.assign(toon(0xffffff,{map:PRINT(),transparent:true}),{alphaTest:.4}));pr.position.set(...m.print);par.add(pr)}
+    mkM(par,key+limb,()=>[...fixedOf(g,limb,dev),...(dev?devParts(g,limb,V):[])],VCM,VCO);
+    if(oi===1&&limb==='torso'){const pr=new THREE.Mesh(new THREE.PlaneGeometry(.2,.15),Object.assign(toon(0xffffff,{map:PRINT(),transparent:true}),{alphaTest:.4}));pr.position.set(...m.print);par.add(pr)}
     c.out.push(...par.children.slice(before))}
   c.hatG.children.slice().forEach(o=>c.hatG.remove(o));
-  mkM(c.hatG,key+'hat',()=>dev?phonesParts(g):hatOf(g),VCM,VCO)}
-function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=(cfg.outfit|0)>0?1:0,g=(cfg.gender|0)>0&&CFG[1].parts?1:0;
+  mkM(c.hatG,key+'hat',()=>oi===2?earsParts(g,SUNV):dev?phonesParts(g):hatOf(g),VCM,VCO)}
+function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=Math.min(Math.max(cfg.outfit|0,0),2),g=(cfg.gender|0)>0&&CFG[1].parts?1:0;
   if(c.g!==g){assemble(p,g);s.oi=undefined}
   if(s.skin!==cfg.skin){const sc=SKINS[cfg.skin][1],ink=inkOf(cshade(sc,.78),.6);c.skin.color.set(sc);c.skinOL.color.copy(ink)}
   if(s.hcol!==cfg.hcol){const hc=HAIRC[cfg.hcol][1];c.hair.color.set(hc);c.hairOL.color.copy(inkOf(hc,.4))}
@@ -2891,7 +2896,7 @@ const TABS=['face','hair','out'];
 function tab(n){TABS.forEach(t=>{const on=t===n;$('t_'+t).classList.toggle('on',on);$('t_'+t).setAttribute('aria-selected',on);$('p_'+t).classList.toggle('on',on)});PV.focus(n)}
 TABS.forEach(t=>$('t_'+t).onclick=()=>tab(t));tab('out');
 function refreshPeople(){const c=PPL[ctl];
-  if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)'});   // (the first outfit is the knight's armour or the princess's gown)
+  if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)';b.hidden=i===1&&IS_GM!==true});   // (the Dev is only shown to the GM)   // (the first outfit is the knight's armour or the princess's gown)
   Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
   $('who').textContent=c.name;PV.show(c);
@@ -2978,11 +2983,13 @@ myname.addEventListener('change',saveMyName);myname.addEventListener('keydown',e
 const hasLook=u=>{try{return !!localStorage.getItem(LKEY(u))}catch(_){return false}};
 // the first time (no saved look on this device or in the account): pick the knight or the princess. Each starts with its own hair colour (black / white) and eyes.
 const DEFHAIR=()=>[0,HAIRC.length-1];
+let IS_GM=null;   // null until we know; the Dev outfit is the GM's alone
+function devGate(){if(IS_GM===false&&PPL[0].outfit===1){PPL[0].outfit=0;dress(me,PPL[ctl]);saveLook(0);refreshPeople()}}   // (anyone else wearing it goes back to their own first outfit: the knight or the princess)
 function pairUp(){if(!CB||CB.genders<2)return;const g=1-(PPL[0].gender|0),f=PPL[1],o=g?0:1;if((f.gender|0)===g&&f.outfit===o)return;if(f.gender!==g&&f.hcol===DEFHAIR()[1-g])f.hcol=DEFHAIR()[g];f.gender=g;f.outfit=o;saveLook(1)}   // the friend is always the other gender from you (you pick yours; theirs follows), and always in that gender's own look: the princess if she is a girl, the Dev if he is a boy
 function askCharacter(){if(!CB||CB.genders<2)return;const el=$('pick');if(!el.hidden)return;el.hidden=false;
   el.onclick=e=>{const b=e.target.closest('.pkc');if(!b)return;const g=+b.dataset.g;Object.assign(PPL[0],{gender:g,outfit:0,hcol:DEFHAIR()[g],eye:g?1:0});pairUp();el.hidden=true;dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);saveLook(0);refreshPeople()}}
 function applyMyLook(){const u=storage.auth&&storage.auth.user();let j=null;try{j=JSON.parse(localStorage.getItem(LKEY(u))||'null')}catch(_){}
-  if(Array.isArray(j)){Object.assign(PPL[0],unpackLook(j));pairUp();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople()}}   // (an account with no saved look keeps the one you have; a first-timer is asked who they want to be, and that is saved)
+  if(Array.isArray(j)){Object.assign(PPL[0],unpackLook(j));pairUp();devGate();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople()}}   // (an account with no saved look keeps the one you have; a first-timer is asked who they want to be, and that is saved)
 applyMyName();applyMyLook();
 storage.ready.then(syncState);if(storage.auth)storage.auth.onChange(()=>syncState());
 if(storage.session)storage.session.onChange(()=>{if(storage.session.active())flushState()});   // (a save held back while this tab was still checking for another session)   // signed in (or out): take that account's state
@@ -3033,7 +3040,7 @@ const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
 const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick()};   // (the coordinates pin is for the GM only)
-async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;pinFor(false);return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;pinFor(gm);if(gm)$('gmtz').value=WTZ}
+async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;pinFor(false);IS_GM=false;devGate();refreshPeople();return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;pinFor(gm);IS_GM=!!gm;devGate();refreshPeople();if(gm)$('gmtz').value=WTZ}
 if(SET){const sel=$('gmtz'),note=t=>{$('gmnote').textContent=t};
   GMZ.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});syncSel();
   sel.onchange=async()=>{const z=sel.value;note('Saving...');sel.disabled=true;
