@@ -46,17 +46,17 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #vpc{font:700 12px var(--body);min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+#bo img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
 #bcar svg{transition:transform .25s}#tools.min #bcar svg{transform:rotate(180deg)}
 #tools.min>*:not(#bcar){display:none!important}
 #tools .txt{font-size:12px;letter-spacing:.02em}
-#clk{background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 9px;font:700 11px var(--body);font-variant-numeric:tabular-nums;box-shadow:var(--shadow);white-space:nowrap}
+#clk{position:fixed;left:calc(26px + var(--mh,140px) + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:40px;box-sizing:border-box;text-align:center;padding:3px 9px;background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 9px;font:700 11px var(--body);font-variant-numeric:tabular-nums;box-shadow:var(--shadow);white-space:nowrap}
 @media (max-height:600px){   /* a phone on its side: the buttons are one row, from the caret leftwards (as far as the full-screen button), and the caret stays put in the corner */
   #tools{flex-direction:row;flex-wrap:nowrap;justify-content:flex-end;align-items:center;left:calc(64px + env(safe-area-inset-left,0px));padding-right:45px;gap:5px;overflow-x:auto;scrollbar-width:none;pointer-events:none}
   #tools::-webkit-scrollbar{display:none}
   #tools>*{pointer-events:auto;flex:0 0 auto}
   #tools .round{width:36px;height:36px;font-size:16px}
   #bcar{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px))}
-  #clk{align-self:center}
 }
 @media (min-height:601px) and (max-height:720px){#tools{gap:5px}#tools .round{width:36px;height:36px;font-size:16px}#tools .txt{font-size:11px}}   /* small phones: the column clears the zoom buttons */
 #outfits{position:fixed;right:calc(60px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));background:var(--paper);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;box-shadow:var(--shadow);color:var(--ink);z-index:2;max-height:calc(100vh - 120px);overflow:auto;width:min(310px,calc(100vw - 84px - env(safe-area-inset-right,0px)));box-sizing:border-box}
@@ -298,8 +298,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <button class="round" id="bx" title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates">📍</button>
   <button class="round txt" id="bh" aria-label="Graphics quality">HD</button>
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  <div id="clk"></div>
 </div>
+<div id="clk"></div>
 <div id="vol" role="group" aria-label="Volume"><button type="button" class="round" id="vmute" aria-label="Mute">🔊</button><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Volume"><span id="vpc">85%</span></div>
 <div id="fsmsg" role="status"></div>
 <button class="round" id="bchat" title="Send a message to everyone here · Enter" aria-label="Send a message" hidden>💬</button>
@@ -374,7 +374,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11f';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11h';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2630,7 +2630,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
   const B=()=>sb.storage.from(cfg.bucket);
   const paths=rows=>rows.flatMap(r=>[r.path,r.thumb_path].filter(Boolean));
   const rowsFor=async key=>{const{data,error}=await sb.from(cfg.table).select('id,item_key,kind,path,thumb_path,name,size,created_at').eq('item_key',key).order('created_at');if(error)throw nice(error);return data||[]};
-  const auth={available:()=>!fail,user:()=>user?{id:user.id,email:user.email||'',name:(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||'',first:(user.user_metadata&&user.user_metadata.given_name)||''}:null,
+  const auth={available:()=>!fail,user:()=>user?{id:user.id,email:user.email||'',name:(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||'',first:(user.user_metadata&&user.user_metadata.given_name)||'',photo:(user.user_metadata&&(user.user_metadata.avatar_url||user.user_metadata.picture))||''}:null,
     onChange:f=>listeners.push(f),
     async signIn(){await ready;if(fail)throw new Error('Sign-in is not available right now');const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(error)throw nice(error)},
     async signOut(){await ready;if(sb)await sb.auth.signOut({scope:'local'})}};
@@ -2949,7 +2949,8 @@ tagN.onclick=()=>{of.style.display='flex';PV.start();const i=ctl===0?fname:mynam
 // your name follows your Google account (first name). Rename yourself in the character menu: it's remembered for that account on this device; clear it to go back to the Google name.
 const NK=u=>'myworld.name.'+(u&&u.id?u.id:'guest');
 const authName=u=>(u&&(u.first||String(u.name||'').trim().split(/\s+/)[0]))||'';
-function applyMyName(){const u=storage.auth&&storage.auth.user();let v='';try{v=localStorage.getItem(NK(u))||''}catch(_){}
+function applyMyPhoto(u){const b=$('bo'),p=(u&&/^https:\/\//.test(u.photo||''))?u.photo:'';if(b.dataset.ph===p)return;b.dataset.ph=p;if(!p){b.textContent='🧑';return}const im=new Image();im.alt='';im.referrerPolicy='no-referrer';im.onerror=()=>{if(b.dataset.ph===p){b.dataset.ph='';b.textContent='🧑'}};im.onload=()=>{if(b.dataset.ph===p){b.textContent='';b.appendChild(im)}};im.src=p}
+function applyMyName(){const u=storage.auth&&storage.auth.user();applyMyPhoto(u);let v='';try{v=localStorage.getItem(NK(u))||''}catch(_){}
   const g=authName(u).slice(0,16);myCustom=v;PPL[0].name=ME.name=v||g||'Explorer';myname.placeholder=g||'Explorer';
   if(HOMEP.redrawPlate)HOMEP.redrawPlate();refreshPeople()}
 const saveMyName=()=>{const u=storage.auth&&storage.auth.user(),v=myname.value.replace(/\s+/g,' ').trim().slice(0,16);
