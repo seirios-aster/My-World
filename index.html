@@ -301,7 +301,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="swap"></button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
-      <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div><div class="lbl">Eye colour</div><div class="sws" id="sweye"></div></div>
+      <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Gender</div><div class="chips" id="chgender"></div><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div><div class="lbl">Eye colour</div><div class="sws" id="sweye"></div></div>
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
       <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
@@ -361,8 +361,8 @@ import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-// the people's body model (the chibi knight) starts downloading right away (while the world is built); null if it can't be had in time, and then the older figures are used
-const CBP=(async()=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL('models/knight/chibi-knight.glb',location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[knight] model not loaded, using the older figures:',e&&e.message||e);return null}})();
+// the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
+const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb'),get('models/princess/princess-chibi.glb')])})();
 
 /* ============================== EDIT ME ============================== */
 // Your places. media = a photo/video as a data: URI (leave it out for a placeholder tile)
@@ -2172,7 +2172,7 @@ function dressLegacy(p,c){const s=p.st,h=HAIRS[c.hair],M=p.M;
   if(s.outfit!==c.outfit||s.hair!==c.hair)wear(p,OUT[c.outfit],h);
   p.st={skin:c.skin,hair:c.hair,hcol:c.hcol,face:c.face,outfit:c.outfit}}
 // the look as a short list of numbers (saved, and sent to the others): skin, hair style, hair colour, face, outfit. Anything out of range is pulled back in.
-const LOOKK=['skin','hair','hcol','face','outfit','eye'],LOOKN=()=>[SKINS.length,HAIRS.length,HAIRC.length,FACES.length,OUTFITS.length,EYES.length];   // (eye colour came last: looks saved before it just get the first one)
+const LOOKK=['skin','hair','hcol','face','outfit','eye','gender'],LOOKN=()=>[SKINS.length,HAIRS.length,HAIRC.length,FACES.length,OUTFITS.length,EYES.length,CB?CB.genders:1];   // (eye colour, then gender, came last: looks saved before them just get the first of each)
 const packLook=c=>LOOKK.map(k=>c[k]|0);
 function unpackLook(a,outfit){if(!Array.isArray(a))a=[1,0,1,0,outfit|0];const n=LOOKN(),r={};LOOKK.forEach((k,i)=>r[k]=clamp(a[i]|0,0,n[i]-1));return r}
 function makePersonLegacy(parent=W){const root=new THREE.Group(),body=new THREE.Group();root.add(body);parent.add(root);
@@ -2190,15 +2190,13 @@ function makePersonLegacy(parent=W){const root=new THREE.Group(),body=new THREE.
   return{root,body,torso,hips,head,hairTop,hairRest,faceB,eyeG,cl,hd,arms,legs,M,mc:new Map(),eyes:[],st:{},cover:false,bl:{t:2+Math.random()*2,k:0},sy:.71,pv:.85,rideY:.46,rideZ:-.38,rideT:.28}}
 // the eyes blink now and then (sometimes twice); closed, smiling eyes stay as they are
 function blinkTickLegacy(p,dt){const b=p.bl;b.t-=dt;if(b.t<=0){b.k=.13;b.t=2.2+Math.random()*3.8;if(Math.random()<.2)b.t=.35}if(b.k>0)b.k-=dt;const y=b.k>0?.12:1;p.eyes.forEach(e=>{if(!e.userData.nb)e.scale.y=y})}
-/* =========================== THE KNIGHT ===========================
-   Everyone is the chibi knight (models/knight/chibi-knight.glb): 53 separate parts, no skeleton. We merge them into a handful of meshes per limb (colours in the vertices, an inked outline
-   for each), so a person is about 20 draw calls, and the limbs are real groups the game turns with the same arm and leg angles as ever. Skin tone, hair colour and eye colour are
-   per person; the outfit swaps the armour for something else: the Knight (as modelled) or the Dev (a hoodie and headphones).
-   If the model can't be loaded, CB is null and the older figures above are used. */
+/* =========================== THE CHIBIS ===========================
+   Everyone is a chibi: the knight (male) or the princess (female), models/knight/chibi-knight.glb and models/princess/princess-chibi.glb. They are made of 50-odd separate parts and have no skeleton.
+   We merge the parts into a handful of meshes per limb (colours in the vertices, an inked outline for each), so a person is about 20 draw calls, and the limbs are real groups the game turns with the
+   same arm and leg angles as ever. Skin tone, hair colour and eye colour are per person; the outfit is the model as made (the knight's armour, the princess's gown) or the Dev (a hoodie and headphones).
+   If the models can't be loaded, CB is null and the older figures above are used (if only the princess is missing, everyone is the knight). */
 const CB=await (async()=>{
-const S=1.55,TH=.014,EYEY=1.35;   // model units -> game units; outline thickness (model units); height of the eyes (the blink squashes them about it)
-const ARM=[[-.33,.87,0],[.33,.87,0]],LEG=[[-.23,.44,.04],[.23,.44,.04]];   // shoulder and hip pivots: [0] is the -x side (what the game calls arms[0] and legs[0])
-const ARMP=['UpperArm','Pauldron','PauldronRim','Lame1','Lame2','Vambrace','VambPlate','Glove','Fingers'],LEGP=['Tasset','Greave','Boot','BootCuff'],HEADP=['Head','Lid','Ear','Nose','Mouth','Hair','Brow','Eye','Shine','Shine2'];
+const TH=.014;   // outline thickness (model units)
 /* ---- colours and shading ---- */
 const ENVK={value:1},ENVSUN={value:new THREE.Vector3(.4,.8,.5)};   // shared by every material: how much light there is to reflect (day 1, night low) and where the sun is
 const col=c=>new THREE.Color(c),cshade=(c,k)=>col(c).multiplyScalar(k);
@@ -2254,95 +2252,116 @@ const part=(geo,c,gl=.08,k)=>({geo:paint(geo,c,gl),ink:inkOf(c,k||.42)});   // (
 const PRINT=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createElement('canvas');cv.width=128;cv.height=96;const g=cv.getContext('2d');g.fillStyle='#f5c542';g.font='800 56px ui-monospace,Menlo,Consolas,monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('</>',64,52);
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t}})();
 
-/* ---- the model, cut into parts (once) ---- */
-// how shiny each of the model's materials is (metals are mirror-like; its clearcoat leathers, hair and boots glossy; skin barely)
-const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9};
-let PARTS=null,SKINBASE=null;const MC=new Map();   // MC: merged meshes already made (the same for everyone), by name
-function catalog(scene){scene.updateMatrixWorld(true);PARTS=[];const skin=new THREE.Color();
-  scene.traverse(o=>{if(!o.isMesh||!o.geometry.attributes.position)return;const nm=o.name.replace(/^CK_/,'').replace(/\.\d+$/,''),side=/_L$/.test(nm)?0:/_R$/.test(nm)?1:-1,base=nm.replace(/_[LR]$/,''),m=o.material;
-    if(base==='Head')skin.copy(m.color);
-    const geo=plain(o.geometry);geo.applyMatrix4(o.matrixWorld);
-    const limb=HEADP.includes(base)?'head':ARMP.includes(base)?'arm'+side:LEGP.includes(base)?'leg'+side:'torso';
-    if(limb==='arm0'||limb==='arm1')geo.translate(-ARM[side][0],-ARM[side][1],-ARM[side][2]);if(limb==='leg0'||limb==='leg1')geo.translate(-LEG[side][0],-LEG[side][1],-LEG[side][2]);
-    if(limb==='head'&&base==='Eye'||base==='Shine'||base==='Shine2')geo.translate(0,-EYEY,0);
-    PARTS.push({base,side,limb,geo,rgb:m.color.clone(),gl:GLOSS[m.name]??.3})});
-  SKINBASE=skin;if(!PARTS.length||!SKINBASE.r)throw new Error('the knight model has no parts')}
+/* ---- the two models (the parts, pivots and Dev outfit of each; every person is built from one of them, by gender) ---- */
+const DEVO={n:'Dev',ic:'💻',top:{c:0x3b3f7a},bot:{c:0x4a5b7d}},TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
+// how shiny each of the models' materials is (metals are mirror-like; clearcoat leathers, hair, boots and eyes glossy; skin barely)
+const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9,
+  PR_Dress:.35,PR_Dress2:.35,PR_Gem:.8,PR_Lace:.1,PR_Skin:.22,PR_Blush:.1,PR_Brow:.1,PR_Eye:.9,PR_Hair:.6,PR_Iris:.8,PR_Lash:.3,PR_Mouth:.3,PR_Nose:.25,PR_Shine:.3,PR_Silver:.88,PR_Pearl:.6,PR_Shoe:.6};
+// S: model units -> game units. ARM/LEG: shoulder and hip pivots ([0] is the -x side, what the game calls arms[0] and legs[0]). sy/pv/ride: where a seat meets the body, how high the hips are, how to sit on the bike (game units).
+// head/arm/leg: which parts move with what (the rest is the torso, still); skin/hair/eye/eyefix/shine/hat: what a part is made of (eye: the person's eye colour; eyefix: always dark; hat: only with the first outfit).
+// dev: the parts the Dev keeps (recoloured); dv: the Dev's hoodie, sleeves, pants and headphones, fitted to this body.
+const CFG=[
+ {id:'knight',S:1.55,EYEY:1.35,pre:/^CK_/,ARM:[[-.33,.87,0],[.33,.87,0]],LEG:[[-.23,.44,.04],[.23,.44,.04]],sy:.45,pv:.68,ride:[1.07,-.42,.22],
+  head:['Head','Lid','Ear','Nose','Mouth','Hair','Brow','Eye','Shine','Shine2'],arm:['UpperArm','Pauldron','PauldronRim','Lame1','Lame2','Vambrace','VambPlate','Glove','Fingers'],leg:['Tasset','Greave','Boot','BootCuff'],
+  skin:['Head','Lid','Fingers','Ear','Nose','Mouth'],hair:['Hair','Brow'],eye:['Eye'],eyefix:[],shine:['Shine','Shine2'],hat:[],dev:{Boot:'#f4f4f4',BootCuff:'#d9d4c8'},print:[0,.72,.28],
+  dv:{body:[[.001,.33],[.27,.33],[.31,.38],[.315,.55],[.30,.75],[.25,.90],[.19,.97],[.001,1.0]],hem:[.345,.30],pocket:[0,.5,.245],hood:[.99,.2],blob:[0,1.0,-.2],str:[.06,.95,.19,.07,.72,.235],A:[.34,.90,0],B:[.45,.45,.02],ar:[.115,.092],la:[.23,.50,.04],lb:[.215,.19,.03],lr:[.115,.092],ph:{cx:.74,cy:1.36,bx:.74,by:.9}},
+  outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO]},
+ {id:'princess',S:1.55,EYEY:1.32,pre:/^PR_/,ARM:[[-.33,.80,0],[.33,.80,0]],LEG:[[-.12,.36,.02],[.12,.36,.02]],sy:.47,pv:.56,ride:[1.05,-.42,.22],
+  head:['Blush','Brow','Ear','Eye','Hair','Head','Iris','Lash','LashA','Mouth','Nose','Pupil','Shine','Shine2',...TIARA],arm:['Cuff','Hand','Puff','Sleeve'],leg:['Leg','Shoe'],
+  skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},print:[0,.70,.255],
+  dv:{body:[[.001,.34],[.26,.34],[.30,.39],[.31,.52],[.29,.70],[.25,.84],[.19,.93],[.001,.98]],hem:[.355,.29],pocket:[0,.5,.24],hood:[.955,.19],blob:[0,.99,-.17],str:[.05,.9,.16,.06,.68,.22],A:[.34,.84,0],B:[.43,.57,.02],ar:[.105,.088],la:[.12,.52,.02],lb:[.12,.13,.02],lr:[.095,.08],ph:{cx:.80,cy:1.30,bx:.78,by:.86}},
+  outfits:[{n:'Princess',ic:'👑',top:{c:0xb591e6},bot:{c:0x7d45be}},DEVO]}];
+const MC=new Map();   // merged meshes already made (the same for everyone), by name
 // the model's own geometry as plain (not interleaved) float attributes: just positions, normals and the index
 function plain(g){const o=new THREE.BufferGeometry();for(const k of ['position','normal']){const a=g.attributes[k],n=a.count,f=new Float32Array(n*3);for(let i=0;i<n;i++){f[i*3]=a.getX(i);f[i*3+1]=a.getY(i);f[i*3+2]=a.getZ(i)}o.setAttribute(k,new THREE.Float32BufferAttribute(f,3))}
   if(g.index)o.setIndex(Array.from(g.index.array));return o}
-// what a part is made of: skin (tinted relative to the skin tone), hair, eye, shine, or a fixed colour
-const roleOf=q=>q.base==='Head'||q.base==='Lid'||q.base==='Fingers'||q.base==='Ear'||q.base==='Nose'||q.base==='Mouth'?'skin':q.base==='Hair'||q.base==='Brow'?'hair':q.base==='Eye'?'eye':q.base==='Shine'||q.base==='Shine2'?'shine':'fixed';
-const tint=q=>new THREE.Color(Math.min(1.3,q.rgb.r/SKINBASE.r),Math.min(1.3,q.rgb.g/SKINBASE.g),Math.min(1.3,q.rgb.b/SKINBASE.b));
-// merged geometry for (limb, role) of the model as made, cached
+// cut a loaded model into parts (once): name -> base name and side, which limb it moves with, what it is made of; limbs' parts are moved so their pivot is the origin
+function catalog(g,scene){const m=CFG[g];scene.updateMatrixWorld(true);const parts=[];let skin=null,hair=null;
+  scene.traverse(o=>{if(!o.isMesh||!o.geometry.attributes.position)return;
+    const mm=/^(.*?)(?:_([LR])\d*)?$/.exec(o.name.replace(m.pre,'').replace(/\.\d+$/,'')),base=mm[1],side=mm[2]==='L'?0:mm[2]==='R'?1:-1,mat=o.material;
+    const role=m.skin.includes(base)?'skin':m.hair.includes(base)?'hair':m.eye.includes(base)?'eye':m.eyefix.includes(base)?'eyefix':m.shine.includes(base)?'shine':m.hat.includes(base)?'hat':'fixed';
+    if(base==='Head')skin=mat.color.clone();if(base==='Hair')hair=mat.color.clone();
+    const geo=plain(o.geometry);geo.applyMatrix4(o.matrixWorld);
+    const limb=m.head.includes(base)?'head':m.arm.includes(base)?'arm'+side:m.leg.includes(base)?'leg'+side:'torso';
+    if(/^arm/.test(limb))geo.translate(-m.ARM[side][0],-m.ARM[side][1],-m.ARM[side][2]);else if(/^leg/.test(limb))geo.translate(-m.LEG[side][0],-m.LEG[side][1],-m.LEG[side][2]);
+    if(role==='eye'||role==='eyefix'||role==='shine')geo.translate(0,-m.EYEY,0);
+    parts.push({base,side,limb,role,geo,rgb:mat.color.clone(),gl:GLOSS[mat.name]??.3})});
+  if(!parts.length||!skin||!hair)throw new Error('the '+m.id+' model has no parts');
+  m.parts=parts;m.skinBase=skin;m.hairBase=hair}
+const rel=(c,b)=>new THREE.Color(Math.min(1.3,c.r/b.r),Math.min(1.3,c.g/b.g),Math.min(1.3,c.b/b.b));   // a colour relative to a base colour (skin and hair take the person's colour times this)
+// merged geometry, cached
 function merged(key,pick){let m=MC.get(key);if(!m){const list=pick();m=list.length?bake(list):null;MC.set(key,m)}return m}
-const fixedOf=(limb,outfit)=>PARTS.filter(q=>q.limb===limb&&roleOf(q)==='fixed'&&(outfit==='knight'||q.base==='Boot'||q.base==='BootCuff')).map(q=>{const c=outfit==='dev'?(q.base==='Boot'?'#f4f4f4':'#d9d4c8'):q.rgb;return part(q.geo.clone(),c,q.gl)});
-const skinOf=limb=>PARTS.filter(q=>q.limb===limb&&roleOf(q)==='skin').map(q=>({geo:paint(q.geo.clone(),tint(q),q.gl),ink:new THREE.Color(1,1,1)}));
-const roleList=(role,fn)=>PARTS.filter(q=>q.limb==='head'&&roleOf(q)===role).map(q=>fn(q));
-/* ---- the Dev: a hoodie, pants and headphones, made to fit the knight (model units, then cut by limb) ---- */
-function devParts(limb){const navy=0x3b3f7a,dark=cshade(navy,.78),pants=0x4a5b7d,out=[];
-  if(limb==='torso'){
-    const e=lathe([[.001,.33],[.27,.33],[.31,.38],[.315,.55],[.30,.75],[.25,.90],[.19,.97],[.001,1.0]],44);e.scale(1,1,.84);out.push(part(e,navy));
-    out.push(part(new THREE.TorusGeometry(.30,.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,.345,0),dark));
-    out.push(part(ellG(.17,.07,.03,[0,.5,.245]),cshade(navy,.88)));
-    out.push(part(new THREE.TorusGeometry(.2,.07,10,32).rotateX(Math.PI/2-.25).translate(0,.99,-.02),navy));out.push(part(ellG(.23,.15,.12,[0,1.0,-.2]),navy));
-    [-1,1].forEach(s=>out.push(part(tube([s*.06,.95,.19],[s*.07,.72,.235],.016,.016,8),'#f2f2f2')))}
-  if(limb==='arm0'||limb==='arm1'){const s=limb==='arm0'?-1:1,A=[s*.34,.90,0],B=[s*.45,.45,.02];
-    out.push(part(tube(A,B,.115,.092),navy),part(ellG(.115,.115,.115,A),navy),part(ringAt(B,[B[0]-A[0],B[1]-A[1],B[2]-A[2]],.093,.022),dark));
-    out.forEach(q=>q.geo.translate(-ARM[s<0?0:1][0],-ARM[s<0?0:1][1],-ARM[s<0?0:1][2]))}
-  if(limb==='leg0'||limb==='leg1'){const s=limb==='leg0'?-1:1,P=LEG[s<0?0:1];
-    out.push(part(tube([s*.23,.50,.04],[s*.215,.19,.03],.115,.092),pants));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
+const INK0=new THREE.Color(0,0,0),INK1=new THREE.Color(1,1,1);
+const skinOf=(g,limb)=>{const m=CFG[g];return m.parts.filter(q=>q.limb===limb&&q.role==='skin').map(q=>({geo:paint(q.geo.clone(),rel(q.rgb,m.skinBase),q.gl),ink:INK1}))};
+const hairOf=g=>{const m=CFG[g];return m.parts.filter(q=>q.role==='hair').map(q=>({geo:paint(q.geo.clone(),rel(q.rgb,m.hairBase),q.gl),ink:INK1}))};
+const eyeOf=(g,role)=>CFG[g].parts.filter(q=>q.role===role).map(q=>({geo:paint(q.geo.clone(),role==='eyefix'?q.rgb:0xffffff,q.gl),ink:INK0}));
+const fixedOf=(g,limb,dev)=>{const m=CFG[g];return m.parts.filter(q=>q.limb===limb&&q.role==='fixed'&&(!dev||m.dev[q.base])).map(q=>part(q.geo.clone(),dev?m.dev[q.base]:q.rgb,q.gl))};
+const hatOf=g=>CFG[g].parts.filter(q=>q.role==='hat').map(q=>part(q.geo.clone(),q.rgb,q.gl));
+/* ---- the Dev: a hoodie, pants and headphones (model units, then cut by limb) ---- */
+function devParts(g,limb){const m=CFG[g],d=m.dv,navy=0x3b3f7a,dark=cshade(navy,.78),out=[];
+  if(limb==='torso'){const e=lathe(d.body,44);e.scale(1,1,.84);out.push(part(e,navy));
+    out.push(part(new THREE.TorusGeometry(d.hem[1],.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0],0),dark));
+    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));
+    out.push(part(new THREE.TorusGeometry(d.hood[1],.07,10,32).rotateX(Math.PI/2-.25).translate(0,d.hood[0],-.02),navy),part(ellG(.23,.15,.12,d.blob),navy));
+    [-1,1].forEach(s=>out.push(part(tube([s*d.str[0],d.str[1],d.str[2]],[s*d.str[3],d.str[4],d.str[5]],.016,.016,8),'#f2f2f2')))}
+  if(/^arm/.test(limb)){const i=limb==='arm0'?0:1,s=i?1:-1,A=[s*d.A[0],d.A[1],d.A[2]],B=[s*d.B[0],d.B[1],d.B[2]];
+    out.push(part(tube(A,B,d.ar[0],d.ar[1]),navy),part(ellG(d.ar[0],d.ar[0],d.ar[0],A),navy),part(ringAt(B,[B[0]-A[0],B[1]-A[1],B[2]-A[2]],d.ar[1]+.001,.022),dark));
+    out.forEach(q=>q.geo.translate(-m.ARM[i][0],-m.ARM[i][1],-m.ARM[i][2]))}
+  if(/^leg/.test(limb)){const i=limb==='leg0'?0:1,s=i?1:-1,P=m.LEG[i];
+    out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),0x4a5b7d));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
   return out}
 // headphones: yellow cups, a dark band over the hair
-function phonesParts(){const y=0xf5c542,d=0x2b2b36,o=[],cy=1.36;
-  [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*.74,cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*.82,cy,0),d,.4))});
-  const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(.74,.9,.74);o.push(part(b.translate(0,cy,0),d,.4));return o}
-const OUTFITS=[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},{n:'Dev',ic:'💻',top:{c:0x3b3f7a},bot:{c:0x4a5b7d}}];
+function phonesParts(g){const p=CFG[g].dv.ph,y=0xf5c542,d=0x2b2b36,o=[];
+  [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
+  const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
 
-/* ---- one person ---- */
+/* ---- one person: the arms and legs are groups made once (the game keeps hold of them); the body is put together for the gender, and the outfit on top ---- */
+const mkM=(par,key,pick,mat,omat)=>{const m=merged(key,pick);if(!m)return;const a=new THREE.Mesh(m.geo,mat);a.castShadow=true;par.add(a);if(omat){const b=new THREE.Mesh(m.ogeo,omat);par.add(b)}};
 function make(parent=W){
-  const root=new THREE.Group(),bodyG=new THREE.Group(),cm=new THREE.Group(),skin=toon('#ffd9b3',{vc:true,gl:true,rim:.16,inkK:.6}),hair=toon('#241c1c',{hgrad:1,gl:true,hy:[1,2.2],rim:.12,inkK:.4}),eye=toon('#17110f',{gl:true,rim:.05});
-  root.add(bodyG);bodyG.add(cm);cm.scale.setScalar(S);
-  const c={cm,skin,hair,eye,skinOL:outlineMat(skin.userData.ink,TH),hairOL:outlineMat(hair.userData.ink,TH),out:[],eyeG:new THREE.Group(),hatG:new THREE.Group()};
-  const add=(par,mesh,cast=true)=>{mesh.castShadow=cast;par.add(mesh);return mesh};
-  const addM=(par,m,mat,omat)=>{if(!m)return;add(par,new THREE.Mesh(m.geo,mat));if(omat)add(par,new THREE.Mesh(m.ogeo,omat),false)};
-  const mk=(par,key,pick,mat,omat)=>addM(par,merged(key,pick),mat,omat);
-  // the head and the hands never change; skin, hair and eyes are this person's own materials
-  mk(cm,'skin|head',()=>skinOf('head'),skin,c.skinOL);mk(cm,'hair',()=>roleList('hair',q=>({geo:paint(q.geo.clone(),0xffffff,q.gl),ink:new THREE.Color(1,1,1)})),hair,c.hairOL);
-  c.eyeG.position.y=EYEY;cm.add(c.eyeG);mk(c.eyeG,'eye',()=>roleList('eye',q=>({geo:paint(q.geo.clone(),0xffffff,q.gl),ink:new THREE.Color(0,0,0)})),eye,null);
-  mk(c.eyeG,'shine',()=>roleList('shine',q=>({geo:paint(q.geo.clone(),0xffffff),ink:new THREE.Color(0,0,0)})),WHITE,null);
-  cm.add(c.hatG);
-  const arms=[0,1].map(i=>{const g=new THREE.Group(),k=new THREE.Group();g.position.set(...ARM[i]);k.rotation.z=i?-.12:.12;g.add(k);g.rotation.z=i?.12:-.12;cm.add(g);g.userData.k=k;mk(k,'skin|arm'+i,()=>skinOf('arm'+i),skin,c.skinOL);return g});
-  const legs=[0,1].map(i=>{const g=new THREE.Group(),k=new THREE.Group();g.position.set(...LEG[i]);g.add(k);cm.add(g);g.userData.k=k;return g});
-  c.limbs={torso:cm,arm0:arms[0].userData.k,arm1:arms[1].userData.k,leg0:legs[0].userData.k,leg1:legs[1].userData.k};c.mk=mk;
-  parent.add(root);
-  return{root,body:bodyG,torso:new THREE.Group(),head:new THREE.Group(),arms,legs,cb:c,st:{},bl:{t:2+Math.random()*2,k:0},eyes:[],sy:.45,pv:.68,rideY:1.07,rideZ:-.42,rideT:.22}}
-function clothe(p,oi){const c=p.cb,o=oi?'dev':'knight';c.out.forEach(m=>m.parent&&m.parent.remove(m));c.out=[];
+  const root=new THREE.Group(),bodyG=new THREE.Group(),cm=new THREE.Group(),skin=toon('#ffd9b3',{vc:true,gl:true,rim:.16,inkK:.6}),hair=toon('#241c1c',{vc:true,hgrad:1,gl:true,hy:[.7,2.2],rim:.12,inkK:.4}),eye=toon('#17110f',{gl:true,rim:.05});
+  root.add(bodyG);bodyG.add(cm);parent.add(root);
+  const arms=[-1,1].map(s=>{const g=new THREE.Group();g.rotation.z=s*.12;cm.add(g);return g}),legs=[0,1].map(()=>{const g=new THREE.Group();cm.add(g);return g});
+  const p={root,body:bodyG,torso:new THREE.Group(),head:new THREE.Group(),arms,legs,st:{},bl:{t:2+Math.random()*2,k:0},eyes:[],sy:0,pv:0,rideY:0,rideZ:0,rideT:0,
+    cb:{cm,skin,hair,eye,skinOL:outlineMat(skin.userData.ink,TH),hairOL:outlineMat(hair.userData.ink,TH),out:[],g:-1}};
+  assemble(p,0);return p}
+function assemble(p,g){const c=p.cb,m=CFG[g],keep=new Set([...p.arms,...p.legs]);   // the head, hair, eyes and skin of one gender's model
+  c.cm.children.slice().forEach(o=>{if(!keep.has(o))c.cm.remove(o)});[...p.arms,...p.legs].forEach(l=>l.clear());
+  c.g=g;c.S=m.S;c.cm.scale.setScalar(m.S);c.out=[];c.eyeG=new THREE.Group();c.eyeG.position.y=m.EYEY;c.hatG=new THREE.Group();c.cm.add(c.eyeG,c.hatG);
+  c.limbs={torso:c.cm};
+  [0,1].forEach(i=>{const k=new THREE.Group(),l=new THREE.Group();p.arms[i].position.set(...m.ARM[i]);k.rotation.z=i?-.12:.12;p.arms[i].add(k);c.limbs['arm'+i]=k;p.legs[i].position.set(...m.LEG[i]);p.legs[i].add(l);c.limbs['leg'+i]=l});
+  mkM(c.cm,g+'|skin|head',()=>skinOf(g,'head'),c.skin,c.skinOL);mkM(c.cm,g+'|skin|torso',()=>skinOf(g,'torso'),c.skin,c.skinOL);mkM(c.cm,g+'|hair',()=>hairOf(g),c.hair,c.hairOL);
+  mkM(c.eyeG,g+'|eye',()=>eyeOf(g,'eye'),c.eye,null);mkM(c.eyeG,g+'|eyefix',()=>eyeOf(g,'eyefix'),VCM,null);mkM(c.eyeG,g+'|shine',()=>eyeOf(g,'shine'),WHITE,null);
+  for(const l of ['arm0','arm1','leg0','leg1'])mkM(c.limbs[l],g+'|skin|'+l,()=>skinOf(g,l),c.skin,c.skinOL);
+  p.sy=m.sy;p.pv=m.pv;[p.rideY,p.rideZ,p.rideT]=m.ride}
+function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,key=g+(dev?'|dev|':'|main|');c.out.forEach(o=>o.parent&&o.parent.remove(o));c.out=[];
   for(const limb of ['torso','arm0','arm1','leg0','leg1']){const par=c.limbs[limb],before=par.children.length;
-    c.mk(par,o+'|'+limb,()=>[...fixedOf(limb,o),...(o==='dev'?devParts(limb):[])],VCM,VCO);
-    if(o==='dev'&&limb==='torso'){const pr=new THREE.Mesh(new THREE.PlaneGeometry(.2,.15),Object.assign(toon(0xffffff,{map:PRINT(),transparent:true}),{alphaTest:.4}));pr.position.set(0,.72,.28);par.add(pr);c.out.push(pr)}
+    mkM(par,key+limb,()=>[...fixedOf(g,limb,dev),...(dev?devParts(g,limb):[])],VCM,VCO);
+    if(dev&&limb==='torso'){const pr=new THREE.Mesh(new THREE.PlaneGeometry(.2,.15),Object.assign(toon(0xffffff,{map:PRINT(),transparent:true}),{alphaTest:.4}));pr.position.set(...m.print);par.add(pr)}
     c.out.push(...par.children.slice(before))}
-  c.hatG.children.slice().forEach(m=>c.hatG.remove(m));
-  if(o==='dev')c.mk(c.hatG,'phones',()=>phonesParts(),VCM,VCO)}
-function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=(cfg.outfit|0)>0?1:0;
+  c.hatG.children.slice().forEach(o=>c.hatG.remove(o));
+  mkM(c.hatG,key+'hat',()=>dev?phonesParts(g):hatOf(g),VCM,VCO)}
+function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=(cfg.outfit|0)>0?1:0,g=(cfg.gender|0)>0&&CFG[1].parts?1:0;
+  if(c.g!==g){assemble(p,g);s.oi=undefined}
   if(s.skin!==cfg.skin){const sc=SKINS[cfg.skin][1],ink=inkOf(cshade(sc,.78),.6);c.skin.color.set(sc);c.skinOL.color.copy(ink)}
   if(s.hcol!==cfg.hcol){const hc=HAIRC[cfg.hcol][1];c.hair.color.set(hc);c.hairOL.color.copy(inkOf(hc,.4))}
   if(s.eye!==eye)c.eye.color.set(EYES[eye][1]);
   if(s.oi!==oi)clothe(p,oi);
-  p.st={skin:cfg.skin,hair:cfg.hair,hcol:cfg.hcol,face:cfg.face,eye,outfit:cfg.outfit,oi}}
+  p.st={skin:cfg.skin,hair:cfg.hair,hcol:cfg.hcol,face:cfg.face,eye,outfit:cfg.outfit,gender:g,oi}}
 // every frame: a blink now and then (sometimes twice: the eyes squash flat), and a slow breath
 function tick(p,dt){const c=p.cb,b=p.bl;
   b.t-=dt;if(b.t<=0){b.k=.13;b.t=2.2+Math.random()*3.8;if(Math.random()<.2)b.t=.35}if(b.k>0)b.k-=dt;
-  c.eyeG.scale.y=b.k>0?.12:1;c.cm.scale.y=S*p.torso.scale.y;ENVK.value=Math.max(.12,1-.85*nt);ENVSUN.value.copy(sdir)}
+  c.eyeG.scale.y=b.k>0?.12:1;c.cm.scale.y=c.S*p.torso.scale.y;ENVK.value=Math.max(.12,1-.85*nt);ENVSUN.value.copy(sdir)}
 
-const gl=await CBP;if(!gl)return null;
-try{catalog(gl.scene)}catch(e){console.warn('[knight] model not usable, using the older figures:',e);return null}
-return{make,dress,tick,outfits:OUTFITS,hat:(p,on)=>{p.cb.hatG.visible=on}}})();
-const OUTFITS=CB?CB.outfits:OUT;   // the outfits you can pick from: the knight's two, or the older figures' ten
+const gls=await CBP;if(!gls[0])return null;
+try{catalog(0,gls[0].scene)}catch(e){console.warn('[chibi] the knight is not usable, using the older figures:',e);return null}
+if(gls[1])try{catalog(1,gls[1].scene)}catch(e){console.warn('[chibi] the princess is not usable (everyone is the knight):',e);CFG[1].parts=null}
+return{make,dress,tick,outfits:[CFG[0].outfits,CFG[1].parts?CFG[1].outfits:CFG[0].outfits],genders:CFG[1].parts?2:1,hat:(p,on)=>{p.cb.hatG.visible=on}}})();
+const OUTFITS=CB?CB.outfits[0]:OUT;   // how many outfits there are to pick from: the models' two, or the older figures' ten (the first one's names; a gender's own names are shown in the menu)
 // whichever bodies are in use: the chibi ones, or the older figures if the model could not be loaded
 const makePerson=(parent=W)=>CB?CB.make(parent):makePersonLegacy(parent),dress=(p,c)=>p.cb?CB.dress(p,c):dressLegacy(p,c),showHat=(p,on)=>p.cb?CB.hat(p,on):showHatLegacy(p,on),
   blinkTick=(p,dt)=>p.cb?CB.tick(p,dt):blinkTickLegacy(p,dt);   // (called once a frame for everyone: blinks, and for the chibi bodies also turns the game's angles into bone rotations)
 // PPL[0] is you (named after your Google account), PPL[1] the friend; `ctl` is whichever one you are playing, the other one wanders
-const PPL=[{name:ME.name,skin:1,hair:0,hcol:0,face:0,outfit:0,eye:0},{name:FRIEND.name,skin:2,hair:3,hcol:2,face:1,outfit:CB?1:6,eye:3}];
+const PPL=[{name:ME.name,skin:1,hair:0,hcol:0,face:0,outfit:0,eye:0,gender:0},{name:FRIEND.name,skin:0,hair:3,hcol:4,face:1,outfit:CB?0:6,eye:1,gender:CB&&CB.genders>1?1:0}];
 try{const n=localStorage.getItem('myworld.friend');if(n)PPL[1].name=n}catch(_){}
 try{const j=JSON.parse(localStorage.getItem('myworld.look.friend')||'null');if(Array.isArray(j))Object.assign(PPL[1],unpackLook(j))}catch(_){}
 let ctl=0;
@@ -2828,8 +2847,8 @@ function setLook(key,i){const c=PPL[ctl];if(c[key]===i)return;c[key]=i;dress(me,
 const mkBtn=(cls,box)=>{const b=document.createElement('button');b.type='button';b.className=cls;box.appendChild(b);return b};
 const swatches=(box,key,list)=>GRP[key]=list.map((it,i)=>{const b=mkBtn('sw',box);b.style.background=it[1];b.title=it[0];b.setAttribute('aria-label',it[0]);b.onclick=()=>setLook(key,i);return b});
 const chips=(box,key,names)=>GRP[key]=names.map((n,i)=>{const b=mkBtn('chip',box);b.textContent=n;b.onclick=()=>setLook(key,i);return b});
-swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('sweye'),'eye',EYES);swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));
-$('sweye').hidden=$('sweye').previousElementSibling.hidden=!CB;   // (eye colour is only for the knight)
+chips($('chgender'),'gender',['Male','Female']);swatches($('swskin'),'skin',SKINS);chips($('chface'),'face',FACES.map(f=>f.n));swatches($('sweye'),'eye',EYES);swatches($('swhair'),'hcol',HAIRC);chips($('chhair'),'hair',HAIRS.map(h=>h.n));
+$('sweye').hidden=$('sweye').previousElementSibling.hidden=!CB;$('chgender').hidden=$('chgender').previousElementSibling.hidden=!(CB&&CB.genders>1);   // (eye colour and gender are only for the chibis)
 if(CB)['chface','chhair'].forEach(i=>{$(i).hidden=$(i).previousElementSibling.hidden=true});   // (the knight has the one face and the one hairstyle, so only colours to pick)
 GRP.outfit=OUTFITS.map((o,i)=>{const b=mkBtn('of',ofl);b.innerHTML='<b></b><span></span><i></i>';b.children[0].textContent=o.ic;b.children[1].textContent=o.n;
   b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c!=null?o.bot.c:o.top.c)+' 50%)';b.onclick=()=>setLook('outfit',i);return b});
@@ -2837,7 +2856,9 @@ const stBtns=STATUS.map((s,i)=>{const b=mkBtn('chip',$('chstat'));b.textContent=
 const TABS=['face','hair','out'];
 function tab(n){TABS.forEach(t=>{const on=t===n;$('t_'+t).classList.toggle('on',on);$('t_'+t).setAttribute('aria-selected',on);$('p_'+t).classList.toggle('on',on)});PV.focus(n)}
 TABS.forEach(t=>$('t_'+t).onclick=()=>tab(t));tab('out');
-function refreshPeople(){const c=PPL[ctl];Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
+function refreshPeople(){const c=PPL[ctl];
+  if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)'});   // (the first outfit is the knight's armour or the princess's gown)
+  Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
   $('who').textContent='Playing as '+c.name;$('swap').textContent='👫 Be '+PPL[1-ctl].name;PV.show(c);
   if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
