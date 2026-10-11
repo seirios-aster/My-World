@@ -81,8 +81,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .of b{font-size:17px;line-height:1;font-weight:400}
 .of span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .of i{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
-#mnl,#fnl{display:flex;flex-direction:column;gap:4px;padding:8px 6px 4px;margin-top:4px;border-top:2px solid var(--paper-2);font:700 12px var(--body);color:var(--ink-soft)}
-#myname,#fname{font:600 15px var(--display);border:2px solid var(--paper-2);border-radius:9px;padding:6px 8px;color:var(--ink);background:#fff;min-width:0;width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
+#mnl,#fnl,#dnl{display:flex;flex-direction:column;gap:4px;padding:8px 6px 4px;margin-top:4px;border-top:2px solid var(--paper-2);font:700 12px var(--body);color:var(--ink-soft)}
+#myname,#fname,#dname{font:600 15px var(--display);border:2px solid var(--paper-2);border-radius:9px;padding:6px 8px;color:var(--ink);background:#fff;min-width:0;width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 #onames{display:flex;flex-direction:column}
 #pick{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(20,24,40,.55);padding:16px;box-sizing:border-box}#pkbox{background:var(--paper);color:var(--ink);border-radius:20px;padding:22px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow)}#pkbox h2{margin:0 0 4px;font:700 22px var(--display)}#pkbox p{margin:0 0 14px;font:600 14px var(--body);opacity:.7}#pkrow{display:flex;gap:12px}.pkc{flex:1;border:3px solid transparent;border-radius:16px;background:var(--paper-2);padding:14px 8px;cursor:pointer;font:700 17px var(--body);color:var(--ink);display:flex;flex-direction:column;gap:2px;align-items:center}.pkc b{font-size:44px}.pkc small{opacity:.6;font-weight:600}.pkc:hover,.pkc:focus-visible{border-color:var(--sun)}
 #obuild{font:600 11px/1.4 var(--body);opacity:.55;padding:8px 6px 0;margin-top:4px;border-top:2px solid var(--paper-2)}
@@ -310,7 +310,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
   <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
-  <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
+  <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label>
+  <label id="dnl">Dog's name<input id="dname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
   <div id="obuild"></div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
@@ -367,7 +368,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11d';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11e';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -403,7 +404,7 @@ const SPOTS=[
   {title:'Golden Hour',place:'Beach name, Region',date:'2026',caption:''}]}
 ];
 // the two people: you, and a friend who wanders the trails. Visitors can rename the friend and change how either of them looks; it is remembered per browser.
-const ME={name:'Explorer'},FRIEND={name:'Friend'};   // ME.name is only the fallback: signed in, it becomes your Google first name (or whatever you rename yourself to)
+const ME={name:'Explorer'},FRIEND={name:'Friend'},DOGDEF='Awaw';   // ME.name is only the fallback: signed in, it becomes your Google first name (or whatever you rename yourself to)
 const APP={name:'Tambayan',short:'Tambayan'};   // the app's name: page title, login screen, loading screen, Home Screen icon
 // latitude for the night sky: a good-enough guess from the visitor's time zone (no location permission needed); Manila if unknown
 const TZLAT={'Asia/Manila':14.6,'Asia/Singapore':1.3,'Asia/Kuala_Lumpur':3.1,'Asia/Jakarta':-6.2,'Asia/Bangkok':13.8,'Asia/Ho_Chi_Minh':10.8,'Asia/Saigon':10.8,'Asia/Hong_Kong':22.3,'Asia/Shanghai':31.2,'Asia/Taipei':25,'Asia/Seoul':37.6,'Asia/Tokyo':35.7,'Asia/Kolkata':23,'Asia/Calcutta':23,'Asia/Dhaka':23.8,'Asia/Karachi':24.9,'Asia/Dubai':25.2,'Asia/Riyadh':24.7,'Asia/Tehran':35.7,'Asia/Jerusalem':31.8,
@@ -2206,7 +2207,7 @@ const TH=.014;   // outline thickness (model units)
 /* ---- colours and shading ---- */
 const ENVK={value:1},ENVSUN={value:new THREE.Vector3(.4,.8,.5)};   // shared by every material: how much light there is to reflect (day 1, night low) and where the sun is
 const col=c=>new THREE.Color(c),cshade=(c,k)=>col(c).multiplyScalar(k);
-const inkOf=(c,k=.42)=>{const o=col(c),h={};o.getHSL(h);o.setHSL(h.h,Math.min(1,h.s*1.05+.05),Math.max(.05,h.l*k));return o};   // the outline colour: the part's own colour, much darker (looks drawn, not black)
+const inkOf=(c,k=.42)=>{const o=col(c),h={};o.getHSL(h);o.setHSL(h.h,Math.min(1,h.s*1.05+.05)*Math.min(1,(1-Math.abs(2*h.l-1))*2.5),Math.max(.05,h.l*k));return o};   // (a near-white colour keeps a neutral dark outline: its hue is a whisper, not a purple)   // the outline colour: the part's own colour, much darker (looks drawn, not black)
 const sm=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
 const RAMP=(()=>{const n=96,d=new Uint8Array(n*4);for(let i=0;i<n;i++){const x=i/(n-1),b=Math.round(Math.min(1,.60+.24*sm(.36,.46,x)+.16*sm(.66,.76,x))*255);d.set([b,b,b,255],i*4)}   // a soft 3-tone anime ramp
   const t=new THREE.DataTexture(d,n,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return t})();
@@ -2274,7 +2275,7 @@ const CFG=[
   outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO]},
  {id:'princess',S:1.55,EYEY:1.32,pre:/^PR_/,ARM:[[-.33,.80,0],[.33,.80,0]],LEG:[[-.12,.36,.02],[.12,.36,.02]],sy:.47,pv:.56,ride:[1.05,-.42,.22],
   head:['Blush','Brow','Ear','Eye','Hair','Head','Iris','Lash','LashA','Mouth','Nose','Pupil','Shine','Shine2',...TIARA],arm:['Cuff','Hand','Puff','Sleeve'],leg:['Leg','Shoe'],
-  skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},recolor:{PR_Dress:'#fbf9ff',PR_Dress2:'#ebe6f5'},print:[0,.70,.255],
+  skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},recolor:{PR_Dress:'#fbf9ff',PR_Dress2:'#ebe6f5',PR_Lace:'#fcfaff',PR_Shoe:'#f6f3fa'},print:[0,.70,.255],
   dv:{body:[[.001,.34],[.26,.34],[.30,.39],[.31,.52],[.29,.70],[.25,.84],[.19,.93],[.001,.98]],hem:[.355,.29],pocket:[0,.5,.24],hood:[.955,.19],blob:[0,.99,-.17],str:[.05,.9,.16,.06,.68,.22],A:[.34,.84,0],B:[.43,.57,.02],ar:[.105,.088],la:[.12,.52,.02],lb:[.12,.13,.02],lr:[.095,.08],ph:{cx:.80,cy:1.30,bx:.78,by:.86}},
   outfits:[{n:'Princess',ic:'👑',top:{c:0xfbf9ff},bot:{c:0xd5c9ee}},DEVO]}];
 const MC=new Map();   // merged meshes already made (the same for everyone), by name
@@ -2780,7 +2781,7 @@ mdel.onclick=async()=>{if(mbusy||!cur)return;const s=cur,i=ci,it=s.items[i];if(!
   mbusy=false;if(cur===s)refreshItem(i)};
 
 // the character menu: skin, face, hair and outfit for whoever you are playing (the outfit is clothes only), swap who you play, and the names
-const of=$('outfits'),ofl=$('oflist'),fname=$('fname'),myname=$('myname'),tagP=$('tagP'),tagN=$('tagN'),tagD=$('tagD'),sayEl=$('say');tagD.textContent='Awaw';
+const of=$('outfits'),ofl=$('oflist'),fname=$('fname'),myname=$('myname'),tagP=$('tagP'),tagN=$('tagN'),tagD=$('tagD'),dname=$('dname'),sayEl=$('say');let dogName=DOGDEF;try{dogName=localStorage.getItem('myworld.dog')||DOGDEF}catch(_){}tagD.textContent=dogName;   // (the dog's name: yours to change)
 /* ---- your state follows your account: look, names, the friend, who you play and where you stand. This device keeps a copy (so a guest, or no network, still gets it back);
    a signed-in account also keeps it in the cloud, so a new device or a cleared browser starts where you left off. Nothing is written to the cloud until what is saved there
    has been read, so a slow or failed read can never wipe it. ---- */
@@ -2789,7 +2790,7 @@ let cloud=false,dirty=false,saveT=0,posDone=false,lastPos=null,myCustom='',PST='
 const POSK=u=>'myworld.pos.'+(u&&u.id?u.id:'guest');
 const posNow=()=>({x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2)});
 function stateOut(){
-  return{v:1,name:myCustom,look:packLook(PPL[0]),friend:{name:PPL[1].name,look:packLook(PPL[1])},ctl,pos:posNow()}}
+  return{v:1,name:myCustom,look:packLook(PPL[0]),friend:{name:PPL[1].name,look:packLook(PPL[1])},dog:dogName,ctl,pos:posNow()}}
 function touchState(now){if(!cloud)return;dirty=true;if(now)flushState();else if(!saveT)saveT=setTimeout(flushState,3000)}
 function flushState(){clearTimeout(saveT);saveT=0;const S=storage.session;
   if(cloud&&dirty&&S&&!S.active()){PST='waiting: this tab has not been confirmed as your active session yet ('+S.state()+')';return}
@@ -2813,6 +2814,7 @@ function stateIn(s,u){const put=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}
   const f=s.friend&&typeof s.friend==='object'?s.friend:{},fn=clean(f.name).slice(0,16);
   if(Array.isArray(f.look)){Object.assign(PPL[1],unpackLook(f.look));put('myworld.look.friend',JSON.stringify(packLook(PPL[1])))}
   if(fn){PPL[1].name=fn;put('myworld.friend',fn)}
+  const dn=clean(s.dog).slice(0,16);if(dn){dogName=dn;put('myworld.dog',dn);tagD.textContent=dn;dname.value=dn}
   applyMyName();applyMyLook();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople();restorePos(s)}
 async function syncState(){applyMyName();applyMyLook();   // (what this device remembers, straight away)
   const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;
@@ -2870,7 +2872,7 @@ function refreshPeople(){const c=PPL[ctl];
   Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
   $('who').textContent='Playing as '+c.name;$('swap').textContent='👫 Be '+PPL[1-ctl].name;PV.show(c);
-  if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
+  if(document.activeElement!==dname)dname.value=dogName;if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
 $('bo').onclick=()=>{of.style.display=of.style.display==='flex'?'none':'flex';if(of.style.display==='flex')PV.start()};
 // the menu closes with its x, by tapping anywhere outside it, or with Escape
 const closeMenu=()=>{of.style.display='none'};$('oclose').onclick=closeMenu;
@@ -2935,6 +2937,8 @@ if(storage.room&&storage.auth){
   storage.ready.then(syncRoom);storage.auth.onChange(()=>{syncRoom()});storage.session.onChange(()=>{syncRoom()})}
 const saveName=()=>{const v=fname.value.replace(/\s+/g,' ').trim().slice(0,16)||FRIEND.name;PPL[1].name=v;try{localStorage.setItem('myworld.friend',v)}catch(_){}refreshPeople();touchState()};
 fname.addEventListener('change',saveName);fname.addEventListener('keydown',e=>{if(e.key==='Enter'){saveName();fname.blur()}else if(e.key==='Escape')fname.blur()});
+const saveDog=()=>{dogName=dname.value.replace(/\s+/g,' ').trim().slice(0,16)||DOGDEF;try{localStorage.setItem('myworld.dog',dogName)}catch(_){}tagD.textContent=dogName;dname.value=dogName;touchState()};
+dname.addEventListener('change',saveDog);dname.addEventListener('keydown',e=>{if(e.key==='Enter'){saveDog();dname.blur()}else if(e.key==='Escape')dname.blur()});
 tagN.onclick=()=>{of.style.display='flex';PV.start();const i=ctl===0?fname:myname;i.focus();i.select()};   // the far tag is whoever you aren't playing
 // your name follows your Google account (first name). Rename yourself in the character menu: it's remembered for that account on this device; clear it to go back to the Google name.
 const NK=u=>'myworld.name.'+(u&&u.id?u.id:'guest');
@@ -3748,7 +3752,7 @@ function frame(){
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
-  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'🧍 Stand up'+(touch?'':'  ·  C'):nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet Awaw'+(touch?'':'  ·  E'):'';
+  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'🧍 Stand up'+(touch?'':'  ·  C'):nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
   pr.style.display=ptx&&!open?'block':'none';if(ptx&&pr.textContent!==ptx)pr.textContent=ptx;
   ringMat.opacity=.55+.3*Math.sin(t*2.4);
   // sky life
