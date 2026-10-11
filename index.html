@@ -46,8 +46,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #vpc{font:700 12px var(--body);min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
-#bo img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-#bcar svg{transition:transform .25s}#tools.min #bcar svg{transform:rotate(180deg)}
+#bcar img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+#bx[hidden]{display:none}
 #tools.min>*:not(#bcar){display:none!important}
 #tools .txt{font-size:12px;letter-spacing:.02em}
 #clk{position:fixed;left:calc(26px + var(--mh,140px) + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:40px;box-sizing:border-box;text-align:center;padding:3px 9px;background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 9px;font:700 11px var(--body);font-variant-numeric:tabular-nums;box-shadow:var(--shadow);white-space:nowrap}
@@ -286,15 +286,12 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="hud"></div>
 <button id="prompt" type="button"></button>
 <div id="tools">
-  <button class="round" id="bcar" title="Hide or show the buttons" aria-label="Hide buttons" aria-expanded="true"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  <button class="round" id="bo" title="Character" aria-label="Character">🧑</button>
+  <button class="round" id="bcar" title="Hide or show the buttons" aria-label="Hide buttons" aria-expanded="true"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
+  <button class="round" id="bo" title="Character" aria-label="Character"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></button>
   <button class="round" id="bn" aria-label="Time of day">🕒</button>
   <button class="round" id="bs" title="Sound" aria-label="Sound">🔊</button>
   <button class="round" id="bc" title="Constellation lines and names - tap for stars only" aria-label="Constellation lines">✨</button>
-  <button class="round" id="bd" title="Sky for today - tap to step through the months" aria-label="Month">📅</button>
-  <button class="round" id="bq" title="Orion view: stands upright with Sirius below (as seen high in the south)" aria-label="Orion view">🏹</button>
-  <button class="round" id="bg" title="Stargaze: look up at the sky (tap again to come back)" aria-label="Stargaze">🔭</button>
-  <button class="round" id="bx" title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates">📍</button>
+  <button class="round" id="bx" hidden title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates">📍</button>
   <button class="round txt" id="bh" aria-label="Graphics quality">HD</button>
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
@@ -374,7 +371,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11n';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11o';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2956,7 +2953,8 @@ tagN.onclick=()=>{of.style.display='flex';PV.start();const i=ctl===0?fname:mynam
 // your name follows your Google account (first name). Rename yourself in the character menu: it's remembered for that account on this device; clear it to go back to the Google name.
 const NK=u=>'myworld.name.'+(u&&u.id?u.id:'guest');
 const authName=u=>(u&&(u.first||String(u.name||'').trim().split(/\s+/)[0]))||'';
-function applyMyPhoto(u){const b=$('bo'),p=(u&&/^https:\/\//.test(u.photo||''))?u.photo:'';if(b.dataset.ph===p)return;b.dataset.ph=p;if(!p){b.textContent='🧑';return}const im=new Image();im.alt='';im.referrerPolicy='no-referrer';im.onerror=()=>{if(b.dataset.ph===p){b.dataset.ph='';b.textContent='🧑'}};im.onload=()=>{if(b.dataset.ph===p){b.textContent='';b.appendChild(im)}};im.src=p}
+const USERIC=$('bo').innerHTML;
+function applyMyPhoto(u){const b=$('bcar'),p=(u&&/^https:\/\//.test(u.photo||''))?u.photo:'';if(b.dataset.ph===p)return;b.dataset.ph=p;if(!p){b.innerHTML=USERIC;return}const im=new Image();im.alt='';im.referrerPolicy='no-referrer';im.onerror=()=>{if(b.dataset.ph===p){b.dataset.ph='';b.innerHTML=USERIC}};im.onload=()=>{if(b.dataset.ph===p){b.textContent='';b.appendChild(im)}};im.src=p}
 function applyMyName(){const u=storage.auth&&storage.auth.user();applyMyPhoto(u);let v='';try{v=localStorage.getItem(NK(u))||''}catch(_){}
   const g=authName(u).slice(0,16);myCustom=v;PPL[0].name=ME.name=v||g||'Explorer';myname.placeholder=g||'Explorer';
   if(HOMEP.redrawPlate)HOMEP.redrawPlate();refreshPeople()}
@@ -3013,18 +3011,15 @@ setTm(0);try{setWorldTz(localStorage.getItem('tambayan.wtz'))}catch(_){}   // (t
 $('bn').onclick=()=>setTm(tmode===0?1:0);
 const curDoy=()=>dayI?Math.round((dayI-1)*30.4+15):doyNow()+clockH()/24,sunY=h=>Math.sin((h-6)/12*Math.PI)*.85,orionH=d=>(((12+5.6-(d-80)*24/365.25)%24)+24)%24;
 // Orion jump: freeze the clock when Orion crosses the southern meridian (upright, Sirius below), face south and look up
-$('bq').onclick=()=>{if(sunY(orionH(curDoy()))>-.12){for(let i=1;i<=12;i++){dayI=((dayI||wall().mo)-1+i)%12+1;if(sunY(orionH(curDoy()))<=-.12)break}}
-  $('bd').title='Sky for mid-'+(dayI?MON[dayI-1]:'today');simH=orionH(curDoy());setTm(2);cmode=0;$('bc').style.opacity=1;yaw=Math.PI;pitch=-1.17};
 $('bc').onclick=()=>{cmode=1-cmode;$('bc').style.opacity=cmode?.55:1;$('bc').title=cmode?'Stars only (as in real life) - tap for lines and names':'Constellation lines and names - tap for stars only'};
-$('bg').onclick=()=>{pitch=pitch<0?.72:-1.15;yaw=Math.PI};
-$('bd').onclick=()=>{dayI=(dayI+1)%13;$('bd').title=dayI?'Sky for mid-'+MON[dayI-1]+' - tap for next month':'Sky for today - tap to step through the months'};
 /* The GM picks the game's time zone; it lives in one database row. Everybody reads it when they arrive, whenever the GM nudges the world channel (a tiny 'tz' message that only says
    "look again": the real value always comes from the database, so nobody can fake it) and every minute and a half as a safety net. */
 const GMZ=[['device',"Each player's own device time (everyone different)"],['America/New_York','US Eastern - Georgia, New York'],['America/Chicago','US Central - Texas, Illinois'],['America/Denver','US Mountain - Colorado, Utah'],['America/Phoenix','Arizona'],['America/Los_Angeles','US Pacific - California, Washington'],['America/Anchorage','Alaska'],['Pacific/Honolulu','Hawaii'],['America/Toronto','Toronto'],['America/Mexico_City','Mexico City'],['America/Bogota','Bogota'],['America/Lima','Lima'],['Europe/London','London'],['Europe/Paris','Paris, Berlin, Madrid'],['Europe/Istanbul','Istanbul'],['Europe/Moscow','Moscow'],['Africa/Cairo','Cairo'],['Africa/Lagos','Lagos'],['Africa/Johannesburg','Johannesburg'],['Asia/Kolkata','India'],['Asia/Bangkok','Bangkok, Jakarta'],['Asia/Manila','Philippines'],['Asia/Singapore','Singapore, Kuala Lumpur'],['Asia/Hong_Kong','Hong Kong'],['Asia/Shanghai','China'],['Asia/Seoul','Korea'],['Asia/Tokyo','Japan'],['Australia/Sydney','Sydney, Melbourne'],['Australia/Perth','Perth'],['Pacific/Auckland','New Zealand']];
 const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;if(gm)$('gmtz').value=WTZ}
+const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick()};   // (the coordinates pin is for the GM only)
+async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;pinFor(false);return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;pinFor(gm);if(gm)$('gmtz').value=WTZ}
 if(SET){const sel=$('gmtz'),note=t=>{$('gmnote').textContent=t};
   GMZ.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});syncSel();
   sel.onchange=async()=>{const z=sel.value;note('Saving...');sel.disabled=true;
