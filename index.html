@@ -47,6 +47,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 #bo img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+#swap[hidden]{display:none}
 #bcar svg{transition:transform .25s}#tools.min #bcar svg{transform:rotate(180deg)}
 #tools.min>*:not(#bcar){display:none!important}
 #tools .txt{font-size:12px;letter-spacing:.02em}
@@ -375,7 +376,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11k';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11l';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2416,6 +2417,9 @@ function frGoSit(b){const os=b.opts.filter(o=>!(o.seat&&o.seat.who));if(!os.leng
   let w=0;os.forEach(o=>w+=wt(o));let r=Math.random()*w,o=os[os.length-1];for(const c of os)if((r-=wt(c))<=0){o=c;break}
   FR.goSit=o;FR.goB=b;FR.path=o.path.map(p=>[p[0],p[1]]);FR.k=0;FR.exit=[...o.path.slice(0,-1).reverse(),TG.N[b.n].slice()];return true}   // exit: back out the way she came
 const FR={mode:'idle',path:[],k:0,wait:4,greet:0,cool:3,prev:'idle',dest:-1,ph:0,amt:0,say:'',sayT:0,chk:0,cx:0,cz:0};
+let frOn=true;   // the friend is only there while you are the only one online
+function frShow(on){frOn=on;fr.root.visible=on;$('swap').hidden=!on;frUnseat();FR.exit=null;Object.assign(FR,{mode:'idle',wait:2.5,cool:4,sayT:0});
+  if(on){const q=P.position,f=[[3.2,-2.4],[-3.2,-2.4],[0,-3.6],[0,3.6]].find(o=>walkable(q.x+o[0],q.z+o[1]));if(f)fr.root.position.set(q.x+f[0],groundY(q.x+f[0],q.z+f[1]),q.z+f[1]);DOG.reset=1}}   // (and she comes back beside you)
 function frUnseat(){if(FR.sit!=null){FR.sit=null;standPose(fr)}if(FR.seat){FR.seat.who=null;FR.seat=null}FR.goSit=null}
 function frPlan(){frUnseat();const ex=FR.exit||[];FR.exit=null;const q=fr.root.position,here=ex.length?TG.near(...ex[ex.length-1]):TG.near(q.x,q.z);let opts=HANG.filter(h=>h.n!==FR.dest);
   const SPB=BEACHES[2],pr=sitting&&sitting.pair&&!sitting.pair.who?sitting.pair:null,join=pr&&Math.random()<.8?SPB.opts.find(o=>o.seat===pr):null;   // you're on the bench: she comes to sit beside you
@@ -3425,7 +3429,7 @@ function drawMap(){const S=mapCv.width,u=S/280;let vs,vx0,vz0;
   mg.fillStyle='#6f9f58';mg.fillRect(0,0,S,S);mg.drawImage(mapBg,(vx0-MAP.x0)*MPU,(vz0-MAP.z0)*MPU,vs*MPU,vs*MPU,0,0,S,S);
   mg.font=Math.round((mapBig?22:26)*u)+'px serif';mg.textAlign='center';mg.textBaseline='middle';const e=15*u;SPOTS.forEach(s=>mg.fillText(s.emoji,clamp(X(s.x),e,S-e),clamp(Z(s.z),e,S-e)));
   if(coordOn&&pin){mg.fillStyle='#ff2d55';mg.beginPath();mg.arc(X(pin.x),Z(pin.z),5*u,0,7);mg.fill()}
-  const q=fr.root.position;mg.fillStyle='#ff6fa8';mg.strokeStyle='#fff';mg.lineWidth=2.5*u;mg.beginPath();mg.arc(clamp(X(q.x),6*u,S-6*u),clamp(Z(q.z),6*u,S-6*u),6*u,0,7);mg.fill();mg.stroke();   // the friend
+  const q=fr.root.position;if(frOn){mg.fillStyle='#ff6fa8';mg.strokeStyle='#fff';mg.lineWidth=2.5*u;mg.beginPath();mg.arc(clamp(X(q.x),6*u,S-6*u),clamp(Z(q.z),6*u,S-6*u),6*u,0,7);mg.fill();mg.stroke()}   // the friend
   mg.fillStyle='#e7a84e';mg.lineWidth=2*u;mg.beginPath();mg.arc(clamp(X(DOG.x),5*u,S-5*u),clamp(Z(DOG.z),5*u,S-5*u),4.3*u,0,7);mg.fill();mg.stroke();   // Awaw
   mg.fillStyle='#3aa7e8';mg.strokeStyle='#fff';mg.lineWidth=2*u;MP.each(R=>{mg.beginPath();mg.arc(clamp(X(R.x),5*u,S-5*u),clamp(Z(R.z),5*u,S-5*u),4.6*u,0,7);mg.fill();mg.stroke()});   // other people
   mg.save();mg.translate(X(P.position.x),Z(P.position.z));mg.rotate(Math.PI/2-P.rotation.y);mg.scale(u,u);
@@ -3442,10 +3446,10 @@ function tagsTick(dt){cam.updateMatrixWorld();
   const q=fr.root.position;
   if((occT-=dt)<=0){occT=.25;const c=cam.position;frSeen=true;for(let k=1;k<10;k++){const f=k/10,x=c.x+(q.x-c.x)*f,y=c.y+(q.y+2-c.y)*f,z=c.z+(q.z-c.z)*f;if(H(x,z)>y){frSeen=false;break}}
     dogSeen=true;for(let k=1;k<10;k++){const f=k/10,x=c.x+(DOG.x-c.x)*f,y=c.y+(DOG.y+1.4-c.y)*f,z=c.z+(DOG.z-c.z)*f;if(H(x,z)>y){dogSeen=false;break}}}
-  if(frSeen&&!open)tagAt(tagN,q.x,q.y,q.z,8,95);else tagN.style.display='none';
+  if(frOn&&frSeen&&!open)tagAt(tagN,q.x,q.y,q.z,8,95);else tagN.style.display='none';
   if(dogSeen&&!open)tagAt(tagD,DOG.x,DOG.y,DOG.z,6,70);else tagD.style.display='none';
   if(mySayUntil>performance.now()&&P.visible&&!open)tagAt(mySay,P.position.x,P.position.y+4.4,P.position.z,-8,999,true);else if(mySay.style.display!=='none')mySay.style.display='none';
-  if(FR.sayT>0&&frSeen&&!open){if(sayEl.textContent!==FR.say)sayEl.textContent=FR.say;tagAt(sayEl,q.x,q.y+4.4,q.z,-8,70,true)}else sayEl.style.display='none'}
+  if(frOn&&FR.sayT>0&&frSeen&&!open){if(sayEl.textContent!==FR.say)sayEl.textContent=FR.say;tagAt(sayEl,q.x,q.y+4.4,q.z,-8,70,true)}else sayEl.style.display='none'}
 
 /* =========================== MAIN LOOP =========================== */
 const inWorld=(x,z)=>(x>-95&&Math.abs(z)<97)||sdTrack(x,z,TRK.r2+30)<0||(x>-122&&z>-78&&z<-4)||(x>-104&&z>-99&&z<=-78)||(x>-214&&x<-95&&z>-42&&z<142);   // ... and the west lowlands, the woods and the west coast   // the old valley, the race ground, the meadows west of the cottage, the lake's west shore
@@ -3578,7 +3582,7 @@ function dogTick(dt){const D=DOG,p=P.position,C=D.cr;
   const night=nt>.6,resting=D.mode==='rest'&&!D.q.length,lieT=resting||(still&&D.idle>(night?9:16))?1:0,sitT=!lieT&&still&&D.idle>3.5?1:0;
   D.sit+=(sitT-D.sit)*Math.min(1,dt*(sitT?3:7));D.lie+=(lieT-D.lie)*Math.min(1,dt*(lieT?2:7));
   D.sleep+=(((resting||lieT)&&night&&D.idle>26?1:0)-D.sleep)*Math.min(1,dt*2);
-  if(dF<4.5&&(D.frc-=dt)<=0&&P.visible){D.frc=45;D.happy=Math.max(D.happy,.7);if(dF<4)bark(1)}else if(dF>8)D.frc=Math.min(D.frc,8);   // the friend comes by: a happy woof
+  if(frOn&&dF<4.5&&(D.frc-=dt)<=0&&P.visible){D.frc=45;D.happy=Math.max(D.happy,.7);if(dF<4)bark(1)}else if(dF>8)D.frc=Math.min(D.frc,8);   // the friend comes by: a happy woof
   D.pant+=((D.v>4||D.happy>.4?1:0)-D.pant)*Math.min(1,dt*(D.v>4?2:.6));
   D.y+=(groundY(D.x,D.z)-D.y)*Math.min(1,dt*14);
   dog.root.position.set(D.x,D.y,D.z);dog.root.rotation.y=D.ry;dogAnim(dt);
@@ -3736,7 +3740,7 @@ function tags(){remotes.forEach(R=>{const q=R.rig.root.position;
   if(R.has&&!open&&R.sayUntil>performance.now())tagAt(R.say,q.x,q.y+4.4,q.z,-8,70,true);else if(R.say.style.display!=='none')R.say.style.display='none'})}
 function dbg(){const o=Object.entries(WS.state()).filter(([k])=>k!==myKey),now=performance.now();
   return{conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
-return{dbg,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged}})();
+return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged}})();
 /*MP-END*/
 // add ?debug to the address to see what the connection is doing (handy when "I can't see anyone" needs a real reason)
 if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
@@ -3776,7 +3780,7 @@ function frame(){
   P.position.y=groundY(P.position.x,P.position.z)+(riding?0:Math.abs(Math.sin(walkPh))*.1*walkAmt)+JUMP.y;
   if(sitting&&sitting.sw){const S=sitting.sw;P.position.x=S.x;P.position.z=S.z;P.position.y=groundY(S.x,S.z);P.rotation.y=sitting.face}   // riding the swing
   if(sitting)sitPose(me,sitting);
-  frTick(dt);dogTick(dt);blinkTick(me,dt);blinkTick(fr,dt);MP.tick(dt,t);
+  {const alone=MP.count()===0;if(alone!==frOn)frShow(alone)}if(frOn)frTick(dt);dogTick(dt);blinkTick(me,dt);blinkTick(fr,dt);MP.tick(dt,t);
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
