@@ -383,7 +383,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-11u';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-11w';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -800,11 +800,9 @@ const water=new THREE.Mesh((()=>{const g=new THREE.PlaneGeometry(1500,900,300,18
     vec3 n=normalize(vN+vec3(n1.x+n2.x,0.,n1.y+n2.y)*.16);
     vec3 V=normalize(cameraPosition-vW);
     float fres=pow(clamp(1.-dot(n,V),0.,1.),4.);
-    float wst=step(vW.x,-40.);   // the west sea, off Sunset Beach: clearer, more tropical water
+    float wst=step(vW.x,-40.);   // the west sea, off Sunset Beach (it keeps its sparkles and the sunlit sand patterns)
     vec3 base=mix(uShallow,uDeep,smoothstep(.15,5.,depth));
-    vec3 bw=mix(vec3(.55,.92,.86),vec3(.16,.79,.78),smoothstep(.05,1.3,depth));                      // pale aqua over the sand, turquoise,
-    bw=mix(bw,vec3(.09,.56,.8),smoothstep(1.1,3.4,depth));bw=mix(bw,vec3(.05,.3,.58),smoothstep(3.,7.5,depth));   // azure, then deep sapphire further out
-    vec3 col=mix(base,bw,wst)*uLight*(.6+.4*max(dot(n,uLightDir),0.));
+    vec3 col=base*uLight*(.6+.4*max(dot(n,uLightDir),0.));   // (both seas now share the east sea's depth colours)
     vec2 cp=vW.xz*1.3+vec2(n1.x+n2.y,n1.y-n2.x)*1.1;float c1=sin(cp.x*1.9+sin(cp.y*1.4+uTime*.8)*1.7+uTime*.6),c2=sin(cp.y*1.7+sin(cp.x*1.2-uTime*.7)*1.6-uTime*.5);
     col+=vec3(.82,1.,.95)*pow(max(1.-abs(c1*c2),0.),10.)*(1.-smoothstep(.25,2.2,depth))*smoothstep(.02,.2,depth)*.24*uLight*wst;   // sunlight dancing on the sandy bottom (warped by the ripples, so never a pattern)
     col=mix(col,mix(uSkyHor,uSkyTop,.3),fres*.6);
@@ -812,10 +810,11 @@ const water=new THREE.Mesh((()=>{const g=new THREE.PlaneGeometry(1500,900,300,18
     vec3 n3=texture2D(uN,vW.xz*.21+vec2(uTime*.05,-uTime*.04)).xyz*2.-1.;
     col+=uLightCol*pow(max(dot(reflect(-V,normalize(vN+vec3(n1.x+n3.x,0.,n1.y+n3.y)*.35)),uLightDir),0.),900.)*5.*wst;   // glitter: tiny sparkles of sun on the ripples
     float shore=1.-smoothstep(0.,.5,depth);
-    float lines=smoothstep(.62,.95,sin(depth*7.-uTime*1.5+n1.x*2.5)*.5+.5)*(1.-smoothstep(.25,1.5,depth));
+    float ds=depth*mix(1.,.5,wst);   // (the west shore drops away faster, so its foam bands are spread wider to look like the east's)
+    float lines=smoothstep(.62,.95,sin(ds*7.-uTime*1.5+n1.x*2.5)*.5+.5)*(1.-smoothstep(.25,1.5,ds));
     float foam=clamp(shore*.9+lines*.55,0.,1.)*(.78+.22*n2.y);
     col=mix(col,vec3(.96,.98,1.)*max(uLight,.18),foam);
-    float alpha=max(mix(mix(.5,.36,wst),.97,smoothstep(.05,mix(2.6,3.2,wst),depth)),foam);   // (clearer in the west shallows)
+    float alpha=max(mix(.5,.97,smoothstep(.05,2.6,depth)),foam);
     col=mix(col,fogColor,smoothstep(fogNear,fogFar,vFog));
     gl_FragColor=vec4(col,alpha);}`}));
 water.position.set(0,0,0);water.renderOrder=1;W.add(water);
@@ -3793,7 +3792,7 @@ function frame(){
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
-  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'🧍 Stand up'+(touch?'':'  ·  C'):nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
+  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'':nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
   pr.style.display=ptx&&!open?'block':'none';if(ptx&&pr.textContent!==ptx)pr.textContent=ptx;
   ringMat.opacity=.55+.3*Math.sin(t*2.4);
   // sky life
