@@ -386,7 +386,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12j';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12k';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2335,7 +2335,7 @@ const LGTM_TEX=(()=>{let t=null;return()=>{if(t)return t;const cv=document.creat
   t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}})();
 const LGM=new Map();
 function lgtmMesh(g){let m=LGM.get(g);if(!m){const pr=CFG[g].dv.body,R=y=>{let r=pr[pr.length-1][0];for(let i=1;i<pr.length;i++)if(y<=pr[i][1]){const a=pr[i-1],b=pr[i],t=Math.min(Math.max((y-a[1])/(b[1]-a[1]||1),0),1);r=a[0]+(b[0]-a[0])*t;break}return r},
-    geo=new THREE.PlaneGeometry(.25,.092,12,1),P=geo.attributes.position,yc=.61;   // (just below where the hoodie strings end)   // (pressed onto the curve of the front)
+    geo=new THREE.PlaneGeometry(.27,.1,12,1),P=geo.attributes.position,yc=.72;   // (pressed onto the curve of the front)   // (pressed onto the curve of the front)
   for(let i=0;i<P.count;i++){const x=P.getX(i),y=yc+P.getY(i),r=R(y);P.setXYZ(i,x,y,r*.84*Math.sqrt(Math.max(1-(x*x)/(r*r),.04))+.008)}
   geo.computeVertexNormals();m=new THREE.Mesh(geo,Object.assign(toon(0xffffff,{map:LGTM_TEX(),transparent:true}),{alphaTest:.4}));LGM.set(g,m)}
   return m.clone()}
