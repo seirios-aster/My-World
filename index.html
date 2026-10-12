@@ -175,7 +175,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #emopick .ae{width:30px;height:30px;margin:0;vertical-align:0}
 #ogm{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}#ogm[hidden]{display:none}#ogm small{font-weight:600;opacity:.6}
 #ogm select{width:100%;padding:7px 9px;border:2px solid var(--paper-2);border-radius:10px;background:var(--field);font:700 13px var(--body);color:var(--ink)}
-#gmnote{font:600 12px var(--body);opacity:.7;min-height:1.2em}
+#gmnote,#gmfx{font:600 12px var(--body);opacity:.7;min-height:1.2em}
 #ostat{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}
 #toasts{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:3;pointer-events:none;width:min(440px,calc(100vw - 130px))}
 .toast{background:var(--paper);color:var(--ink);font:600 14px/1.35 var(--body);padding:7px 14px;border-radius:16px;box-shadow:var(--shadow);max-width:100%;overflow-wrap:anywhere;animation:tin .25s ease-out;transition:opacity .6s}
@@ -223,7 +223,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #zoom{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
 #zoom .round{width:44px;height:44px;font-size:24px}
 #acts{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
-#acts .round{width:44px;height:44px}#acts svg{width:24px;height:24px}
+#acts .round{width:44px;height:44px}#bem{font-size:22px}
+#emo{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(66px + env(safe-area-inset-bottom,0px));display:none;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:30}
+#emo .emb{border:0;border-radius:12px;background:var(--paper-2);color:var(--ink);padding:6px 10px;font:700 12px var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}#emo .emb span{font-size:24px;line-height:1.1}#acts svg{width:24px;height:24px}
 
 #panel{position:fixed;inset:0;background:var(--scrim);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
 #card{background:var(--paper);color:var(--ink);border-radius:20px;width:min(580px,100%);max-height:100%;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 50px rgba(20,16,40,.4);user-select:text;-webkit-user-select:text;box-sizing:border-box}
@@ -289,9 +291,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #loading span{font:700 15px var(--body);color:#2f5368}
 @media (prefers-reduced-motion:reduce){#loading,#hud{transition:none}}
 /* see-through chat bar, messages and speech bubbles (last, so it wins over their plain backgrounds) */
-#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#gmp,#vol{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
+#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#gmp,#vol,#emo{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
 #mysay::after,.rsay::after{border-top-color:color-mix(in srgb,var(--paper) var(--see),transparent)}
-:root[data-theme=dark] #gmp,:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
+:root[data-theme=dark] #gmp,:root[data-theme=dark] #emo,:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
 :root[data-theme=dark] #ogm small{opacity:.8}
 :root[data-theme=dark] input::placeholder{color:var(--ink-soft);opacity:.95}   /* the "Say something…" hint and the name fields' hints: the browser's dark grey was hard to read on the dark panels */
 #gmp{position:fixed;right:calc(60px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));color:var(--ink);border-radius:14px;padding:10px;display:none;flex-direction:column;gap:6px;box-shadow:var(--shadow);z-index:2;max-height:calc(100vh - 120px);overflow:auto;width:min(340px,calc(100vw - 84px - env(safe-area-inset-right,0px)));box-sizing:border-box;font:700 13px var(--body)}
@@ -333,7 +335,10 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
       <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
-  <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div></div>
+  <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
+    <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
+    <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select>
+    <div class="lbl">Lanterns</div><select id="gml" aria-label="Lanterns"><option value="auto">Auto (clear nights)</option><option value="on">Always on</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="dnl">Dog's name<input id="dname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
@@ -377,7 +382,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 
 <div id="chat"><input id="chatin" maxlength="80" placeholder="Say something to everyone here…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button type="button" class="round em" id="chatem" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">🙂</button><div id="emopick" role="group" aria-label="Emoji"></div></div>
 <canvas id="map" width="280" height="280"></canvas>
-<div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
+<div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bem" title="Emotes: wave, dance, clap, cheer, bow" aria-label="Emotes" aria-expanded="false">😊</button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
+<div id="emo" role="group" aria-label="Emotes"></div>
 <div id="zoom"><button class="round" id="zi" aria-label="Zoom in">+</button><button class="round" id="zo" aria-label="Zoom out">−</button></div>
 <div id="panel"><div id="card"><div id="hd"><h2 id="t"></h2><span><button class="ib" id="mx" title="Maximize" aria-label="Maximize">⤢</button><button class="ib" id="x" title="Close" aria-label="Close">✕</button></span></div><p id="d"></p><div id="viewer"><button class="nv" id="pv" aria-label="Previous">‹</button><div id="media"></div><div id="mload" role="status" aria-label="Loading"><i></i></div><button class="nv" id="nx" aria-label="Next">›</button><div id="mact"><button type="button" class="ma" id="macc" hidden></button><button type="button" class="ma" id="madd">📷 Add photo/video</button><button type="button" class="ma" id="mdel" aria-label="Remove photo or video" title="Remove">🗑</button></div><div id="mmsg" role="status"></div></div><div id="cap"></div><div id="thumbs"></div></div></div>
 
@@ -395,7 +401,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12m';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12o';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -1745,6 +1751,20 @@ const fireMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blendi
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('seed',new THREE.Float32BufferAttribute(sd,1));
   const f=new THREE.Points(g,fireMat);f.frustumCulled=false;W.add(f)}
 
+/* ---------------- picnic blankets: a place to sit together (four seats round a checked blanket, with a basket) ----------------
+   They go on the first flat bits of meadow found round the hub, so they never sit on a path, a slope or a building. The search has no randomness, so everybody's game puts them in the same place (seats are shared by number). */
+const PICNICS=[];
+{const tex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#f6efe2';g.fillRect(0,0,128,128);g.fillStyle='#d9503f';for(let i=0;i<4;i++)for(let j=0;j<4;j++)if((i+j)%2===0)g.fillRect(i*32,j*32,32,32);
+    g.fillStyle='rgba(255,255,255,.35)';g.fillRect(0,0,128,4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=THREE.NearestFilter;return t})(),
+    blM=std(0xffffff,{map:tex}),bkM=std(0xb98550),hM=std(0x8a5a2b);
+  const flat=(x,z)=>{const h=H(x,z);if(!meadow(x,z)||slopeAt(x,z)>.1)return false;for(const[dx,dz]of[[2.4,0],[-2.4,0],[0,2.4],[0,-2.4]]){const a=x+dx,b=z+dz;if(!meadow(a,b)||Math.abs(H(a,b)-h)>.25)return false}
+    return BL.every(o=>Math.hypot(o.x-x,o.z-z)>o.r+3.2)&&SEATS.every(s=>Math.hypot(s.x-x,s.z-z)>4)&&PICNICS.every(p=>Math.hypot(p.x-x,p.z-z)>14)};
+  for(const R of[11,15,19,23,27,31])for(let k=0;k<24&&PICNICS.length<2;k++){const a=k*Math.PI/12+R*.37,x=HUB[0]+Math.cos(a)*R,z=HUB[1]+Math.sin(a)*R;if(flat(x,z))PICNICS.push({x,z})}
+  PICNICS.forEach(p=>{const y=H(p.x,p.z),m=new THREE.Mesh(new THREE.BoxGeometry(3.1,.05,3.1),blM);m.position.set(p.x,y+.04,p.z);m.receiveShadow=true;W.add(m);
+    const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.3,.36),bkM),h=new THREE.Mesh(new THREE.TorusGeometry(.2,.03,6,10,Math.PI),hM);b.position.set(p.x,y+.22,p.z);h.position.set(p.x,y+.37,p.z);b.castShadow=h.castShadow=true;W.add(b,h);
+    BL.push({x:p.x,z:p.z,r:.4});
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>SEATS.push({x:p.x+dx*1.15,z:p.z+dz*1.15,face:Math.atan2(-dx,-dz),h:.2,kind:'ground',label:'🧺 Sit on the picnic blanket'}))})}
+
 /* =========================== THE RACE GROUND =========================== */
 // a point on the oval at loop position u and radius R: 0-1 the north bend, 1-2 the back straight (west side, run southward),
 // 2-3 the south bend, 3-4 the home straight (east side, run northward to the finish line by the Races waypoint)
@@ -2732,6 +2752,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
       const me=wch=sb.channel(cfg.room+'-world',{config:{broadcast:{self:false,ack:false},presence:{key:wkey}}});
       wch.on('broadcast',{event:'p'},m=>wfire('p',m&&m.payload));
       wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
+      wch.on('broadcast',{event:'e'},m=>wfire('e',m&&m.payload));   // (an emote: who + which one; see EMO)
       wch.on('broadcast',{event:'gm'},m=>wfire('gm',m&&m.payload));   // (a nudge only: "someone was just removed, check yourself". Forging one does nothing, the truth is the world_bans row)
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
@@ -2747,6 +2768,9 @@ function makeCloudAdapter(cfg,prepare,fallback){
      and that is enforced by the database, not by hiding the control. See supabase-world-clock.sql. load(): the zone, undefined if it can't be read. */
   const settings={async load(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('tz').eq('id','main').maybeSingle();
       if(error){console.warn('[clock] could not read the game clock setting (everyone follows their own time):',error.message||error);return undefined}return data&&data.tz?data.tz:'device'},
+    /* weather and night effects (rain, snow, fireflies, lanterns): one small JSON value in the same row. fx() returns the value, null if it isn't set, undefined if it can't be read (older database: nothing breaks) */
+    async fx(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('fx').eq('id','main').maybeSingle();if(error)return undefined;return data&&data.fx?data.fx:null},
+    async saveFx(fx){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',fx,updated_at:new Date().toISOString()});if(error)throw nice(error)},
     async gm(){await ready;if(fail||!sb||!user)return false;const{data,error}=await sb.from('world_admins').select('user_id').eq('user_id',user.id).maybeSingle();return !error&&!!data},
     async save(tz){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',tz,updated_at:new Date().toISOString()});if(error)throw nice(error)}};
   /* the GM tools (see supabase-gm-tools.sql and supabase/functions/gm-admin): heartbeat() says "I'm here" and returns how long that took (the ping);
@@ -3071,7 +3095,15 @@ $('bc').onclick=()=>{cmode=1-cmode;$('bc').style.opacity=cmode?.55:1;$('bc').tit
 const GMZ=[['device',"Each player's own device time (everyone different)"],['America/New_York','US Eastern - Georgia, New York'],['America/Chicago','US Central - Texas, Illinois'],['America/Denver','US Mountain - Colorado, Utah'],['America/Phoenix','Arizona'],['America/Los_Angeles','US Pacific - California, Washington'],['America/Anchorage','Alaska'],['Pacific/Honolulu','Hawaii'],['America/Toronto','Toronto'],['America/Mexico_City','Mexico City'],['America/Bogota','Bogota'],['America/Lima','Lima'],['Europe/London','London'],['Europe/Paris','Paris, Berlin, Madrid'],['Europe/Istanbul','Istanbul'],['Europe/Moscow','Moscow'],['Africa/Cairo','Cairo'],['Africa/Lagos','Lagos'],['Africa/Johannesburg','Johannesburg'],['Asia/Kolkata','India'],['Asia/Bangkok','Bangkok, Jakarta'],['Asia/Manila','Philippines'],['Asia/Singapore','Singapore, Kuala Lumpur'],['Asia/Hong_Kong','Hong Kong'],['Asia/Shanghai','China'],['Asia/Seoul','Korea'],['Asia/Tokyo','Japan'],['Australia/Sydney','Sydney, Melbourne'],['Australia/Perth','Perth'],['Pacific/Auckland','New Zealand']];
 const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
+  pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['l','gml']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);syncFx()}   // (undefined: can't be read, keep what we have)
+{const note=t=>{$('gmfx').textContent=t};
+  ['gmw','gmf','gml'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,l:$('gml').value};note('Saving...');[...document.querySelectorAll('#gmw,#gmf,#gml')].forEach(x=>x.disabled=true);
+    try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
+    catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
+    finally{[...document.querySelectorAll('#gmw,#gmf,#gml')].forEach(x=>x.disabled=false)}}})}
 const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick();$('bgm').hidden=!gm;if(!gm){$('gmp').style.display='none';clearInterval(gmTimer)}};   // (the coordinates pin is for the GM only)
 /* ---- the GM panel: who is online (with their ping), kick, ban. The buttons only ask the gm-admin Edge Function, which checks on the server that you are a GM;
    the list of people comes from a table every signed-in game writes to about once a minute, so the ids are real (see supabase-gm-tools.sql) ---- */
@@ -3231,7 +3263,76 @@ function skyTick(dt){
   {const t1=sstep(-.02,.06,ey),t2=sstep(.05,.2,ey),t3=sstep(.15,.45,ey),g=sstep(0,.35,ey);SUNDISC.color.copy(SD0).lerp(SD1,t1).lerp(SD2,t2).lerp(SD3,t3);
     SUNSW=1+.35*(1-sstep(0,.3,ey));SUNGLOW.material.color.setRGB(1,lerp(.42,1,g),lerp(.2,1,g));SUNGLOW.scale.setScalar(lerp(120,60,sstep(0,.3,ey)));
     const dp=clamp(cam.position.y/500,0,.4);SUNGLOW.material.opacity=sstep(-.07,.01,ey+dp);MOONGLOW.material.opacity=sstep(-.07,.01,-ey+dp)}
+  fxTick(dt);
   $('clk').textContent=fmt(simH)+(dayI?' · '+MON[dayI-1]:'')}
+
+/* =========================== WEATHER + NIGHT EFFECTS: rain, snow, fireflies, floating lanterns ===========================
+   Every one is Auto or set by the GM (stored in world_settings.fx, see supabase-world-weather.sql, and read the same way as the game clock).
+   Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
+   fireflies come out at dusk and stay till dawn, lanterns drift up on clear nights. The GM's choice only overrides what Auto would do. */
+const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],l:['auto','on','off']};
+const FXS={w:'auto',f:'auto',l:'auto',ir:0,is:0,ff:0,ln:0,seenW:null};
+function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}return ch}
+const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
+function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=doyNow(),winter=d>=335||d<=6;   // (the game clock's date: 1 Dec to 6 Jan is snow season)
+  return winter?(r<.4?'snow':'clear'):(r<.14?'rain':'clear')}
+const fxWeather=()=>FXS.w==='auto'?fxAutoWeather():FXS.w;
+const fxGlowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
+const FXG=new THREE.Group();FXG.frustumCulled=false;W.add(FXG);
+const FXN={rain:HQ?1300:600,snow:HQ?1500:650,ln:HQ?14:8},FXBOX=44,FXH=30;
+// rain: short slanted streaks that fall through a box around the camera and wrap
+const rainP=new Float32Array(FXN.rain*3),rainV=new Float32Array(FXN.rain),rainGeo=new THREE.BufferGeometry(),rainPos=new Float32Array(FXN.rain*6);
+for(let i=0;i<FXN.rain;i++){rainP[i*3]=(Math.random()-.5)*FXBOX;rainP[i*3+1]=Math.random()*FXH;rainP[i*3+2]=(Math.random()-.5)*FXBOX;rainV[i]=24+Math.random()*10}
+rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
+const rainMat=new THREE.LineBasicMaterial({color:0xdfe9f4,transparent:true,opacity:0,depthWrite:false,fog:false}),rainObj=new THREE.LineSegments(rainGeo,rainMat);rainObj.frustumCulled=false;rainObj.visible=false;FXG.add(rainObj);
+// snow: soft white flakes drifting down and sideways
+const snowP=new Float32Array(FXN.snow*3),snowV=new Float32Array(FXN.snow),snowPh=new Float32Array(FXN.snow),snowGeo=new THREE.BufferGeometry(),snowPos=new Float32Array(FXN.snow*3);
+for(let i=0;i<FXN.snow;i++){snowP[i*3]=(Math.random()-.5)*FXBOX;snowP[i*3+1]=Math.random()*FXH;snowP[i*3+2]=(Math.random()-.5)*FXBOX;snowV[i]=1.1+Math.random()*1.4;snowPh[i]=Math.random()*6.28}
+snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPos,3));
+const snowMat=new THREE.PointsMaterial({color:0xffffff,map:fxGlowTex,size:.5,sizeAttenuation:true,transparent:true,opacity:0,depthWrite:false,fog:false}),snowObj=new THREE.Points(snowGeo,snowMat);snowObj.frustumCulled=false;snowObj.visible=false;FXG.add(snowObj);
+// lanterns: little glowing paper lanterns that rise slowly and drift
+const lnBody=new THREE.MeshBasicMaterial({color:0xffb457,transparent:true,opacity:0,fog:false,depthWrite:false}),lnGlow=new THREE.SpriteMaterial({map:fxGlowTex,color:0xff9a3c,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),
+  lnGeo=new THREE.CylinderGeometry(.22,.17,.42,8,1,true),lnCap=new THREE.CircleGeometry(.17,8),LN=[];
+for(let i=0;i<FXN.ln;i++){const g=new THREE.Group(),b=new THREE.Mesh(lnGeo,lnBody),t=new THREE.Mesh(lnCap,lnBody),s=new THREE.Sprite(lnGlow);t.rotation.x=-Math.PI/2;s.scale.setScalar(4.2);b.scale.setScalar(2.2);t.scale.setScalar(2.2);t.position.y=-.44;g.add(b,t,s);g.visible=false;FXG.add(g);
+  LN.push({g,x:0,y:0,z:0,age:0,life:0,vx:0,vz:0,ph:Math.random()*6.28,on:false})}
+function lnSpawn(l,first){const a=Math.random()*6.28,d=8+Math.random()*34,x=P.position.x+Math.cos(a)*d,z=P.position.z+Math.sin(a)*d,gy=Math.max(groundY(x,z),0);
+  l.x=x;l.z=z;l.y=gy+(first?2+Math.random()*24:1.5+Math.random()*3);l.life=45+Math.random()*25;l.age=first?Math.random()*l.life*.5:0;l.vx=(Math.random()-.3)*.5;l.vz=(Math.random()-.5)*.4;l.on=true}
+const FXGREY=new THREE.Color();
+function fxTick(dt){
+  const wk=fxWeather();
+  if(FXS.seenW===null)FXS.seenW=wk;else if(FXS.seenW!==wk){FXS.seenW=wk;if(tmode===0)toast('',wk==='snow'?'It started snowing ❄️':wk==='rain'?'It started raining 🌧️':'The weather cleared up 🌤️',true)}
+  const k=Math.min(1,dt/4);   // (about 4 s to fade in or out)
+  FXS.ir+=((wk==='rain'?1:0)-FXS.ir)*k;FXS.is+=((wk==='snow'?1:0)-FXS.is)*k;
+  const wi=Math.max(FXS.ir,FXS.is),ffT=FXS.f==='on'?1:FXS.f==='off'?0:sstep(.5,1,nt)*(1-wi),lnT=FXS.l==='on'?1:FXS.l==='off'?0:sstep(.55,.85,nt)*(1-wi);
+  FXS.ff+=(ffT-FXS.ff)*k;FXS.ln+=(lnT-FXS.ln)*k;
+  const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z;
+  // a grey, closer, dimmer day (and a dark grey night) while it rains or snows
+  if(wi>.003){FXGREY.setRGB(.62,.66,.7).multiplyScalar(1-nt*.82);
+    W.fog.color.lerp(FXGREY,.55*wi);W.fog.near=80*(1-.6*wi);W.fog.far=280*(1-.5*wi);
+    domeU.uTop.value.lerp(FXGREY,.6*wi);domeU.uHor.value.lerp(FXGREY,.7*wi);domeU.uBot.value.lerp(FXGREY,.7*wi);
+    key.intensity*=1-.6*wi;hemi.intensity*=1-.2*wi;cloudU.uLit.value.multiplyScalar(1-.3*wi);cloudU.uShade.value.multiplyScalar(1-.3*wi);cloudU.uOp.value=lerp(cloudU.uOp.value,1,wi)}
+  else{W.fog.near=80;W.fog.far=280}
+  // rain
+  rainObj.visible=FXS.ir>.01;
+  if(rainObj.visible){rainMat.opacity=.65*FXS.ir;const sx=.18,len=.9;
+    for(let i=0;i<FXN.rain;i++){let y=rainP[i*3+1]-rainV[i]*dt;if(y<0){y+=FXH;rainP[i*3]=(Math.random()-.5)*FXBOX;rainP[i*3+2]=(Math.random()-.5)*FXBOX}rainP[i*3+1]=y;
+      const x=cx+((rainP[i*3]-cx+FXBOX*1e3)%FXBOX)-FXBOX/2+0,z=cz+((rainP[i*3+2]-cz+FXBOX*1e3)%FXBOX)-FXBOX/2,yy=cy-12+y;
+      rainPos[i*6]=x;rainPos[i*6+1]=yy;rainPos[i*6+2]=z;rainPos[i*6+3]=x+sx*len;rainPos[i*6+4]=yy+len;rainPos[i*6+5]=z}
+    rainGeo.attributes.position.needsUpdate=true}
+  // snow
+  snowObj.visible=FXS.is>.01;
+  if(snowObj.visible){snowMat.opacity=.9*FXS.is;const t=performance.now()/1000;
+    for(let i=0;i<FXN.snow;i++){let y=snowP[i*3+1]-snowV[i]*dt;if(y<0){y+=FXH;snowP[i*3]=(Math.random()-.5)*FXBOX;snowP[i*3+2]=(Math.random()-.5)*FXBOX}snowP[i*3+1]=y;
+      const sx=Math.sin(t*.7+snowPh[i])*.8,sz=Math.cos(t*.6+snowPh[i]*1.3)*.8;
+      snowPos[i*3]=cx+((snowP[i*3]-cx+FXBOX*1e3)%FXBOX)-FXBOX/2+sx;snowPos[i*3+1]=cy-12+y;snowPos[i*3+2]=cz+((snowP[i*3+2]-cz+FXBOX*1e3)%FXBOX)-FXBOX/2+sz}
+    snowGeo.attributes.position.needsUpdate=true}
+  fireMat.uniforms.uNight.value=FXS.ff;   // (the world's own fireflies: Auto is the usual dusk-to-dawn glow, but none in rain or snow)
+  // lanterns
+  const lv=FXS.ln>.01;LN.forEach(l=>l.g.visible=lv&&l.on);
+  if(lv){lnBody.opacity=.92*FXS.ln;lnGlow.opacity=.8*FXS.ln;const t=performance.now()/1000;
+    LN.forEach(l=>{if(!l.on||Math.hypot(l.x-P.position.x,l.z-P.position.z)>75||l.age>l.life)lnSpawn(l,!l.on);
+      l.age+=dt;l.y+=dt*(.85+.1*Math.sin(l.ph+t*.3));l.x+=l.vx*dt;l.z+=l.vz*dt;
+      l.g.position.set(l.x+Math.sin(t*.5+l.ph)*.5,l.y,l.z);l.g.scale.setScalar(clamp(Math.min(l.age/3,(l.life-l.age)/3),0,1)*(.9+.15*Math.sin(t*3+l.ph)))})}}
 
 /* =========================== AMBIENT SOUND (synthesised, no files) =========================== */
 let AC=null,mute=false,amb,master=null,nbt=0,nsp=0,fireT=0;const A={tm:{}};
@@ -3241,7 +3342,7 @@ function layer(type,freq,q,hz,depth){const s=AC.createBufferSource(),f=AC.create
   s.buffer=A.nb;s.loop=true;f.type=type;f.frequency.value=freq;f.Q.value=q;g.gain.value=1-depth;lv.gain.value=0;o.frequency.value=hz;og.gain.value=depth;
   o.connect(og);og.connect(g.gain);o.start();s.connect(f);f.connect(g);g.connect(lv);lv.connect(amb);s.start();return lv}
 function snd(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}
-  amb=AC.createGain();amb.gain.value=.5;master=AC.createGain();master.gain.value=mute?0:VOL*VOL;amb.connect(master);master.connect(AC.destination);A.nb=noiseBuf(3);A.wn=whiteBuf(1);A.wave=layer('lowpass',650,.7,.13,.7);A.wind=layer('bandpass',500,.5,.07,.5);A.river=layer('bandpass',1250,.8,.55,.45);A.crowd=layer('bandpass',820,.55,.33,.4);A.rustle=layer('bandpass',3400,.35,.17,.6);A.fire=layer('lowpass',420,.6,.9,.55);A.fsb=AC.createGain();A.fsb.gain.value=.5;A.fsb.connect(amb);
+  amb=AC.createGain();amb.gain.value=.5;master=AC.createGain();master.gain.value=mute?0:VOL*VOL;amb.connect(master);master.connect(AC.destination);A.nb=noiseBuf(3);A.wn=whiteBuf(1);A.wave=layer('lowpass',650,.7,.13,.7);A.wind=layer('bandpass',500,.5,.07,.5);A.river=layer('bandpass',1250,.8,.55,.45);A.crowd=layer('bandpass',820,.55,.33,.4);A.rustle=layer('bandpass',3400,.35,.17,.6);A.fire=layer('lowpass',420,.6,.9,.55);A.rain=layer('highpass',2400,.3,.35,.5);A.fsb=AC.createGain();A.fsb.gain.value=.5;A.fsb.connect(amb);
   A.mus=AC.createGain();A.mus.gain.value=0;A.mus.connect(amb);const dl=AC.createDelay(1),fb=AC.createGain(),wet=AC.createGain();dl.delayTime.value=.32;fb.gain.value=.32;wet.gain.value=.4;A.mus.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(amb)}
   if(AC.state==='suspended')AC.resume()}
 addEventListener('pointerdown',snd);addEventListener('keydown',snd);
@@ -3352,7 +3453,7 @@ function ambient(dt){if(!AC)return;const px=P.position.x,pz=P.position.z,nr=s=>c
   const set=(k,v)=>{const c=A[k+'v']||0,n=c+((mute?0:v)-c)*Math.min(1,dt*3);A[k+'v']=n;A[k].gain.value=n};
   const gm=zl(GYM.x,GYM.z,7,24),cp=zl(CAMP[0],CAMP[1],5,24),bh=zl(SPOTS[1].x,SPOTS[1].z,8,26),ss=Math.max(zl(SPOTS[6].x,SPOTS[6].z,9,34),zl(SUNPT.x,SUNPT.z,9,34)),sm=zl(SPOTS[3].x,SPOTS[3].z,6,26),hz=zl(SPOTS[0].x,SPOTS[0].z,6,26),
     rc=Math.max(zl(SPOTS[4].x,SPOTS[4].z,10,42),zl(TRK.cx,TRK.cz,24,52)),hb=zl(HUB[0],HUB[1],6,24),lA=zl(LH.x,LH.z,10,40),lB=zl(LH2.x,LH2.z,10,40),lh=Math.max(lA,lB),lk=zl(LAKE.x,LAKE.z,LAKE.rs+3,LAKE.rs+30);
-  set('wave',sw*.55);set('wind',Math.max(hk*.35,clamp((P.position.y-6)/16,0,1)*.42));
+  set('wave',sw*.55);set('wind',Math.max(hk*.35,clamp((P.position.y-6)/16,0,1)*.42,FXS.is*.2));set('rain',FXS.ir*.3);
   const rr=riverNear(px,pz);set('river',Math.max(rr?clamp(1-(rr.d-rAt(rr.R.W,rr.f))/14,0,1)*.32:0,clamp(1-FALLP.distanceTo(P.position)/32,0,1)*.6));
   set('crowd',rc*.2);set('rustle',Math.max(hz,cp*.7)*.12*(1-nt*.4));set('fire',cp*.28);
   const bird=Math.max(sw*.9,hk*.7,bc)*(1-nt);if(bird>.1&&!mute&&AC.currentTime>nbt){chirp(bird);nbt=AC.currentTime+1.5+Math.random()*3.5}
@@ -3775,6 +3876,36 @@ function applyPos(R,d){const x=num(d.x,-2000,2000),z=num(d.z,-2000,2000),r0=num(
 WS.on('p',d=>{if(!d||typeof d.k!=='string'||d.k===myKey)return;const R=remotes.get(d.k);
   if(R){applyPos(R,d);return}
   early.delete(d.k);early.set(d.k,d);if(early.size>64)early.delete(early.keys().next().value)});
+/* ---- emotes: wave, dance, clap, cheer, bow. Played on the spot (walking, jumping, sitting or riding stops them) and shown to everybody through one tiny 'e' message (who + which).
+   The receiver only plays a pose from its own fixed list, so a forged message can do nothing but make someone wave. ---- */
+const EMO={wave:{dur:3.4},dance:{loop:1},clap:{dur:3},cheer:{dur:2.6},bow:{dur:2.2}};
+function emotePose(p,id,s,dur){const e=dur?Math.min(1,s/.3)*Math.min(1,(dur-s)/.3):Math.min(1,s/.3),A=p.arms,L=p.legs,sn=Math.sin;
+  p.body.position.set(0,0,0);p.body.rotation.set(0,0,0);L.forEach(l=>{l.rotation.x=0;l.rotation.z=0});
+  if(id==='wave'){A[0].rotation.x=0;A[0].rotation.z=-.12;A[1].rotation.x=-2.7*e;A[1].rotation.z=.12+(.3+sn(s*10)*.35)*e}
+  else if(id==='clap'){A.forEach((a,i)=>{a.rotation.x=-1.3*e;a.rotation.z=(i?-1:1)*(.05+.34*(.5+.5*sn(s*14)))*e})}
+  else if(id==='cheer'){const j=Math.abs(sn(s*8))*.16*e;p.body.position.y=j;A.forEach((a,i)=>{a.rotation.x=-2.9*e;a.rotation.z=(i?1:-1)*(.3+.12*sn(s*8))*e});L.forEach((l,i)=>l.rotation.x=(i?-1:1)*.12*e*sn(s*8))}
+  else if(id==='bow'){lean(p,.95*sn(Math.min(1,s/dur)*Math.PI),0);A.forEach((a,i)=>{a.rotation.x=.25*e;a.rotation.z=(i?1:-1)*.1})}
+  else if(id==='dance'){const w=sn(s*7);p.body.position.y=Math.abs(w)*.09*e;p.body.rotation.z=sn(s*3.5)*.12*e;p.body.rotation.y=sn(s*3.5)*.28*e;
+    A[0].rotation.x=(-2.1+w*.55)*e;A[1].rotation.x=(-2.1-w*.55)*e;A.forEach((a,i)=>a.rotation.z=(i?1:-1)*.5*e);L[0].rotation.x=w*.5*e;L[1].rotation.x=-w*.5*e}}
+const EM={id:null,t0:0,sent:0};
+function emoStop(tell){if(!EM.id)return;EM.id=null;standPose(me);if(tell)try{WS.send('e',{k:myKey,i:''})}catch(_){}}
+function emoPlay(id){if(!EMO[id])return;if(sitting||riding||open||JUMP.y>0){toast('','Stand still on the ground to do that 🙂',true);return}
+  EM.id=id;EM.t0=performance.now();EM.sent=EM.t0;try{WS.send('e',{k:myKey,i:id})}catch(_){}}
+function emoMe(moving){if(!EM.id)return;const now=performance.now(),s=(now-EM.t0)/1000,d=EMO[EM.id].dur;
+  if(moving||sitting||riding||open||JUMP.y>0||(d&&s>d)){emoStop(true);return}
+  if(EMO[EM.id].loop&&now-EM.sent>5000){EM.sent=now;try{WS.send('e',{k:myKey,i:EM.id})}catch(_){}}   // (a dance is sent again every 5 s: it fades out by itself if the messages stop)
+  emotePose(me,EM.id,s,d)}
+function emoRemote(R,g,now){const e=R.em;if(!e)return;if(R.m||now>e.until){R.em=null;standPose(g);return}emotePose(g,e.id,(now-e.t0)/1000,EMO[e.id].dur)}
+WS.on('e',d=>{if(!d||typeof d.k!=='string'||d.k===myKey)return;const R=remotes.get(d.k);if(!R)return;
+  if(!d.i){if(R.em){R.em=null;standPose(R.rig)}return}
+  const E=typeof d.i==='string'&&Object.prototype.hasOwnProperty.call(EMO,d.i)?EMO[d.i]:null;if(!E)return;const now=performance.now(),until=now+(E.dur?E.dur*1000+300:9000);
+  if(R.em&&R.em.id===d.i)R.em.until=until;else R.em={id:d.i,t0:now,until}});
+{const bem=$('bem'),pop=$('emo');
+  const IC={wave:'👋',dance:'💃',clap:'👏',cheer:'🙌',bow:'🙇'};
+  Object.keys(EMO).forEach(id=>{const b=document.createElement('button');b.type='button';b.className='emb';b.dataset.id=id;b.innerHTML='<span>'+IC[id]+'</span>'+id[0].toUpperCase()+id.slice(1);b.onclick=()=>{pop.style.display='none';emoPlay(id)};pop.appendChild(b)});
+  bem.onclick=()=>{pop.style.display=pop.style.display==='grid'?'none':'grid'};
+  addEventListener('pointerdown',e=>{if(pop.style.display==='grid'&&!pop.contains(e.target)&&e.target!==bem&&!bem.contains(e.target))pop.style.display='none'},true)}
+
 WS.on('sync',onSync);
 WS.on('gm',d=>{const u=storage.auth&&storage.auth.user();if(d&&u&&d.u===u.id)checkBan()});   // (a GM just removed someone: if it was me, check)
 // somebody new: say where I am straight away, and again a moment later (their first look at the room may not have caught up yet)
@@ -3807,6 +3938,7 @@ function tick(dt,t){
     const e=R.m?Math.min((now-R.lastP)/1000,.4):0,px=R.tx+R.vx*e,pz=R.tz+R.vz*e,k=1-Math.exp(-dt*10),ox=R.x,oz=R.z;
     if(Math.hypot(px-R.x,pz-R.z)>25){R.x=px;R.z=pz}else{R.x+=(px-R.x)*k;R.z+=(pz-R.z)*k}
     let dr=R.tr-R.r;dr=Math.atan2(Math.sin(dr),Math.cos(dr));R.r+=dr*Math.min(1,dt*12);
+    if(R.em&&(seat||ride)){R.em=null}
     const pose=seat?'sit':ride?'ride':'walk';if(pose!==R.pose){if(R.pose==='sit'||R.pose==='ride')standPose(g);R.pose=pose}
     showBike(R,ride?R.b:-1);
     R.amt+=((R.m&&!seat?1:0)-R.amt)*Math.min(1,dt*10);R.ph+=dt*(ride?7.5:11)*R.amt;
@@ -3814,14 +3946,14 @@ function tick(dt,t){
     else{root.position.set(R.x,groundY(R.x,R.z)+(ride?0:Math.abs(Math.sin(R.ph))*.1*R.amt),R.z);root.rotation.y=R.r;
       if(ride){const pd=Math.sin(R.ph)*.5*R.amt,b=g.bikes[R.curBike];g.legs[0].rotation.x=-1.05+pd;g.legs[1].rotation.x=-1.05-pd;g.arms[0].rotation.x=g.arms[1].rotation.x=-1.0;ridePose(g);
         if(b){b.crank.rotation.x=R.ph;const mvd=Math.hypot(R.x-ox,R.z-oz);b.wheels.forEach(w=>w.rotation.x+=mvd/.62)}}
-      else{const sw=Math.sin(R.ph)*R.amt;g.legs[0].rotation.x=sw*.65;g.legs[1].rotation.x=-sw*.65;g.arms[0].rotation.x=-sw*.55;g.arms[1].rotation.x=sw*.55;g.torso.scale.y=1+Math.sin(t*2.2)*.012*(1-R.amt)}}
+      else{const sw=Math.sin(R.ph)*R.amt;g.legs[0].rotation.x=sw*.65;g.legs[1].rotation.x=-sw*.65;g.arms[0].rotation.x=-sw*.55;g.arms[1].rotation.x=sw*.55;g.torso.scale.y=1+Math.sin(t*2.2)*.012*(1-R.amt);if(R.em)emoRemote(R,g,now)}}
     blinkTick(g,dt)})}
 function tags(){remotes.forEach(R=>{const q=R.rig.root.position;
   if(R.has&&!open)tagAt(R.tag,q.x,q.y,q.z,8,70);else R.tag.style.display='none';
   if(R.has&&!open&&R.sayUntil>performance.now())tagAt(R.say,q.x,q.y+4.4,q.z,-8,70,true);else if(R.say.style.display!=='none')R.say.style.display='none'})}
 function dbg(){const o=Object.entries(WS.state()).filter(([k])=>k!==myKey),now=performance.now();
   return{conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
-return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged}})();
+return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe}})();
 /*MP-END*/
 // add ?debug to the address to see what the connection is doing (handy when "I can't see anyone" needs a real reason)
 if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
@@ -3857,6 +3989,7 @@ function frame(){
     myBike.crank.rotation.x=walkPh;myBike.wheels.forEach(w=>w.rotation.x+=moved/.62)}
   else{const sw=Math.sin(walkPh)*walkAmt;legs[0].rotation.x=sw*.65;legs[1].rotation.x=-sw*.65;arms[0].rotation.x=-sw*.55;arms[1].rotation.x=sw*.55}
   torso.scale.y=1+Math.sin(t*2.2)*.012*(1-walkAmt);
+  MP.emoMe(moving);
   if(JUMP.y>0){JUMP.v-=GRAV*dt;JUMP.y+=JUMP.v*dt;if(JUMP.y<=0){JUMP.y=0;JUMP.v=0}}   // (in the air)
   P.position.y=groundY(P.position.x,P.position.z)+(riding?0:Math.abs(Math.sin(walkPh))*.1*walkAmt)+JUMP.y;
   if(sitting&&sitting.sw){const S=sitting.sw;P.position.x=S.x;P.position.z=S.z;P.position.y=groundY(S.x,S.z);P.rotation.y=sitting.face}   // riding the swing
