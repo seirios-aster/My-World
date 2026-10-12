@@ -223,7 +223,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #zoom{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
 #zoom .round{width:44px;height:44px;font-size:24px}
 #acts{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
-#acts .round{width:44px;height:44px}#bem{font-size:22px}
+#acts .round{width:44px;height:44px}#bem,#bvc,#bptt{font-size:22px}#bvc[hidden]{display:none}#bvc.on{background:#3fa66b;color:#fff}#bptt{display:none;touch-action:none;user-select:none;-webkit-user-select:none}#bptt.show{display:grid}#bptt.talk{background:#d9503f;color:#fff;box-shadow:0 0 0 5px rgba(217,80,63,.3)}#bptt.latch{outline:3px solid #d9503f;outline-offset:2px}
+.tag.spk{background:rgba(52,150,96,.88);box-shadow:0 0 0 3px rgba(52,150,96,.35)}.tag.spk::before{content:'🔊 '}
 #ask{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:rgba(20,18,30,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #ask.on{display:flex}#askbox{width:min(340px,100%);background:color-mix(in srgb,var(--paper) 86%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);color:var(--ink);border-radius:18px;padding:20px 20px 16px;box-shadow:0 18px 50px rgba(0,0,0,.35);font:600 14px var(--body);animation:askin .14s ease-out}
 @keyframes askin{from{transform:translateY(8px) scale(.97);opacity:0}to{transform:none;opacity:1}}
@@ -385,7 +386,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 
 <div id="chat"><input id="chatin" maxlength="80" placeholder="Say something to everyone here…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button type="button" class="round em" id="chatem" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">🙂</button><div id="emopick" role="group" aria-label="Emoji"></div></div>
 <canvas id="map" width="280" height="280"></canvas>
-<div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bem" title="Emotes: wave, dance, clap, cheer, bow" aria-label="Emotes" aria-expanded="false">😊</button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
+<div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bem" title="Emotes: wave, dance, clap, cheer, bow" aria-label="Emotes" aria-expanded="false">😊</button><button class="round" id="bvc" hidden title="Voice chat: hear people near you and talk to them" aria-label="Voice chat" aria-pressed="false">🎧</button><button class="round" id="bptt" aria-label="Hold to talk">🎙️</button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
 <div id="emo" role="group" aria-label="Emotes"></div>
 <div id="ask" role="dialog" aria-modal="true" aria-labelledby="asktitle" aria-describedby="asktext"><div id="askbox"><h2 id="asktitle"></h2><p id="asktext"></p><div id="askbtns"><button type="button" id="askno">Cancel</button><button type="button" id="askok">OK</button></div></div></div>
 <div id="zoom"><button class="round" id="zi" aria-label="Zoom in">+</button><button class="round" id="zo" aria-label="Zoom out">−</button></div>
@@ -405,7 +406,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12s';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12t';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2742,7 +2743,8 @@ function makeCloudAdapter(cfg,prepare,fallback){
       const me=wch=sb.channel(cfg.room+'-world',{config:{broadcast:{self:false,ack:false},presence:{key:wkey}}});
       wch.on('broadcast',{event:'p'},m=>wfire('p',m&&m.payload));
       wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
-      wch.on('broadcast',{event:'e'},m=>wfire('e',m&&m.payload));   // (an emote: who + which one; see EMO)
+      wch.on('broadcast',{event:'e'},m=>wfire('e',m&&m.payload));
+      wch.on('broadcast',{event:'v'},m=>wfire('v',m&&m.payload));   // (voice chat set-up: an offer or an answer addressed to one person; see VC)   // (an emote: who + which one; see EMO)
       wch.on('broadcast',{event:'gm'},m=>wfire('gm',m&&m.payload));   // (a nudge only: "someone was just removed, check yourself". Forging one does nothing, the truth is the world_bans row)
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
@@ -3824,7 +3826,7 @@ function onSync(st){const seen=new Set();
     setTag(R.tag,clean(e.n).slice(0,16)||'Someone',(e.u|0)>0&&(e.u|0)<STATUS.length?e.u|0:0);   // (anything unknown counts as active)
     const lk=unpackLook(e.a,e.o),sg=packLook(lk).join();if(sg!==R.lk){R.lk=sg;dress(R.rig,lk)}
     R.b=Number.isInteger(e.b)&&e.b>=0&&e.b<PARKED.length?e.b:-1;R.bt=+e.bt||0;
-    R.s=Number.isInteger(e.s)&&e.s>=-1&&e.s<SEATS.length?e.s:null;R.st=+e.st||0;
+    R.s=Number.isInteger(e.s)&&e.s>=-1&&e.s<SEATS.length?e.s:null;R.st=+e.st||0;R.vc=e.vc===1;
     R.pk={};if(e.pk&&typeof e.pk==='object')for(const i in e.pk){const q=e.pk[i];if(Array.isArray(q)&&q.length>=5&&q.slice(0,5).every(Number.isFinite)&&i>=0&&i<PARKED.length)R.pk[i]=q.slice(0,5)}}
   remotes.forEach(R=>{if(!seen.has(R.key))dropRemote(R)});early.forEach((_,k)=>{if(!(k in st))early.delete(k)});
   reconcile()}
@@ -3853,13 +3855,80 @@ function bikeChanged(){const now=Date.now();
   else{const g=PARKED[bikeIdx].g.position;my.pk[bikeIdx]=[+g.x.toFixed(2),+g.z.toFixed(2),+PARKED[bikeIdx].g.rotation.y.toFixed(3),now,+g.y.toFixed(2)];my.b=-1}
   pushState(true);applyBikes()}
 
+/* ---- voice chat (peer to peer): you hear people close to you who also turned voice on; hold the mic button (or V) to talk.
+   Audio goes straight between the players' devices (WebRTC); the world channel only carries the set-up messages ('v': an offer or an answer, addressed to one person).
+   Nothing is recorded or stored anywhere. Players within about 26 steps connect (at most 6 at once), and volume fades with distance. ---- */
+const VC={on:false,talk:false,latch:false,track:null,stream:null,peers:new Map(),retry:{},t:0,askd:false};
+const VR=26,VRX=34,VMAX=6,ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}];
+const vbtn=$('bvc'),pbtn=$('bptt');
+function vui(){vbtn.classList.toggle('on',VC.on);vbtn.setAttribute('aria-pressed',VC.on?'true':'false');vbtn.title=VC.on?'Voice chat is on (tap to turn off)':'Voice chat: hear people near you and talk to them';
+  pbtn.classList.toggle('show',VC.on);pbtn.classList.toggle('talk',VC.talk);pbtn.classList.toggle('latch',VC.latch);
+  pbtn.title=VC.latch?'Microphone is open: tap to close it':'Hold to talk (or hold V). A quick tap keeps the microphone open'}
+const vSend=(to,k,sdp)=>WS.send('v',{f:myKey,t:to,k,d:sdp});
+function vGather(pc){return new Promise(res=>{if(pc.iceGatheringState==='complete')return res();let t=0;const ch=()=>{if(pc.iceGatheringState==='complete')done()},done=()=>{clearTimeout(t);pc.removeEventListener('icegatheringstatechange',ch);res()};
+  t=setTimeout(done,3000);pc.addEventListener('icegatheringstatechange',ch)})}   // (all the network addresses go in the one message, so a call is just two messages, not a stream of them)
+function vClose(key){const p=VC.peers.get(key);if(!p)return;VC.peers.delete(key);try{p.pc.ontrack=p.pc.onconnectionstatechange=null;p.pc.close()}catch(_){}
+  try{p.src&&p.src.disconnect();p.gain&&p.gain.disconnect();p.pan&&p.pan.disconnect();p.an&&p.an.disconnect()}catch(_){}if(p.el)p.el.srcObject=null;
+  VC.retry[key]=performance.now()+4000;const R=remotes.get(key);if(R)R.tag.classList.remove('spk')}
+function vHear(p,st){const c=AC;p.el=new Audio();p.el.srcObject=st;p.el.muted=!!c;p.el.play().catch(()=>{});   // (muted element: some browsers only deliver the stream to Web Audio while it is playing somewhere)
+  if(!c)return;p.src=c.createMediaStreamSource(st);p.gain=c.createGain();p.gain.gain.value=0;p.an=c.createAnalyser();p.an.fftSize=256;p.buf=new Uint8Array(p.an.fftSize);
+  p.src.connect(p.an);p.src.connect(p.gain);let tail=p.gain;if(c.createStereoPanner){p.pan=c.createStereoPanner();p.gain.connect(p.pan);tail=p.pan}tail.connect(master||c.destination)}   // (through the game's volume, so its slider and mute work on voices too)
+function vPeer(key,init){const pc=new RTCPeerConnection({iceServers:ICE}),p={key,pc,init,t0:performance.now(),spk:0,ok:false,send:null};
+  if(init){const tr=pc.addTransceiver('audio',{direction:'sendrecv'});p.send=tr.sender;if(VC.track)tr.sender.replaceTrack(VC.track).catch(()=>{})}
+  pc.ontrack=e=>{if(p.el)return;vHear(p,e.streams[0]||new MediaStream([e.track]))};
+  pc.onconnectionstatechange=()=>{const s=pc.connectionState;if(s==='connected')p.ok=true;else if(s==='failed'||s==='closed')vClose(key)};
+  VC.peers.set(key,p);return p}
+async function vOffer(p){try{const o=await p.pc.createOffer();await p.pc.setLocalDescription(o);await vGather(p.pc);if(VC.peers.get(p.key)===p)vSend(p.key,'o',p.pc.localDescription.sdp)}catch(_){vClose(p.key)}}
+WS.on('v',async d=>{if(!VC.on||!d||typeof d.f!=='string'||d.t!==myKey||typeof d.d!=='string'||d.d.length>20000)return;const R=remotes.get(d.f);
+  if(!R||!R.vc||!R.has||Math.hypot(R.tx-P.position.x,R.tz-P.position.z)>VRX)return;   // only people who turned voice on, and who are close
+  if(d.k==='o'){if(!(myKey>d.f)||(VC.peers.size>=VMAX&&!VC.peers.has(d.f)))return;   // offers only ever come from the smaller key, so two people never offer to each other at once
+    vClose(d.f);const p=vPeer(d.f,false);
+    try{await p.pc.setRemoteDescription({type:'offer',sdp:d.d});const tr=p.pc.getTransceivers()[0];tr.direction='sendrecv';p.send=tr.sender;if(VC.track)tr.sender.replaceTrack(VC.track).catch(()=>{});
+      const a=await p.pc.createAnswer();await p.pc.setLocalDescription(a);await vGather(p.pc);if(VC.peers.get(d.f)===p)vSend(d.f,'a',p.pc.localDescription.sdp)}catch(_){vClose(d.f)}}
+  else if(d.k==='a'){const p=VC.peers.get(d.f);if(!p||!p.init||p.pc.signalingState!=='have-local-offer')return;try{await p.pc.setRemoteDescription({type:'answer',sdp:d.d})}catch(_){vClose(d.f)}}});
+async function vMic(){if(VC.track)return true;
+  try{const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
+    if(!VC.on){s.getTracks().forEach(t=>t.stop());return false}
+    VC.stream=s;VC.track=s.getAudioTracks()[0];VC.track.enabled=VC.talk;VC.peers.forEach(p=>p.send&&p.send.replaceTrack(VC.track).catch(()=>{}));return true}
+  catch(_){toast('','The microphone is blocked or missing, but you can still listen 🎧',true);return false}}
+function vTalk(on){if(on===VC.talk||(on&&!VC.on))return;VC.talk=on;
+  if(on)vMic().then(ok=>{if(!ok){VC.talk=false;VC.latch=false}else if(VC.track)VC.track.enabled=VC.talk;vui()});else if(VC.track)VC.track.enabled=false;vui()}
+function voiceOff(){if(!VC.on&&!VC.peers.size)return;VC.on=false;VC.talk=false;VC.latch=false;[...VC.peers.keys()].forEach(vClose);
+  if(VC.stream){VC.stream.getTracks().forEach(t=>t.stop());VC.stream=VC.track=null}pushState(true);vui()}
+async function voiceToggle(){if(VC.on){voiceOff();return}
+  if(typeof RTCPeerConnection==='undefined'||!navigator.mediaDevices){toast('','Voice chat is not supported on this browser',true);return}
+  let ok=VC.askd;try{ok=ok||localStorage.getItem('myworld.voiceok')==='1'}catch(_){}
+  if(!ok){if(!await ask({title:'Turn on voice chat?',text:'You will hear people near you who also turned it on, and you talk by holding the mic button (or V). Voice goes straight between players’ devices, so they can see your network address (IP) while you are connected. Nothing is recorded.',ok:'Turn on',cancel:'Not now'}))return;try{localStorage.setItem('myworld.voiceok','1')}catch(_){}}
+  VC.askd=true;if(!AC)snd();if(AC&&AC.state==='suspended')AC.resume();
+  VC.on=true;pushState(true);vui();toast('','Voice is on 🎧 Hold 🎙️ (or V) to talk to people near you',true)}
+function voiceTick(dt){if(!VC.on&&!VC.peers.size)return;const now=performance.now();   // (runs on its own timer, not with the drawing, so voice carries on if the tab is in the background)
+  VC.t-=dt;if(VC.t<=0){VC.t=.5;const want=[];
+    remotes.forEach(R=>{if(!R.has||!R.vc)return;const d=Math.hypot(R.tx-P.position.x,R.tz-P.position.z);if(d<(VC.peers.has(R.key)?VRX:VR))want.push([d,R])});
+    want.sort((a,b)=>a[0]-b[0]);const near=want.slice(0,VMAX),keep=new Set(near.map(w=>w[1].key));
+    [...VC.peers].forEach(([k,p])=>{if(!VC.on||!keep.has(k))vClose(k);else if(!p.ok&&now-p.t0>15000)vClose(k)});   // (a call that never got through is dropped and tried again a few seconds later)
+    if(VC.on&&myKey)near.forEach(([d,R])=>{if(!VC.peers.has(R.key)&&myKey<R.key&&now>(VC.retry[R.key]||0))vOffer(vPeer(R.key,true))})}
+  VC.peers.forEach((p,k)=>{const R=remotes.get(k);if(!R)return;const dx=R.tx-P.position.x,dz=R.tz-P.position.z,d=Math.hypot(dx,dz),g=d<3?1:Math.pow(clamp(1-(d-3)/(VR-3),0,1),2);
+    if(p.gain){const t=AC.currentTime;p.gain.gain.setTargetAtTime(g,t,.08);
+      if(p.pan){const e=cam.matrixWorld.elements,rl=Math.hypot(e[0],e[2])||1;p.pan.pan.setTargetAtTime(clamp((dx*e[0]+dz*e[2])/rl/(d||1),-1,1)*.85*Math.min(1,d/3),t,.1)}}   // (voices come from the side they are on)
+    if(p.an){p.an.getByteTimeDomainData(p.buf);let m=0;for(let i=0;i<p.buf.length;i++){const v=Math.abs(p.buf[i]-128);if(v>m)m=v}p.lvl=m;if(m>6)p.spk=now}
+    R.tag.classList.toggle('spk',now-p.spk<300)})}
+{let down=0;
+  vbtn.onclick=voiceToggle;
+  pbtn.addEventListener('pointerdown',e=>{e.preventDefault();try{pbtn.setPointerCapture(e.pointerId)}catch(_){}if(VC.latch){VC.latch=false;vTalk(false);down=0;return}down=performance.now();vTalk(true)});
+  const up=()=>{if(!down)return;const held=performance.now()-down;down=0;if(held<280){VC.latch=true;vui()}else vTalk(false)};   // (a quick tap keeps the microphone open until you tap again)
+  pbtn.addEventListener('pointerup',up);pbtn.addEventListener('pointercancel',up);
+  addEventListener('keydown',e=>{if(e.code!=='KeyV'||e.repeat||e.metaKey||e.ctrlKey||e.altKey||(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)))return;if(VC.on)vTalk(true)});
+  addEventListener('keyup',e=>{if(e.code==='KeyV'&&!VC.latch)vTalk(false)});
+  addEventListener('blur',()=>{if(!VC.latch)vTalk(false)});
+  storage.auth.onChange(()=>{if(!storage.auth.user())voiceOff()});setInterval(()=>voiceTick(.25),250);vbtn.hidden=false;vui()}
+
 /* ---- telling the others about me ---- */
 const seatNow=()=>!sitting?null:sitting.kind==='ground'&&!SEATS.includes(sitting)?-1:SEATS.indexOf(sitting);
-const mySig=()=>{const p=PPL[ctl];return clean(p.name)+'|'+packLook(p).join()+'|'+MYST+'|'+my.s+'|'+my.b};
+const mySig=()=>{const p=PPL[ctl];return clean(p.name)+'|'+packLook(p).join()+'|'+MYST+'|'+my.s+'|'+my.b+'|'+(VC.on?1:0)};
 function pushState(force){const now=performance.now();if(!on)return;
   const gap=force?120:500;if(now-lastTrack<gap){dueMin=trackDue?Math.min(dueMin,gap):gap;trackDue=true;return}
   lastTrack=now;trackDue=false;dueMin=500;const p=PPL[ctl];
-  WS.track({n:clean(p.name).slice(0,16)||'Someone',a:packLook(p),u:MYST,x:+P.position.x.toFixed(1),z:+P.position.z.toFixed(1),r:+wrapA(P.rotation.y).toFixed(2),b:my.b,bt:my.bt,s:my.s,st:my.st,pk:my.pk})}
+  WS.track({n:clean(p.name).slice(0,16)||'Someone',a:packLook(p),u:MYST,x:+P.position.x.toFixed(1),z:+P.position.z.toFixed(1),r:+wrapA(P.rotation.y).toFixed(2),b:my.b,bt:my.bt,s:my.s,st:my.st,pk:my.pk,vc:VC.on?1:0})}
 function sendPos(force,mv){const now=performance.now();lastSend=now;sent.m=mv;sent.r=P.rotation.y;
   WS.send('p',{k:myKey,x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2),m:mv})}
 // a position can arrive a moment BEFORE that person's presence entry (they are two separate messages): keep the latest one per person and use it as soon as they appear,
@@ -3951,7 +4020,7 @@ function tags(){remotes.forEach(R=>{const q=R.rig.root.position;
   if(R.has&&!open&&R.sayUntil>performance.now())tagAt(R.say,q.x,q.y+4.4,q.z,-8,70,true);else if(R.say.style.display!=='none')R.say.style.display='none'})}
 function dbg(){const o=Object.entries(WS.state()).filter(([k])=>k!==myKey),now=performance.now();
   return{conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
-return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe}})();
+return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe,voiceStats:async()=>{const out=[];for(const[k,p]of VC.peers){const st=await p.pc.getStats();const o={k:k.slice(-5)};st.forEach(r=>{if(r.type==='inbound-rtp')o.in={bytes:r.bytesReceived,packets:r.packetsReceived,level:r.audioLevel};if(r.type==='outbound-rtp')o.out={bytes:r.bytesSent,packets:r.packetsSent}});o.recv=p.pc.getReceivers().map(x=>({muted:x.track&&x.track.muted,state:x.track&&x.track.readyState}));o.send=p.send&&p.send.track?{en:p.send.track.enabled,state:p.send.track.readyState,muted:p.send.track.muted}:null;out.push(o)}return out},voice:()=>({on:VC.on,talk:VC.talk,mic:!!VC.track,retry:Object.keys(VC.retry).length,peers:[...VC.peers].map(([k,p])=>({k:k.slice(-5),init:p.init,conn:p.pc.connectionState,ice:p.pc.iceConnectionState,sig:p.pc.signalingState,ok:p.ok,hear:!!p.el,gain:p.gain?+p.gain.gain.value.toFixed(2):null,lvl:p.lvl|0,ac:AC?AC.state:'none'})),remotes:[...remotes.values()].map(R=>({vc:R.vc,has:R.has,d:+Math.hypot(R.tx-P.position.x,R.tz-P.position.z).toFixed(1)}))})}})();
 /*MP-END*/
 // add ?debug to the address to see what the connection is doing (handy when "I can't see anyone" needs a real reason)
 if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
