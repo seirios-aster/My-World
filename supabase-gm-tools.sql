@@ -64,3 +64,10 @@ create policy "world_online: update own" on public.world_online for update to au
 create policy "world_online: see own row" on public.world_online for select to authenticated using (user_id = auth.uid());
 create policy "world_online: gm reads" on public.world_online for select to authenticated
   using (exists (select 1 from public.world_admins a where a.user_id = auth.uid()));
+
+-- ---------------------------------------------------------------- the server-side key
+-- The gm-admin Edge Function uses the project's secret (service_role) key. That key skips the row-level-security rules, but it still needs plain table permissions,
+-- and on some projects it does not have them on tables made in the SQL editor (then every call is refused with 403 "GM only", because it cannot read world_admins).
+grant select on public.world_admins to service_role;
+grant select, insert, update, delete on public.world_bans to service_role;
+grant select on public.world_online to service_role;
