@@ -386,7 +386,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12g';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12h';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2340,6 +2340,15 @@ function claudeChest(d){const pr=d.body,R=y=>{let r=pr[pr.length-1][0];for(let i
   g=SPARK().clone(),P=g.attributes.position,cx=.0,cy=.72,k=.85;
   for(let i=0;i<P.count;i++){const x=cx+P.getX(i)*k,y=cy+P.getY(i)*k,r=R(y);P.setXYZ(i,x,y,r*.84*Math.sqrt(Math.max(1-(x*x)/(r*r),.04))+.012)}
   g.computeVertexNormals();return[part(g,0xfdf3ea,.2,.92)]}
+// "LGTM" printed small on the back of the Dev's hoodie, in a normal (monospace) font: a text picture on a thin panel bent to follow the back
+const LGTM_TEX=(()=>{let t=null;return()=>{if(t)return t;const cv=document.createElement('canvas');cv.width=256;cv.height=96;const x=cv.getContext('2d');x.fillStyle='#f0f0f3';x.font='800 58px ui-monospace,Menlo,Consolas,monospace';x.textAlign='center';x.textBaseline='middle';try{x.letterSpacing='5px'}catch(_){}x.fillText('LGTM',128,52);
+  t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}})();
+const LGM=new Map();
+function lgtmMesh(g){let m=LGM.get(g);if(!m){const pr=CFG[g].dv.body,R=y=>{let r=pr[pr.length-1][0];for(let i=1;i<pr.length;i++)if(y<=pr[i][1]){const a=pr[i-1],b=pr[i],t=Math.min(Math.max((y-a[1])/(b[1]-a[1]||1),0),1);r=a[0]+(b[0]-a[0])*t;break}return r},
+    geo=new THREE.PlaneGeometry(.25,.094,12,1).rotateY(Math.PI),P=geo.attributes.position,yc=.5;   // (turned to face backwards, then pressed onto the curve of the back)
+  for(let i=0;i<P.count;i++){const x=P.getX(i),y=yc+P.getY(i),r=R(y);P.setXYZ(i,x,y,-(r*.84*Math.sqrt(Math.max(1-(x*x)/(r*r),.04))+.008))}
+  geo.computeVertexNormals();m=new THREE.Mesh(geo,Object.assign(toon(0xffffff,{map:LGTM_TEX(),transparent:true}),{alphaTest:.4}));LGM.set(g,m)}
+  return m.clone()}
 function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.bot??0x383b47,dark=cshade(navy,.78),out=[];
   if(limb==='torso'){const e=lathe(d.body,44);e.scale(1,1,.84);out.push(part(e,navy));
     out.push(part(new THREE.TorusGeometry(d.hem[1],.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0],0),dark));
@@ -2385,6 +2394,7 @@ function assemble(p,g){const c=p.cb,m=CFG[g],keep=new Set([...p.arms,...p.legs])
 function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,V=oi===2?SUNV:{},key=g+(oi===2?'|sun|':dev?'|dev|':'|main|');c.out.forEach(o=>o.parent&&o.parent.remove(o));c.out=[];
   for(const limb of ['torso','arm0','arm1','leg0','leg1']){const par=c.limbs[limb],before=par.children.length;
     mkM(par,key+limb,()=>[...fixedOf(g,limb,dev),...(dev?devParts(g,limb,V):[])],VCM,VCO);
+    if(oi===1&&limb==='torso')par.add(lgtmMesh(g));
     c.out.push(...par.children.slice(before))}
   c.hatG.children.slice().forEach(o=>c.hatG.remove(o));
   mkM(c.hatG,key+'hat',()=>oi===2?[]:dev?phonesParts(g):hatOf(g),VCM,VCO)}
