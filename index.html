@@ -386,7 +386,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12f';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12g';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2330,15 +2330,20 @@ function ghDecal(d,y,w){const g=new THREE.ShapeGeometry(GHMARK(),6),pr=d.body;le
   g.computeVertexNormals();const N=g.attributes.normal;for(let i=0;i<N.count;i++)N.setXYZ(i,N.getX(i),N.getY(i),-Math.abs(N.getZ(i)));   // (facing backwards)
   const ix=g.index;for(let i=0;i<ix.count;i+=3){const t=ix.getX(i+1);ix.setX(i+1,ix.getX(i+2));ix.setX(i+2,t)}   // (and wound to face backwards)
   return g}
-// a small terminal prompt (">_") embroidered on the Dev's left chest, hugging the front of the hoodie
-function promptParts(d){const pr=d.body,R=y=>{let r=pr[pr.length-1][0];for(let i=1;i<pr.length;i++)if(y<=pr[i][1]){const a=pr[i-1],b=pr[i],t=Math.min(Math.max((y-a[1])/(b[1]-a[1]||1),0),1);r=a[0]+(b[0]-a[0])*t;break}return r},
-  Z=(x,y)=>{const r=R(y);return r*.84*Math.sqrt(Math.max(1-(x*x)/(r*r),.04))+.012},cx=.12,cy=.74,W=0xfdf3ea,o=[],K=1.4;
-  const seg=(a,b)=>{const A=[cx+a[0]*K,cy+a[1]*K],B=[cx+b[0]*K,cy+b[1]*K];o.push(part(tube([A[0],A[1],Z(A[0],A[1])],[B[0],B[1],Z(B[0],B[1])],.013,.013,8),W,.1,.92));[A,B].forEach(q=>o.push(part(ellG(.013,.013,.013,[q[0],q[1],Z(q[0],q[1])],8),W,.1,.92)))};
-  seg([-.05,.035],[-.005,0]);seg([-.005,0],[-.05,-.035]);seg([.012,-.04],[.065,-.04]);return o}
+// the Claude mark, drawn after the real one: a solid middle with a dozen blunt rays of uneven length (flat, white)
+const SPARK=(()=>{let g=null;return()=>{if(g)return g;const A=[0,27,61,96,127,158,190,223,252,284,317,346],L=[1,.78,.92,.7,1,.8,.96,.72,1,.84,.9,.76],parts=[new THREE.CircleGeometry(.045,24)];
+  A.forEach((d,k)=>{const a=d*Math.PI/180,c=Math.cos(a),s=Math.sin(a),len=L[k]*.118,wb=.012,wt=.016,P=[[-wb,.02],[-wt,len],[wt,len],[wb,.02]].map(([x,y])=>[x*c+y*s,-x*s+y*c]),sh=new THREE.Shape();
+    P.forEach((p,n)=>n?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));sh.closePath();parts.push(new THREE.ShapeGeometry(sh))});
+  return g=mergeGeometries(parts)}})();
+// ... on the Dev's chest, bent to follow the front of the hoodie
+function claudeChest(d){const pr=d.body,R=y=>{let r=pr[pr.length-1][0];for(let i=1;i<pr.length;i++)if(y<=pr[i][1]){const a=pr[i-1],b=pr[i],t=Math.min(Math.max((y-a[1])/(b[1]-a[1]||1),0),1);r=a[0]+(b[0]-a[0])*t;break}return r},
+  g=SPARK().clone(),P=g.attributes.position,cx=.0,cy=.72,k=.85;
+  for(let i=0;i<P.count;i++){const x=cx+P.getX(i)*k,y=cy+P.getY(i)*k,r=R(y);P.setXYZ(i,x,y,r*.84*Math.sqrt(Math.max(1-(x*x)/(r*r),.04))+.012)}
+  g.computeVertexNormals();return[part(g,0xfdf3ea,.2,.92)]}
 function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.bot??0x383b47,dark=cshade(navy,.78),out=[];
   if(limb==='torso'){const e=lathe(d.body,44);e.scale(1,1,.84);out.push(part(e,navy));
     out.push(part(new THREE.TorusGeometry(d.hem[1],.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0],0),dark));
-    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));if(!V.id){out.push(part(ghDecal(d,.7,.2),0xeceef3,.05));out.push(...promptParts(d))}   // (the GitHub mark is the Dev's)
+    out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));if(!V.id){out.push(part(ghDecal(d,.7,.2),0xeceef3,.05));out.push(...claudeChest(d))}   // (the GitHub mark is the Dev's)
    
     out.push(part(new THREE.TorusGeometry(d.hood[1],.07,10,32).rotateX(Math.PI/2-.25).translate(0,d.hood[0],-.02),navy),part(ellG(.23,.15,.12,d.blob),navy));
     [-1,1].forEach(s=>out.push(part(tube([s*d.str[0],d.str[1],d.str[2]],[s*d.str[3],d.str[4],d.str[5]],.016,.016,8),'#f2f2f2')))}
@@ -2350,9 +2355,12 @@ function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.
   return out}
 // headphones: silver cups, a dark band over the hair
 // "</>" in white strokes on the outer face of each headphone cup (read left to right from outside, so the u axis runs the other way on the two sides)
+const BRACE=[[.022,.075],[.004,.066],[-.002,.04],[-.004,.014],[-.026,0],[-.004,-.014],[-.002,-.04],[.004,-.066],[.022,-.075]];   // one "{" as points (u across, v up); the "}" is its mirror
 const CODE=[[[-.04,.06],[-.1,0],[-.04,-.06]],[[.025,.07],[-.025,-.07]],[[.04,.06],[.1,0],[.04,-.06]]];
 function phonesParts(g){const p=CFG[g].dv.ph,y=0xc4c8d2,d=0x2b2b36,o=[];
-  [-1,1].forEach(s=>CODE.forEach(L=>{const P=L.map(([u,v])=>[s*(p.cx+.125),p.cy+v,-s*u]);for(let k=1;k<P.length;k++)o.push(part(tube(P[k-1],P[k],.012,.012,8),0xfdf3ea,.2,.92));P.forEach(q=>o.push(part(ellG(.012,.012,.012,q,8),0xfdf3ea,.2,.92)))}));   // (white </> on the outside of each cup)
+  [-1,1].forEach(s=>{const X=s*(p.cx+.125);   // </> on the one cup, { } on the other (white, as if typed there)
+    if(s<0)CODE.forEach(L=>{const P=L.map(([u,v])=>[X,p.cy+v,-s*u]);for(let k=1;k<P.length;k++)o.push(part(tube(P[k-1],P[k],.012,.012,8),0xfdf3ea,.2,.92));P.forEach(q=>o.push(part(ellG(.012,.012,.012,q,8),0xfdf3ea,.2,.92)))});
+    else[[-.05,1],[.05,-1]].forEach(([u0,m])=>{const pts=BRACE.map(([u,v])=>new THREE.Vector3(X,p.cy+v,-s*(u0+u*m)));o.push(part(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,false,'catmullrom',.5),28,.0085,6),0xfdf3ea,.2,.92))})});
   [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
   const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
 
