@@ -386,7 +386,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12b';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12c';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2348,7 +2348,12 @@ function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.
     out.push(part(tube([s*d.la[0],d.la[1],d.la[2]],[s*d.lb[0],d.lb[1],d.lb[2]],d.lr[0],d.lr[1]),bot));out.forEach(q=>q.geo.translate(-P[0],-P[1],-P[2]))}
   return out}
 // headphones: silver cups, a dark band over the hair
+// the Claude spark: a twelve-ray burst (uneven rays, like the real mark), flat, for the outer face of each headphone cup
+const SPARK=(()=>{let sh=null;return()=>{if(sh)return sh;const R=[1,.8,.95,.72,1,.84,.92,.74,1,.8,.94,.76],n=R.length,sp=new THREE.Shape();
+  for(let i=0;i<n*2;i++){const a=i*Math.PI/n+Math.PI/2,r=i%2?.04:R[i>>1]*.125;i?sp.lineTo(Math.cos(a)*r,Math.sin(a)*r):sp.moveTo(Math.cos(a)*r,Math.sin(a)*r)}
+  sp.closePath();return sh=sp}})();
 function phonesParts(g){const p=CFG[g].dv.ph,y=0xc4c8d2,d=0x2b2b36,o=[];
+  [-1,1].forEach(s=>o.push(part(new THREE.ShapeGeometry(SPARK()).rotateY(s*Math.PI/2).translate(s*(p.cx+.12),p.cy,0),0xd97757,.3)));   // (an orange Claude spark on the outside of each cup)
   [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
   const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
 
