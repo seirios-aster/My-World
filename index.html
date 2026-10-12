@@ -224,6 +224,11 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #zoom .round{width:44px;height:44px;font-size:24px}
 #acts{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
 #acts .round{width:44px;height:44px}#bem{font-size:22px}
+#ask{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:rgba(20,18,30,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#ask.on{display:flex}#askbox{width:min(340px,100%);background:var(--paper);color:var(--ink);border-radius:18px;padding:20px 20px 16px;box-shadow:0 18px 50px rgba(0,0,0,.35);font:600 14px var(--body);animation:askin .14s ease-out}
+@keyframes askin{from{transform:translateY(8px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+#asktitle{margin:0 0 6px;font:800 18px var(--body)}#asktext{margin:0 0 16px;color:var(--ink-soft);line-height:1.4}#askbtns{display:flex;gap:8px;justify-content:flex-end}
+#askbtns button{border:0;border-radius:999px;padding:9px 18px;font:800 14px var(--body);cursor:pointer;background:var(--paper-2);color:var(--ink)}#askbtns button#askok{background:var(--sun);color:#fff}#askbtns button#askok.danger{background:#b3382c}#askbtns button:focus-visible{outline:3px solid color-mix(in srgb,var(--sun) 55%,transparent);outline-offset:2px}
 #emo{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(66px + env(safe-area-inset-bottom,0px));display:none;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:30}
 #emo .emb{border:0;border-radius:12px;background:var(--paper-2);color:var(--ink);padding:6px 10px;font:700 12px var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}#emo .emb span{font-size:24px;line-height:1.1}#acts svg{width:24px;height:24px}
 
@@ -382,6 +387,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <canvas id="map" width="280" height="280"></canvas>
 <div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bem" title="Emotes: wave, dance, clap, cheer, bow" aria-label="Emotes" aria-expanded="false">😊</button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
 <div id="emo" role="group" aria-label="Emotes"></div>
+<div id="ask" role="dialog" aria-modal="true" aria-labelledby="asktitle" aria-describedby="asktext"><div id="askbox"><h2 id="asktitle"></h2><p id="asktext"></p><div id="askbtns"><button type="button" id="askno">Cancel</button><button type="button" id="askok">OK</button></div></div></div>
 <div id="zoom"><button class="round" id="zi" aria-label="Zoom in">+</button><button class="round" id="zo" aria-label="Zoom out">−</button></div>
 <div id="panel"><div id="card"><div id="hd"><h2 id="t"></h2><span><button class="ib" id="mx" title="Maximize" aria-label="Maximize">⤢</button><button class="ib" id="x" title="Close" aria-label="Close">✕</button></span></div><p id="d"></p><div id="viewer"><button class="nv" id="pv" aria-label="Previous">‹</button><div id="media"></div><div id="mload" role="status" aria-label="Loading"><i></i></div><button class="nv" id="nx" aria-label="Next">›</button><div id="mact"><button type="button" class="ma" id="macc" hidden></button><button type="button" class="ma" id="madd">📷 Add photo/video</button><button type="button" class="ma" id="mdel" aria-label="Remove photo or video" title="Remove">🗑</button></div><div id="mmsg" role="status"></div></div><div id="cap"></div><div id="thumbs"></div></div></div>
 
@@ -399,7 +405,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12q';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12r';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2813,7 +2819,17 @@ macc.onclick=()=>{const A=storage.auth;if(!A||mbusy||A.user())return;A.signIn().
 // sign out: a button in the side column, there only while signed in
 const bout=$('bout');
 function outSync(){const A=storage.auth,u=A&&A.available()&&A.user();bout.hidden=!u;if(u)bout.title='Sign out · '+(u.name?u.name+' · ':'')+u.email}
-bout.onclick=()=>{const A=storage.auth;if(!A||!A.user())return;if(confirm('Sign out of '+APP.name+'?'))A.signOut().catch(e=>toast('','Couldn\'t sign out - try again',true))};
+// our own "are you sure?" box (instead of the browser's pop-up): ask({title,text,ok,cancel,danger}) answers true or false. Esc or a tap outside the box means no; Enter means yes.
+let askBusy=null;
+function ask({title='Are you sure?',text='',ok='OK',cancel='Cancel',danger=false}={}){if(askBusy)return askBusy;const box=$('ask'),yes=$('askok'),no=$('askno'),prev=document.activeElement;
+  $('asktitle').textContent=title;$('asktext').textContent=text;yes.textContent=ok;no.textContent=cancel;yes.classList.toggle('danger',!!danger);box.classList.add('on');setTimeout(()=>yes.focus(),30);
+  return askBusy=new Promise(res=>{const done=v=>{box.classList.remove('on');removeEventListener('keydown',key,true);box.removeEventListener('pointerdown',out);yes.onclick=no.onclick=null;askBusy=null;try{prev&&prev.focus&&prev.focus()}catch(_){}res(v)},
+      key=e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();done(false)}
+        else if(e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();(document.activeElement===yes?no:yes).focus()}
+        else{e.stopImmediatePropagation();if(e.key==='Enter'&&document.activeElement!==no){e.preventDefault();done(true)}}},   // (nothing reaches the game while the box is open)
+      out=e=>{if(e.target===box)done(false)};
+    yes.onclick=()=>done(true);no.onclick=()=>done(false);addEventListener('keydown',key,true);box.addEventListener('pointerdown',out)})}
+bout.onclick=async()=>{const A=storage.auth;if(!A||!A.user())return;if(await ask({title:'Sign out?',text:'You will leave '+APP.name+' and go back to the sign-in screen.',ok:'Sign out',cancel:'Stay'}))A.signOut().catch(e=>toast('','Couldn\'t sign out - try again',true))};
 if(storage.auth){outSync();storage.ready.then(outSync);storage.auth.onChange(outSync)}
 if(storage.auth)storage.auth.onChange(()=>{SPOTS.forEach(sp=>sp.items.forEach(it=>applyRec(it,null)));if(cur){cur.items.forEach((_,i)=>refreshItem(i));hydrate(cur)}});   // someone signed in or out: show only their own media
 /* ---- login gate: on the hosted version the world opens only after Google sign-in ---- */
