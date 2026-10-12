@@ -173,8 +173,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #emopick button{width:46px;height:46px;border:0;background:none;border-radius:12px;cursor:pointer;padding:7px;display:grid;place-items:center}
 #emopick button:hover,#emopick button:focus-visible{background:var(--paper-2)}
 #emopick .ae{width:30px;height:30px;margin:0;vertical-align:0}
-#ogm{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}#ogm[hidden]{display:none}#ogm small{font-weight:600;opacity:.6}
-#ogm select{width:100%;padding:7px 9px;border:2px solid var(--paper-2);border-radius:10px;background:var(--field);font:700 13px var(--body);color:var(--ink)}
+#gms{display:flex;flex-direction:column;gap:5px}#gms[hidden]{display:none}#gms small{font-weight:600;opacity:.6}
+#gms select{width:100%;padding:7px 9px;border:2px solid var(--paper-2);border-radius:10px;background:var(--field);font:700 13px var(--body);color:var(--ink)}
 #gmnote,#gmfx{font:600 12px var(--body);opacity:.7;min-height:1.2em}
 #ostat{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}
 #toasts{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:3;pointer-events:none;width:min(440px,calc(100vw - 130px))}
@@ -294,13 +294,13 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#gmp,#vol,#emo{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
 #mysay::after,.rsay::after{border-top-color:color-mix(in srgb,var(--paper) var(--see),transparent)}
 :root[data-theme=dark] #gmp,:root[data-theme=dark] #emo,:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
-:root[data-theme=dark] #ogm small{opacity:.8}
+:root[data-theme=dark] #gms small{opacity:.8}
 :root[data-theme=dark] input::placeholder{color:var(--ink-soft);opacity:.95}   /* the "Say something…" hint and the name fields' hints: the browser's dark grey was hard to read on the dark panels */
 #gmp{position:fixed;right:calc(60px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));color:var(--ink);border-radius:14px;padding:10px;display:none;flex-direction:column;gap:6px;box-shadow:var(--shadow);z-index:2;max-height:calc(100vh - 120px);overflow:auto;width:min(340px,calc(100vw - 84px - env(safe-area-inset-right,0px)));box-sizing:border-box;font:700 13px var(--body)}
-#gmh{display:flex;align-items:center;justify-content:space-between}#gmp .round{width:30px;height:30px;font-size:14px}
+#gmh{display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}#gmh.drag{cursor:grabbing}#gmh .gmgrip{opacity:.45;font-weight:400;margin-left:6px}#gmp .round{width:30px;height:30px;font-size:14px}
 #gmp .gmr{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px solid var(--paper-2)}#gmp .gmn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #gmp .gmpg{color:var(--ink-soft);font-size:11px;white-space:nowrap}
-#gmp .gmb{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:4px 10px;font:700 12px var(--body);cursor:pointer}#gmt{display:flex;gap:6px}#gmt .gmb{flex:1}#gmp .gmb.on{background:var(--ink);color:var(--paper)}#gmp [hidden]{display:none}
+#gmp .gmb{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:4px 10px;font:700 12px var(--body);cursor:pointer}#gmt{display:flex;gap:6px;flex-wrap:wrap}#gmt .gmb{flex:1 1 auto;padding:4px 8px}#gmp .gmb.on{background:var(--ink);color:var(--paper)}#gmp [hidden]{display:none}
 #gmp .gmb.danger{background:#b3382c;color:#fff}
 #gmm{color:var(--ink-soft);font-size:12px;min-height:14px}#bgm[hidden]{display:none}
 </style>
@@ -316,7 +316,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <button class="round" id="bc" title="Constellation lines and names - tap for stars only" aria-label="Constellation lines"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" stroke-width="1.5"/></svg></button>
   <button class="round" id="bx" hidden title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
   <button class="round" id="bth" title="Dark theme" aria-label="Dark theme"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></button>
-  <button class="round" id="bgm" hidden title="GM panel: who is online, kick, ban" aria-label="GM panel"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></button>
+  <button class="round" id="bgm" hidden title="GM settings: who is online, kick, ban, clock, weather" aria-label="GM settings"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   <button class="round txt" id="bh" aria-label="Graphics quality">HD</button>
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
@@ -327,7 +327,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 <div id="coords" title="Tap to copy"></div>
 <div id="lap" role="status" aria-live="polite"></div>
-<div id="gmp"><div id="gmh"><b>GM panel</b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gmm"></div></div>
+<div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
+  <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
+  <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -335,10 +337,6 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
       <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
-  <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
-    <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
-    <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select>
-    <div class="lbl">Lanterns</div><select id="gml" aria-label="Lanterns"><option value="auto">Auto (clear nights)</option><option value="on">Always on</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="dnl">Dog's name<input id="dname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
@@ -401,7 +399,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12o';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12p';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -1751,20 +1749,6 @@ const fireMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blendi
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('seed',new THREE.Float32BufferAttribute(sd,1));
   const f=new THREE.Points(g,fireMat);f.frustumCulled=false;W.add(f)}
 
-/* ---------------- picnic blankets: a place to sit together (four seats round a checked blanket, with a basket) ----------------
-   They go on the first flat bits of meadow found round the hub, so they never sit on a path, a slope or a building. The search has no randomness, so everybody's game puts them in the same place (seats are shared by number). */
-const PICNICS=[];
-{const tex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#f6efe2';g.fillRect(0,0,128,128);g.fillStyle='#d9503f';for(let i=0;i<4;i++)for(let j=0;j<4;j++)if((i+j)%2===0)g.fillRect(i*32,j*32,32,32);
-    g.fillStyle='rgba(255,255,255,.35)';g.fillRect(0,0,128,4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=THREE.NearestFilter;return t})(),
-    blM=std(0xffffff,{map:tex}),bkM=std(0xb98550),hM=std(0x8a5a2b);
-  const flat=(x,z)=>{const h=H(x,z);if(!meadow(x,z)||slopeAt(x,z)>.1)return false;for(const[dx,dz]of[[2.4,0],[-2.4,0],[0,2.4],[0,-2.4]]){const a=x+dx,b=z+dz;if(!meadow(a,b)||Math.abs(H(a,b)-h)>.25)return false}
-    return BL.every(o=>Math.hypot(o.x-x,o.z-z)>o.r+3.2)&&SEATS.every(s=>Math.hypot(s.x-x,s.z-z)>4)&&PICNICS.every(p=>Math.hypot(p.x-x,p.z-z)>14)};
-  for(const R of[11,15,19,23,27,31])for(let k=0;k<24&&PICNICS.length<2;k++){const a=k*Math.PI/12+R*.37,x=HUB[0]+Math.cos(a)*R,z=HUB[1]+Math.sin(a)*R;if(flat(x,z))PICNICS.push({x,z})}
-  PICNICS.forEach(p=>{const y=H(p.x,p.z),m=new THREE.Mesh(new THREE.BoxGeometry(3.1,.05,3.1),blM);m.position.set(p.x,y+.04,p.z);m.receiveShadow=true;W.add(m);
-    const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.3,.36),bkM),h=new THREE.Mesh(new THREE.TorusGeometry(.2,.03,6,10,Math.PI),hM);b.position.set(p.x,y+.22,p.z);h.position.set(p.x,y+.37,p.z);b.castShadow=h.castShadow=true;W.add(b,h);
-    BL.push({x:p.x,z:p.z,r:.4});
-    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>SEATS.push({x:p.x+dx*1.15,z:p.z+dz*1.15,face:Math.atan2(-dx,-dz),h:.2,kind:'ground',label:'🧺 Sit on the picnic blanket'}))})}
-
 /* =========================== THE RACE GROUND =========================== */
 // a point on the oval at loop position u and radius R: 0-1 the north bend, 1-2 the back straight (west side, run southward),
 // 2-3 the south bend, 3-4 the home straight (east side, run northward to the finish line by the Races waypoint)
@@ -2768,7 +2752,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
      and that is enforced by the database, not by hiding the control. See supabase-world-clock.sql. load(): the zone, undefined if it can't be read. */
   const settings={async load(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('tz').eq('id','main').maybeSingle();
       if(error){console.warn('[clock] could not read the game clock setting (everyone follows their own time):',error.message||error);return undefined}return data&&data.tz?data.tz:'device'},
-    /* weather and night effects (rain, snow, fireflies, lanterns): one small JSON value in the same row. fx() returns the value, null if it isn't set, undefined if it can't be read (older database: nothing breaks) */
+    /* weather and night effects (rain, snow, fireflies): one small JSON value in the same row. fx() returns the value, null if it isn't set, undefined if it can't be read (older database: nothing breaks) */
     async fx(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('fx').eq('id','main').maybeSingle();if(error)return undefined;return data&&data.fx?data.fx:null},
     async saveFx(fx){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',fx,updated_at:new Date().toISOString()});if(error)throw nice(error)},
     async gm(){await ready;if(fail||!sb||!user)return false;const{data,error}=await sb.from('world_admins').select('user_id').eq('user_id',user.id).maybeSingle();return !error&&!!data},
@@ -3097,13 +3081,13 @@ const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['l','gml']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
 async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);syncFx()}   // (undefined: can't be read, keep what we have)
 {const note=t=>{$('gmfx').textContent=t};
-  ['gmw','gmf','gml'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,l:$('gml').value};note('Saving...');[...document.querySelectorAll('#gmw,#gmf,#gml')].forEach(x=>x.disabled=true);
+  ['gmw','gmf'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value};note('Saving...');[...document.querySelectorAll('#gmw,#gmf')].forEach(x=>x.disabled=true);
     try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
     catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
-    finally{[...document.querySelectorAll('#gmw,#gmf,#gml')].forEach(x=>x.disabled=false)}}})}
+    finally{[...document.querySelectorAll('#gmw,#gmf')].forEach(x=>x.disabled=false)}}})}
 const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick();$('bgm').hidden=!gm;if(!gm){$('gmp').style.display='none';clearInterval(gmTimer)}};   // (the coordinates pin is for the GM only)
 /* ---- the GM panel: who is online (with their ping), kick, ban. The buttons only ask the gm-admin Edge Function, which checks on the server that you are a GM;
    the list of people comes from a table every signed-in game writes to about once a minute, so the ids are real (see supabase-gm-tools.sql) ---- */
@@ -3112,9 +3096,9 @@ const gmNote=t=>{$('gmm').textContent=t||''};
 const gmBtn=(label,fn,cls)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className='gmb'+(cls?' '+cls:'');b.onclick=fn;return b};
 // (a kick or ban sends the nudge three times, in case one is missed)
 async function gmAct(body,done){gmNote('...');try{await GMT.act(body);gmNote(done);if(body.action==='kick'||body.action==='ban')[0,1500,4000].forEach(ms=>setTimeout(()=>WS.send('gm',{u:body.userId}),ms));gmRefresh()}catch(e){gmNote(e.message||'That did not work')}}
-let gmTab=1;
-const gmShow=t=>{gmTab=t;$('gmo').hidden=t!==1;$('gmbn').hidden=t!==2;$('gmt1').classList.toggle('on',t===1);$('gmt2').classList.toggle('on',t===2)};
-$('gmt1').onclick=()=>gmShow(1);$('gmt2').onclick=()=>gmShow(2);
+let gmTab=1,gmFit=()=>{};
+const gmShow=t=>{gmTab=t;$('gmo').hidden=t!==1;$('gmbn').hidden=t!==2;$('gms').hidden=t!==3;[1,2,3].forEach(i=>$('gmt'+i).classList.toggle('on',t===i))};
+[1,2,3].forEach(i=>$('gmt'+i).onclick=()=>gmShow(i));
 async function gmRefresh(){if(!GMT||!IS_GM||gmp.style.display!=='flex')return;const me=storage.auth.user();let out=new Set();
   // removed people first, so they can be left out of the online list (their last heartbeat lingers for a couple of minutes)
   try{const res=await GMT.act({action:'list'}),box=$('gmbn'),bans=res.bans||[];box.textContent='';$('gmbc').textContent='('+bans.length+')';
@@ -3128,7 +3112,16 @@ async function gmRefresh(){if(!GMT||!IS_GM||gmp.style.display!=='flex')return;co
       if(!self){row.append(gmBtn('Kick',()=>{if(confirm('Remove '+nm+' for a minute?'))gmAct({action:'kick',userId:r.user_id,name:nm},'Removed '+nm)}),
         gmBtn('Ban',()=>{const d=prompt('Ban '+nm+' for how many days? (0 = until you unban them)','7');if(d===null)return;const days=Math.floor(+d);if(!(days>=0))return;gmAct({action:'ban',userId:r.user_id,name:nm,days},'Banned '+nm)},'danger'))}
       box.appendChild(row)})}catch(e){gmNote('Could not read who is online (has supabase-gm-tools.sql been run?)')}}
-$('bgm').onclick=()=>{const on=gmp.style.display!=='flex';gmp.style.display=on?'flex':'none';clearInterval(gmTimer);if(on){of.style.display='none';gmNote('');gmRefresh();gmTimer=setInterval(gmRefresh,8000)}};
+// the panel can be dragged by its title bar (mouse or finger); where you leave it is remembered, and it is kept on screen
+{const h=$('gmh'),KEY='myworld.gmpos';let pos=null,dr=null;try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&isFinite(v.x)&&isFinite(v.y))pos=v}catch(_){}
+  const fit=()=>{if(!pos||gmp.style.display!=='flex')return;const w=gmp.offsetWidth,hh=gmp.offsetHeight;pos.x=clamp(pos.x,0,Math.max(0,innerWidth-w));pos.y=clamp(pos.y,0,Math.max(0,innerHeight-Math.min(hh,60)));
+    gmp.style.left=pos.x+'px';gmp.style.top=pos.y+'px';gmp.style.right='auto'};
+  gmFit=fit;
+  h.addEventListener('pointerdown',e=>{if(e.target.closest('button')||(e.button!=null&&e.button>0))return;const r=gmp.getBoundingClientRect();dr={id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};pos={x:r.left,y:r.top};h.classList.add('drag');try{h.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
+  h.addEventListener('pointermove',e=>{if(!dr||e.pointerId!==dr.id)return;pos.x=e.clientX-dr.dx;pos.y=e.clientY-dr.dy;fit()});
+  const end=e=>{if(!dr||e.pointerId!==dr.id)return;dr=null;h.classList.remove('drag');try{localStorage.setItem(KEY,JSON.stringify({x:Math.round(pos.x),y:Math.round(pos.y)}))}catch(_){}};
+  h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);addEventListener('resize',fit)}
+$('bgm').onclick=()=>{const on=gmp.style.display!=='flex';gmp.style.display=on?'flex':'none';clearInterval(gmTimer);if(on){of.style.display='none';gmNote('');gmFit();gmRefresh();gmTimer=setInterval(gmRefresh,8000)}};
 $('gmx').onclick=()=>{gmp.style.display='none';clearInterval(gmTimer)};
 // every signed-in game says "I'm here" once a minute (and learns its ping from how long that took); a banned or just-kicked person is refused and then finds out why
 async function heartbeat(){const A=storage.auth,u=A&&A.user();if(!GMT||!u||document.hidden||banned)return;
@@ -3143,7 +3136,7 @@ async function checkBan(){const A=storage.auth;if(!GMT||!A||!A.user()||chkBusy)r
   finally{chkBusy=false}}
 if(GMT&&storage.auth){storage.ready.then(()=>setTimeout(heartbeat,4000));storage.auth.onChange(()=>setTimeout(heartbeat,3000));setInterval(heartbeat,60000);
   setInterval(()=>{if(!document.hidden&&!banned&&storage.auth.user())checkBan()},15000)}   // (a safety net: even if the GM's nudge never arrives, a removed person finds out within about 15 s; it is one tiny read)
-async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;pinFor(false);IS_GM=false;devGate();refreshPeople();return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;pinFor(gm);IS_GM=!!gm;devGate();refreshPeople();if(gm)$('gmtz').value=WTZ}
+async function gmSync(){if(!SET){pinFor(false);IS_GM=false;devGate();refreshPeople();return}let gm=false;try{gm=await SET.gm()}catch(_){}pinFor(gm);IS_GM=!!gm;devGate();refreshPeople();if(gm)$('gmtz').value=WTZ}
 if(SET){const sel=$('gmtz'),note=t=>{$('gmnote').textContent=t};
   GMZ.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});syncSel();
   sel.onchange=async()=>{const z=sel.value;note('Saving...');sel.disabled=true;
@@ -3266,12 +3259,12 @@ function skyTick(dt){
   fxTick(dt);
   $('clk').textContent=fmt(simH)+(dayI?' · '+MON[dayI-1]:'')}
 
-/* =========================== WEATHER + NIGHT EFFECTS: rain, snow, fireflies, floating lanterns ===========================
+/* =========================== WEATHER + NIGHT EFFECTS: rain, snow, fireflies ===========================
    Every one is Auto or set by the GM (stored in world_settings.fx, see supabase-world-weather.sql, and read the same way as the game clock).
    Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
-   fireflies come out at dusk and stay till dawn, lanterns drift up on clear nights. The GM's choice only overrides what Auto would do. */
-const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],l:['auto','on','off']};
-const FXS={w:'auto',f:'auto',l:'auto',ir:0,is:0,ff:0,ln:0,seenW:null};
+   fireflies come out at dusk and stay till dawn. The GM's choice only overrides what Auto would do. */
+const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off']};
+const FXS={w:'auto',f:'auto',ir:0,is:0,ff:0,seenW:null};
 function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}return ch}
 const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
 function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=doyNow(),winter=d>=335||d<=6;   // (the game clock's date: 1 Dec to 6 Jan is snow season)
@@ -3279,7 +3272,7 @@ function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=
 const fxWeather=()=>FXS.w==='auto'?fxAutoWeather():FXS.w;
 const fxGlowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
 const FXG=new THREE.Group();FXG.frustumCulled=false;W.add(FXG);
-const FXN={rain:HQ?1300:600,snow:HQ?1500:650,ln:HQ?14:8},FXBOX=44,FXH=30;
+const FXN={rain:HQ?1300:600,snow:HQ?1500:650},FXBOX=44,FXH=30;
 // rain: short slanted streaks that fall through a box around the camera and wrap
 const rainP=new Float32Array(FXN.rain*3),rainV=new Float32Array(FXN.rain),rainGeo=new THREE.BufferGeometry(),rainPos=new Float32Array(FXN.rain*6);
 for(let i=0;i<FXN.rain;i++){rainP[i*3]=(Math.random()-.5)*FXBOX;rainP[i*3+1]=Math.random()*FXH;rainP[i*3+2]=(Math.random()-.5)*FXBOX;rainV[i]=24+Math.random()*10}
@@ -3290,21 +3283,14 @@ const snowP=new Float32Array(FXN.snow*3),snowV=new Float32Array(FXN.snow),snowPh
 for(let i=0;i<FXN.snow;i++){snowP[i*3]=(Math.random()-.5)*FXBOX;snowP[i*3+1]=Math.random()*FXH;snowP[i*3+2]=(Math.random()-.5)*FXBOX;snowV[i]=1.1+Math.random()*1.4;snowPh[i]=Math.random()*6.28}
 snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPos,3));
 const snowMat=new THREE.PointsMaterial({color:0xffffff,map:fxGlowTex,size:.5,sizeAttenuation:true,transparent:true,opacity:0,depthWrite:false,fog:false}),snowObj=new THREE.Points(snowGeo,snowMat);snowObj.frustumCulled=false;snowObj.visible=false;FXG.add(snowObj);
-// lanterns: little glowing paper lanterns that rise slowly and drift
-const lnBody=new THREE.MeshBasicMaterial({color:0xffb457,transparent:true,opacity:0,fog:false,depthWrite:false}),lnGlow=new THREE.SpriteMaterial({map:fxGlowTex,color:0xff9a3c,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),
-  lnGeo=new THREE.CylinderGeometry(.22,.17,.42,8,1,true),lnCap=new THREE.CircleGeometry(.17,8),LN=[];
-for(let i=0;i<FXN.ln;i++){const g=new THREE.Group(),b=new THREE.Mesh(lnGeo,lnBody),t=new THREE.Mesh(lnCap,lnBody),s=new THREE.Sprite(lnGlow);t.rotation.x=-Math.PI/2;s.scale.setScalar(4.2);b.scale.setScalar(2.2);t.scale.setScalar(2.2);t.position.y=-.44;g.add(b,t,s);g.visible=false;FXG.add(g);
-  LN.push({g,x:0,y:0,z:0,age:0,life:0,vx:0,vz:0,ph:Math.random()*6.28,on:false})}
-function lnSpawn(l,first){const a=Math.random()*6.28,d=8+Math.random()*34,x=P.position.x+Math.cos(a)*d,z=P.position.z+Math.sin(a)*d,gy=Math.max(groundY(x,z),0);
-  l.x=x;l.z=z;l.y=gy+(first?2+Math.random()*24:1.5+Math.random()*3);l.life=45+Math.random()*25;l.age=first?Math.random()*l.life*.5:0;l.vx=(Math.random()-.3)*.5;l.vz=(Math.random()-.5)*.4;l.on=true}
 const FXGREY=new THREE.Color();
 function fxTick(dt){
   const wk=fxWeather();
   if(FXS.seenW===null)FXS.seenW=wk;else if(FXS.seenW!==wk){FXS.seenW=wk;if(tmode===0)toast('',wk==='snow'?'It started snowing ❄️':wk==='rain'?'It started raining 🌧️':'The weather cleared up 🌤️',true)}
   const k=Math.min(1,dt/4);   // (about 4 s to fade in or out)
   FXS.ir+=((wk==='rain'?1:0)-FXS.ir)*k;FXS.is+=((wk==='snow'?1:0)-FXS.is)*k;
-  const wi=Math.max(FXS.ir,FXS.is),ffT=FXS.f==='on'?1:FXS.f==='off'?0:sstep(.5,1,nt)*(1-wi),lnT=FXS.l==='on'?1:FXS.l==='off'?0:sstep(.55,.85,nt)*(1-wi);
-  FXS.ff+=(ffT-FXS.ff)*k;FXS.ln+=(lnT-FXS.ln)*k;
+  const wi=Math.max(FXS.ir,FXS.is),ffT=FXS.f==='on'?1:FXS.f==='off'?0:sstep(.5,1,nt)*(1-wi);
+  FXS.ff+=(ffT-FXS.ff)*k;
   const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z;
   // a grey, closer, dimmer day (and a dark grey night) while it rains or snows
   if(wi>.003){FXGREY.setRGB(.62,.66,.7).multiplyScalar(1-nt*.82);
@@ -3327,12 +3313,7 @@ function fxTick(dt){
       snowPos[i*3]=cx+((snowP[i*3]-cx+FXBOX*1e3)%FXBOX)-FXBOX/2+sx;snowPos[i*3+1]=cy-12+y;snowPos[i*3+2]=cz+((snowP[i*3+2]-cz+FXBOX*1e3)%FXBOX)-FXBOX/2+sz}
     snowGeo.attributes.position.needsUpdate=true}
   fireMat.uniforms.uNight.value=FXS.ff;   // (the world's own fireflies: Auto is the usual dusk-to-dawn glow, but none in rain or snow)
-  // lanterns
-  const lv=FXS.ln>.01;LN.forEach(l=>l.g.visible=lv&&l.on);
-  if(lv){lnBody.opacity=.92*FXS.ln;lnGlow.opacity=.8*FXS.ln;const t=performance.now()/1000;
-    LN.forEach(l=>{if(!l.on||Math.hypot(l.x-P.position.x,l.z-P.position.z)>75||l.age>l.life)lnSpawn(l,!l.on);
-      l.age+=dt;l.y+=dt*(.85+.1*Math.sin(l.ph+t*.3));l.x+=l.vx*dt;l.z+=l.vz*dt;
-      l.g.position.set(l.x+Math.sin(t*.5+l.ph)*.5,l.y,l.z);l.g.scale.setScalar(clamp(Math.min(l.age/3,(l.life-l.age)/3),0,1)*(.9+.15*Math.sin(t*3+l.ph)))})}}
+}
 
 /* =========================== AMBIENT SOUND (synthesised, no files) =========================== */
 let AC=null,mute=false,amb,master=null,nbt=0,nsp=0,fireT=0;const A={tm:{}};
