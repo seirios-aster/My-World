@@ -298,7 +298,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #gmh{display:flex;align-items:center;justify-content:space-between}#gmp .round{width:30px;height:30px;font-size:14px}
 #gmp .gmr{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px solid var(--paper-2)}#gmp .gmn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #gmp .gmpg{color:var(--ink-soft);font-size:11px;white-space:nowrap}
-#gmp .gmb{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:4px 10px;font:700 12px var(--body);cursor:pointer}#gmp .gmb.danger{background:#b3382c;color:#fff}
+#gmp .gmb{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:4px 10px;font:700 12px var(--body);cursor:pointer}#gmt{display:flex;gap:6px}#gmt .gmb{flex:1}#gmp .gmb.on{background:var(--ink);color:var(--paper)}#gmp [hidden]{display:none}
+#gmp .gmb.danger{background:#b3382c;color:#fff}
 #gmm{color:var(--ink-soft);font-size:12px;min-height:14px}#bgm[hidden]{display:none}
 </style>
 
@@ -324,7 +325,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 <div id="coords" title="Tap to copy"></div>
 <div id="lap" role="status" aria-live="polite"></div>
-<div id="gmp"><div id="gmh"><b>GM panel</b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div class="lbl">Online <span id="gmn"></span></div><div id="gmo"></div><div class="lbl">Banned or just removed</div><div id="gmbn"></div><div id="gmm"></div></div>
+<div id="gmp"><div id="gmh"><b>GM panel</b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -3079,18 +3080,22 @@ const gmNote=t=>{$('gmm').textContent=t||''};
 const gmBtn=(label,fn,cls)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className='gmb'+(cls?' '+cls:'');b.onclick=fn;return b};
 // (a kick or ban sends the nudge three times, in case one is missed)
 async function gmAct(body,done){gmNote('...');try{await GMT.act(body);gmNote(done);if(body.action==='kick'||body.action==='ban')[0,1500,4000].forEach(ms=>setTimeout(()=>WS.send('gm',{u:body.userId}),ms));gmRefresh()}catch(e){gmNote(e.message||'That did not work')}}
-async function gmRefresh(){if(!GMT||!IS_GM||gmp.style.display!=='flex')return;const me=storage.auth.user();
-  try{const on=await GMT.online(),box=$('gmo');$('gmn').textContent='('+on.length+')';box.textContent='';
+let gmTab=1;
+const gmShow=t=>{gmTab=t;$('gmo').hidden=t!==1;$('gmbn').hidden=t!==2;$('gmt1').classList.toggle('on',t===1);$('gmt2').classList.toggle('on',t===2)};
+$('gmt1').onclick=()=>gmShow(1);$('gmt2').onclick=()=>gmShow(2);
+async function gmRefresh(){if(!GMT||!IS_GM||gmp.style.display!=='flex')return;const me=storage.auth.user();let out=new Set();
+  // removed people first, so they can be left out of the online list (their last heartbeat lingers for a couple of minutes)
+  try{const res=await GMT.act({action:'list'}),box=$('gmbn'),bans=res.bans||[];box.textContent='';$('gmbc').textContent='('+bans.length+')';
+    bans.forEach(r=>{out.add(r.user_id);const row=document.createElement('div');row.className='gmr';const n=document.createElement('span');n.className='gmn';
+      n.textContent=(clean(r.name).slice(0,24)||r.email||'Someone')+' · '+(r.kind==='kick'?'removed':r.until?'banned until '+new Date(r.until).toLocaleDateString():'banned');n.title=r.email||'';
+      row.append(n,gmBtn('Unban',()=>gmAct({action:'unban',userId:r.user_id},'Unbanned')));box.appendChild(row)});
+    if(!bans.length){const e=document.createElement('div');e.className='gmpg';e.textContent='Nobody';box.appendChild(e)}}catch(e){if(!$('gmm').textContent)gmNote(e.message)}
+  try{const on=(await GMT.online()).filter(r=>!out.has(r.user_id)),box=$('gmo');$('gmn').textContent='('+on.length+')';box.textContent='';
     on.forEach(r=>{const row=document.createElement('div'),nm=clean(r.name).slice(0,24)||'Someone',self=!!me&&r.user_id===me.id;row.className='gmr';
       const n=document.createElement('span');n.className='gmn';n.textContent=nm+(self?' (you)':'');const p=document.createElement('span');p.className='gmpg';p.textContent=r.ping==null?'':r.ping+' ms';row.append(n,p);
       if(!self){row.append(gmBtn('Kick',()=>{if(confirm('Remove '+nm+' for a minute?'))gmAct({action:'kick',userId:r.user_id,name:nm},'Removed '+nm)}),
         gmBtn('Ban',()=>{const d=prompt('Ban '+nm+' for how many days? (0 = until you unban them)','7');if(d===null)return;const days=Math.floor(+d);if(!(days>=0))return;gmAct({action:'ban',userId:r.user_id,name:nm,days},'Banned '+nm)},'danger'))}
-      box.appendChild(row)})}catch(e){gmNote('Could not read who is online (has supabase-gm-tools.sql been run?)')}
-  try{const res=await GMT.act({action:'list'}),box=$('gmbn');box.textContent='';
-    (res.bans||[]).forEach(r=>{const row=document.createElement('div');row.className='gmr';const n=document.createElement('span');n.className='gmn';
-      n.textContent=(clean(r.name).slice(0,24)||r.email||'Someone')+' · '+(r.kind==='kick'?'removed':r.until?'banned until '+new Date(r.until).toLocaleDateString():'banned');n.title=r.email||'';
-      row.append(n,gmBtn('Unban',()=>gmAct({action:'unban',userId:r.user_id},'Unbanned')));box.appendChild(row)});
-    if(!(res.bans||[]).length){const e=document.createElement('div');e.className='gmpg';e.textContent='Nobody';box.appendChild(e)}}catch(e){if(!$('gmm').textContent)gmNote(e.message)}}
+      box.appendChild(row)})}catch(e){gmNote('Could not read who is online (has supabase-gm-tools.sql been run?)')}}
 $('bgm').onclick=()=>{const on=gmp.style.display!=='flex';gmp.style.display=on?'flex':'none';clearInterval(gmTimer);if(on){of.style.display='none';gmNote('');gmRefresh();gmTimer=setInterval(gmRefresh,8000)}};
 $('gmx').onclick=()=>{gmp.style.display='none';clearInterval(gmTimer)};
 // every signed-in game says "I'm here" once a minute (and learns its ping from how long that took); a banned or just-kicked person is refused and then finds out why
