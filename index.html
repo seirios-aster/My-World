@@ -394,7 +394,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12l';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12m';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -3077,7 +3077,8 @@ const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick();$('bg
 const GMT=storage.gm,gmp=$('gmp');let gmTimer=0,banned=false,hbPing=null;
 const gmNote=t=>{$('gmm').textContent=t||''};
 const gmBtn=(label,fn,cls)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className='gmb'+(cls?' '+cls:'');b.onclick=fn;return b};
-async function gmAct(body,done){gmNote('...');try{await GMT.act(body);gmNote(done);if(body.action==='kick'||body.action==='ban')WS.send('gm',{u:body.userId});gmRefresh()}catch(e){gmNote(e.message||'That did not work')}}
+// (a kick or ban sends the nudge three times, in case one is missed)
+async function gmAct(body,done){gmNote('...');try{await GMT.act(body);gmNote(done);if(body.action==='kick'||body.action==='ban')[0,1500,4000].forEach(ms=>setTimeout(()=>WS.send('gm',{u:body.userId}),ms));gmRefresh()}catch(e){gmNote(e.message||'That did not work')}}
 async function gmRefresh(){if(!GMT||!IS_GM||gmp.style.display!=='flex')return;const me=storage.auth.user();
   try{const on=await GMT.online(),box=$('gmo');$('gmn').textContent='('+on.length+')';box.textContent='';
     on.forEach(r=>{const row=document.createElement('div'),nm=clean(r.name).slice(0,24)||'Someone',self=!!me&&r.user_id===me.id;row.className='gmr';
@@ -3095,10 +3096,16 @@ $('gmx').onclick=()=>{gmp.style.display='none';clearInterval(gmTimer)};
 // every signed-in game says "I'm here" once a minute (and learns its ping from how long that took); a banned or just-kicked person is refused and then finds out why
 async function heartbeat(){const A=storage.auth,u=A&&A.user();if(!GMT||!u||document.hidden||banned)return;
   const r=await GMT.heartbeat(clean(PPL[ctl].name).slice(0,24)||'Someone',hbPing);if(!r)return;if(r.error){checkBan();return}hbPing=Math.min(9999,r.ms)}
-async function checkBan(){const A=storage.auth;if(!GMT||!A||!A.user())return;let b=null;try{b=await GMT.myBan()}catch(_){return}if(!b){banned=false;return}
-  banned=true;try{await A.signOut()}catch(_){}
-  setTimeout(()=>showGate('error',b.kind==='kick'?'You were removed from the world by the GM. You can come back in a minute.':'You have been banned from this world'+(b.until?' until '+new Date(b.until).toLocaleString():'')+'.'+(b.reason?' Reason: '+b.reason:'')),400)}
-if(GMT&&storage.auth){storage.ready.then(()=>setTimeout(heartbeat,4000));storage.auth.onChange(()=>setTimeout(heartbeat,3000));setInterval(heartbeat,60000)}
+let chkBusy=false;
+async function checkBan(){const A=storage.auth;if(!GMT||!A||!A.user()||chkBusy)return;chkBusy=true;
+  try{let b=null;try{b=await GMT.myBan()}catch(_){return}if(!b){banned=false;return}
+    banned=true;const msg=b.kind==='kick'?'You were removed from the world by the GM. You can come back in a minute.':'You have been banned from this world'+(b.until?' until '+new Date(b.until).toLocaleString():'')+'.'+(b.reason?' Reason: '+b.reason:'');
+    showGate('error',msg);   // (say so at once; signing out can take a moment)
+    try{await A.signOut()}catch(_){}
+    setTimeout(()=>showGate('error',msg),400)}   // (and again, in case signing out put the ordinary sign-in text back)
+  finally{chkBusy=false}}
+if(GMT&&storage.auth){storage.ready.then(()=>setTimeout(heartbeat,4000));storage.auth.onChange(()=>setTimeout(heartbeat,3000));setInterval(heartbeat,60000);
+  setInterval(()=>{if(!document.hidden&&!banned&&storage.auth.user())checkBan()},15000)}   // (a safety net: even if the GM's nudge never arrives, a removed person finds out within about 15 s; it is one tiny read)
 async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;pinFor(false);IS_GM=false;devGate();refreshPeople();return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;pinFor(gm);IS_GM=!!gm;devGate();refreshPeople();if(gm)$('gmtz').value=WTZ}
 if(SET){const sel=$('gmtz'),note=t=>{$('gmnote').textContent=t};
   GMZ.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});syncSel();
