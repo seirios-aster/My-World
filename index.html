@@ -289,11 +289,17 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #loading span{font:700 15px var(--body);color:#2f5368}
 @media (prefers-reduced-motion:reduce){#loading,#hud{transition:none}}
 /* see-through chat bar, messages and speech bubbles (last, so it wins over their plain backgrounds) */
-#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#vol{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
+#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#gmp,#vol{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
 #mysay::after,.rsay::after{border-top-color:color-mix(in srgb,var(--paper) var(--see),transparent)}
-:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
+:root[data-theme=dark] #gmp,:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
 :root[data-theme=dark] #ogm small{opacity:.8}
 :root[data-theme=dark] input::placeholder{color:var(--ink-soft);opacity:.95}   /* the "Say something…" hint and the name fields' hints: the browser's dark grey was hard to read on the dark panels */
+#gmp{position:fixed;right:calc(60px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));color:var(--ink);border-radius:14px;padding:10px;display:none;flex-direction:column;gap:6px;box-shadow:var(--shadow);z-index:2;max-height:calc(100vh - 120px);overflow:auto;width:min(340px,calc(100vw - 84px - env(safe-area-inset-right,0px)));box-sizing:border-box;font:700 13px var(--body)}
+#gmh{display:flex;align-items:center;justify-content:space-between}#gmp .round{width:30px;height:30px;font-size:14px}
+#gmp .gmr{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px solid var(--paper-2)}#gmp .gmn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#gmp .gmpg{color:var(--ink-soft);font-size:11px;white-space:nowrap}
+#gmp .gmb{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:4px 10px;font:700 12px var(--body);cursor:pointer}#gmp .gmb.danger{background:#b3382c;color:#fff}
+#gmm{color:var(--ink-soft);font-size:12px;min-height:14px}#bgm[hidden]{display:none}
 </style>
 
 <div id="loading"><div><b>Tambayan</b><span id="loadmsg">Planting the trees…</span></div></div>
@@ -307,6 +313,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <button class="round" id="bc" title="Constellation lines and names - tap for stars only" aria-label="Constellation lines"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" stroke-width="1.5"/></svg></button>
   <button class="round" id="bx" hidden title="Coordinates: shows where you are, tap the ground to drop a pin" aria-label="Coordinates"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
   <button class="round" id="bth" title="Dark theme" aria-label="Dark theme"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></button>
+  <button class="round" id="bgm" hidden title="GM panel: who is online, kick, ban" aria-label="GM panel"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></button>
   <button class="round txt" id="bh" aria-label="Graphics quality">HD</button>
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
@@ -317,6 +324,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 <div id="coords" title="Tap to copy"></div>
 <div id="lap" role="status" aria-live="polite"></div>
+<div id="gmp"><div id="gmh"><b>GM panel</b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div class="lbl">Online <span id="gmn"></span></div><div id="gmo"></div><div class="lbl">Banned or just removed</div><div id="gmbn"></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -386,7 +394,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12k';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12l';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2723,6 +2731,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
       const me=wch=sb.channel(cfg.room+'-world',{config:{broadcast:{self:false,ack:false},presence:{key:wkey}}});
       wch.on('broadcast',{event:'p'},m=>wfire('p',m&&m.payload));
       wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
+      wch.on('broadcast',{event:'gm'},m=>wfire('gm',m&&m.payload));   // (a nudge only: "someone was just removed, check yourself". Forging one does nothing, the truth is the world_bans row)
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
       wch.subscribe(st=>{if(me!==wch)return;const ok=st==='SUBSCRIBED';if(ok!==wok){wok=ok;wfire('status',ok)}if(!ok)wfire('down',st)});
@@ -2739,7 +2748,19 @@ function makeCloudAdapter(cfg,prepare,fallback){
       if(error){console.warn('[clock] could not read the game clock setting (everyone follows their own time):',error.message||error);return undefined}return data&&data.tz?data.tz:'device'},
     async gm(){await ready;if(fail||!sb||!user)return false;const{data,error}=await sb.from('world_admins').select('user_id').eq('user_id',user.id).maybeSingle();return !error&&!!data},
     async save(tz){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',tz,updated_at:new Date().toISOString()});if(error)throw nice(error)}};
-  return{auth,ready,session,room:rm,world,profile,settings,
+  /* the GM tools (see supabase-gm-tools.sql and supabase/functions/gm-admin): heartbeat() says "I'm here" and returns how long that took (the ping);
+     online() is for GMs; myBan() says whether I'm banned or just kicked; act() asks the gm-admin Edge Function, which checks on the server that the caller is a GM. */
+  const gmTools={
+    async heartbeat(name,ping){await ready;if(fail||!sb||!user)return null;const t=performance.now();
+      const{error}=await sb.from('world_online').upsert({user_id:user.id,name,ping},{onConflict:'user_id'});return{ms:Math.round(performance.now()-t),error:error||null}},
+    async online(){await ready;if(fail||!sb||!user)return[];const since=new Date(Date.now()-120000).toISOString();
+      const{data,error}=await sb.from('world_online').select('user_id,name,ping,seen_at').gte('seen_at',since).order('name');if(error)throw nice(error);return data||[]},
+    async myBan(){await ready;if(fail||!sb||!user)return null;const{data,error}=await sb.from('world_bans').select('kind,until,reason').eq('user_id',user.id).maybeSingle();
+      if(error||!data)return null;return !data.until||new Date(data.until)>new Date()?data:null},
+    async act(body){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{data,error}=await sb.functions.invoke('gm-admin',{body});
+      if(error){let m='';try{m=(await error.context.json()).error}catch(_){}throw new Error(m||'The GM tools are not set up yet (the gm-admin function)')}
+      if(data&&data.error)throw new Error(data.error);return data}};
+  return{auth,ready,session,room:rm,world,profile,settings,gm:gmTools,
     async put(file,meta){const c=await need();if(!c)return fallback.put(file,meta);
       const p=await prepare(file),id=uid(),base=user.id+'/'+id,tp=p.thumb?base+'.thumb':null,up=[];
       try{
@@ -2856,7 +2877,7 @@ function stateIn(s,u){const put=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}
   const dn=clean(s.dog).slice(0,16);if(dn){dogName=dn;put('myworld.dog',dn);tagD.textContent=dn;dname.value=dn}
   applyMyName();applyMyLook();pairUp();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople();restorePos(s)}
 async function syncState(){applyMyName();applyMyLook();   // (what this device remembers, straight away)
-  const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;
+  const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;if(u&&typeof checkBan==='function')checkBan();
   const local=()=>{let j=null;try{j=JSON.parse(localStorage.getItem(POSK(u))||'null')}catch(_){}restorePos(j)};
   if(!u||!storage.profile){PST=u?'no cloud profile here':'guest: kept on this device only';local();if(!had)askCharacter();return}
   PST='reading your saved state...';let s;try{s=await storage.profile.load()}catch(_){s=undefined}
@@ -3050,7 +3071,34 @@ const GMZ=[['device',"Each player's own device time (everyone different)"],['Ame
 const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick()};   // (the coordinates pin is for the GM only)
+const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick();$('bgm').hidden=!gm;if(!gm){$('gmp').style.display='none';clearInterval(gmTimer)}};   // (the coordinates pin is for the GM only)
+/* ---- the GM panel: who is online (with their ping), kick, ban. The buttons only ask the gm-admin Edge Function, which checks on the server that you are a GM;
+   the list of people comes from a table every signed-in game writes to about once a minute, so the ids are real (see supabase-gm-tools.sql) ---- */
+const GMT=storage.gm,gmp=$('gmp');let gmTimer=0,banned=false,hbPing=null;
+const gmNote=t=>{$('gmm').textContent=t||''};
+const gmBtn=(label,fn,cls)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className='gmb'+(cls?' '+cls:'');b.onclick=fn;return b};
+async function gmAct(body,done){gmNote('...');try{await GMT.act(body);gmNote(done);if(body.action==='kick'||body.action==='ban')WS.send('gm',{u:body.userId});gmRefresh()}catch(e){gmNote(e.message||'That did not work')}}
+async function gmRefresh(){if(!GMT||!IS_GM||gmp.style.display!=='flex')return;const me=storage.auth.user();
+  try{const on=await GMT.online(),box=$('gmo');$('gmn').textContent='('+on.length+')';box.textContent='';
+    on.forEach(r=>{const row=document.createElement('div'),nm=clean(r.name).slice(0,24)||'Someone',self=!!me&&r.user_id===me.id;row.className='gmr';
+      const n=document.createElement('span');n.className='gmn';n.textContent=nm+(self?' (you)':'');const p=document.createElement('span');p.className='gmpg';p.textContent=r.ping==null?'':r.ping+' ms';row.append(n,p);
+      if(!self){row.append(gmBtn('Kick',()=>{if(confirm('Remove '+nm+' for a minute?'))gmAct({action:'kick',userId:r.user_id,name:nm},'Removed '+nm)}),
+        gmBtn('Ban',()=>{const d=prompt('Ban '+nm+' for how many days? (0 = until you unban them)','7');if(d===null)return;const days=Math.floor(+d);if(!(days>=0))return;gmAct({action:'ban',userId:r.user_id,name:nm,days},'Banned '+nm)},'danger'))}
+      box.appendChild(row)})}catch(e){gmNote('Could not read who is online (has supabase-gm-tools.sql been run?)')}
+  try{const res=await GMT.act({action:'list'}),box=$('gmbn');box.textContent='';
+    (res.bans||[]).forEach(r=>{const row=document.createElement('div');row.className='gmr';const n=document.createElement('span');n.className='gmn';
+      n.textContent=(clean(r.name).slice(0,24)||r.email||'Someone')+' · '+(r.kind==='kick'?'removed':r.until?'banned until '+new Date(r.until).toLocaleDateString():'banned');n.title=r.email||'';
+      row.append(n,gmBtn('Unban',()=>gmAct({action:'unban',userId:r.user_id},'Unbanned')));box.appendChild(row)});
+    if(!(res.bans||[]).length){const e=document.createElement('div');e.className='gmpg';e.textContent='Nobody';box.appendChild(e)}}catch(e){if(!$('gmm').textContent)gmNote(e.message)}}
+$('bgm').onclick=()=>{const on=gmp.style.display!=='flex';gmp.style.display=on?'flex':'none';clearInterval(gmTimer);if(on){of.style.display='none';gmNote('');gmRefresh();gmTimer=setInterval(gmRefresh,8000)}};
+$('gmx').onclick=()=>{gmp.style.display='none';clearInterval(gmTimer)};
+// every signed-in game says "I'm here" once a minute (and learns its ping from how long that took); a banned or just-kicked person is refused and then finds out why
+async function heartbeat(){const A=storage.auth,u=A&&A.user();if(!GMT||!u||document.hidden||banned)return;
+  const r=await GMT.heartbeat(clean(PPL[ctl].name).slice(0,24)||'Someone',hbPing);if(!r)return;if(r.error){checkBan();return}hbPing=Math.min(9999,r.ms)}
+async function checkBan(){const A=storage.auth;if(!GMT||!A||!A.user())return;let b=null;try{b=await GMT.myBan()}catch(_){return}if(!b){banned=false;return}
+  banned=true;try{await A.signOut()}catch(_){}
+  setTimeout(()=>showGate('error',b.kind==='kick'?'You were removed from the world by the GM. You can come back in a minute.':'You have been banned from this world'+(b.until?' until '+new Date(b.until).toLocaleString():'')+'.'+(b.reason?' Reason: '+b.reason:'')),400)}
+if(GMT&&storage.auth){storage.ready.then(()=>setTimeout(heartbeat,4000));storage.auth.onChange(()=>setTimeout(heartbeat,3000));setInterval(heartbeat,60000)}
 async function gmSync(){const box=$('ogm');if(!SET){box.hidden=true;pinFor(false);IS_GM=false;devGate();refreshPeople();return}let gm=false;try{gm=await SET.gm()}catch(_){}box.hidden=!gm;pinFor(gm);IS_GM=!!gm;devGate();refreshPeople();if(gm)$('gmtz').value=WTZ}
 if(SET){const sel=$('gmtz'),note=t=>{$('gmnote').textContent=t};
   GMZ.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});syncSel();
@@ -3716,6 +3764,7 @@ WS.on('p',d=>{if(!d||typeof d.k!=='string'||d.k===myKey)return;const R=remotes.g
   if(R){applyPos(R,d);return}
   early.delete(d.k);early.set(d.k,d);if(early.size>64)early.delete(early.keys().next().value)});
 WS.on('sync',onSync);
+WS.on('gm',d=>{const u=storage.auth&&storage.auth.user();if(d&&u&&d.u===u.id)checkBan()});   // (a GM just removed someone: if it was me, check)
 // somebody new: say where I am straight away, and again a moment later (their first look at the room may not have caught up yet)
 WS.on('join',()=>{if(on)sendPos(true,sent.m<0?0:sent.m);[600,1800].forEach(ms=>setTimeout(()=>{if(on)sendPos(true,sent.m<0?0:sent.m)},ms))});
 WS.on('status',ok=>{
