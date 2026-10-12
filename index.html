@@ -175,7 +175,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #emopick .ae{width:30px;height:30px;margin:0;vertical-align:0}
 #ogm{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}#ogm[hidden]{display:none}#ogm small{font-weight:600;opacity:.6}
 #ogm select{width:100%;padding:7px 9px;border:2px solid var(--paper-2);border-radius:10px;background:var(--field);font:700 13px var(--body);color:var(--ink)}
-#gmnote{font:600 12px var(--body);opacity:.7;min-height:1.2em}
+#gmnote,#gmfx{font:600 12px var(--body);opacity:.7;min-height:1.2em}
 #ostat{display:flex;flex-direction:column;gap:5px;padding:8px 6px 2px;margin-top:4px;border-top:2px solid var(--paper-2)}
 #toasts{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:3;pointer-events:none;width:min(440px,calc(100vw - 130px))}
 .toast{background:var(--paper);color:var(--ink);font:600 14px/1.35 var(--body);padding:7px 14px;border-radius:16px;box-shadow:var(--shadow);max-width:100%;overflow-wrap:anywhere;animation:tin .25s ease-out;transition:opacity .6s}
@@ -333,7 +333,10 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
       <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
-  <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div></div>
+  <div id="ogm" hidden><div class="lbl">Game clock <small>(only you, the GM, see this)</small></div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
+    <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
+    <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select>
+    <div class="lbl">Lanterns</div><select id="gml" aria-label="Lanterns"><option value="auto">Auto (clear nights)</option><option value="on">Always on</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="dnl">Dog's name<input id="dname" maxlength="16" autocomplete="off" spellcheck="false"></label></div>
@@ -395,7 +398,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12m';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-12n';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2747,6 +2750,9 @@ function makeCloudAdapter(cfg,prepare,fallback){
      and that is enforced by the database, not by hiding the control. See supabase-world-clock.sql. load(): the zone, undefined if it can't be read. */
   const settings={async load(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('tz').eq('id','main').maybeSingle();
       if(error){console.warn('[clock] could not read the game clock setting (everyone follows their own time):',error.message||error);return undefined}return data&&data.tz?data.tz:'device'},
+    /* weather and night effects (rain, snow, fireflies, lanterns): one small JSON value in the same row. fx() returns the value, null if it isn't set, undefined if it can't be read (older database: nothing breaks) */
+    async fx(){await ready;if(fail||!sb)return undefined;const{data,error}=await sb.from('world_settings').select('fx').eq('id','main').maybeSingle();if(error)return undefined;return data&&data.fx?data.fx:null},
+    async saveFx(fx){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',fx,updated_at:new Date().toISOString()});if(error)throw nice(error)},
     async gm(){await ready;if(fail||!sb||!user)return false;const{data,error}=await sb.from('world_admins').select('user_id').eq('user_id',user.id).maybeSingle();return !error&&!!data},
     async save(tz){await ready;if(fail||!sb||!user)throw new Error('Sign in first');const{error}=await sb.from('world_settings').upsert({id:'main',tz,updated_at:new Date().toISOString()});if(error)throw nice(error)}};
   /* the GM tools (see supabase-gm-tools.sql and supabase/functions/gm-admin): heartbeat() says "I'm here" and returns how long that took (the ping);
@@ -3071,7 +3077,15 @@ $('bc').onclick=()=>{cmode=1-cmode;$('bc').style.opacity=cmode?.55:1;$('bc').tit
 const GMZ=[['device',"Each player's own device time (everyone different)"],['America/New_York','US Eastern - Georgia, New York'],['America/Chicago','US Central - Texas, Illinois'],['America/Denver','US Mountain - Colorado, Utah'],['America/Phoenix','Arizona'],['America/Los_Angeles','US Pacific - California, Washington'],['America/Anchorage','Alaska'],['Pacific/Honolulu','Hawaii'],['America/Toronto','Toronto'],['America/Mexico_City','Mexico City'],['America/Bogota','Bogota'],['America/Lima','Lima'],['Europe/London','London'],['Europe/Paris','Paris, Berlin, Madrid'],['Europe/Istanbul','Istanbul'],['Europe/Moscow','Moscow'],['Africa/Cairo','Cairo'],['Africa/Lagos','Lagos'],['Africa/Johannesburg','Johannesburg'],['Asia/Kolkata','India'],['Asia/Bangkok','Bangkok, Jakarta'],['Asia/Manila','Philippines'],['Asia/Singapore','Singapore, Kuala Lumpur'],['Asia/Hong_Kong','Hong Kong'],['Asia/Shanghai','China'],['Asia/Seoul','Korea'],['Asia/Tokyo','Japan'],['Australia/Sydney','Sydney, Melbourne'],['Australia/Perth','Perth'],['Pacific/Auckland','New Zealand']];
 const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
+  pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['l','gml']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);syncFx()}   // (undefined: can't be read, keep what we have)
+{const note=t=>{$('gmfx').textContent=t};
+  ['gmw','gmf','gml'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,l:$('gml').value};note('Saving...');[...document.querySelectorAll('#gmw,#gmf,#gml')].forEach(x=>x.disabled=true);
+    try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
+    catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
+    finally{[...document.querySelectorAll('#gmw,#gmf,#gml')].forEach(x=>x.disabled=false)}}})}
 const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick();$('bgm').hidden=!gm;if(!gm){$('gmp').style.display='none';clearInterval(gmTimer)}};   // (the coordinates pin is for the GM only)
 /* ---- the GM panel: who is online (with their ping), kick, ban. The buttons only ask the gm-admin Edge Function, which checks on the server that you are a GM;
    the list of people comes from a table every signed-in game writes to about once a minute, so the ids are real (see supabase-gm-tools.sql) ---- */
@@ -3231,7 +3245,76 @@ function skyTick(dt){
   {const t1=sstep(-.02,.06,ey),t2=sstep(.05,.2,ey),t3=sstep(.15,.45,ey),g=sstep(0,.35,ey);SUNDISC.color.copy(SD0).lerp(SD1,t1).lerp(SD2,t2).lerp(SD3,t3);
     SUNSW=1+.35*(1-sstep(0,.3,ey));SUNGLOW.material.color.setRGB(1,lerp(.42,1,g),lerp(.2,1,g));SUNGLOW.scale.setScalar(lerp(120,60,sstep(0,.3,ey)));
     const dp=clamp(cam.position.y/500,0,.4);SUNGLOW.material.opacity=sstep(-.07,.01,ey+dp);MOONGLOW.material.opacity=sstep(-.07,.01,-ey+dp)}
+  fxTick(dt);
   $('clk').textContent=fmt(simH)+(dayI?' · '+MON[dayI-1]:'')}
+
+/* =========================== WEATHER + NIGHT EFFECTS: rain, snow, fireflies, floating lanterns ===========================
+   Every one is Auto or set by the GM (stored in world_settings.fx, see supabase-world-weather.sql, and read the same way as the game clock).
+   Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
+   fireflies come out at dusk and stay till dawn, lanterns drift up on clear nights. The GM's choice only overrides what Auto would do. */
+const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],l:['auto','on','off']};
+const FXS={w:'auto',f:'auto',l:'auto',ir:0,is:0,ff:0,ln:0,seenW:null};
+function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}return ch}
+const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
+function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=doyNow(),winter=d>=335||d<=6;   // (the game clock's date: 1 Dec to 6 Jan is snow season)
+  return winter?(r<.4?'snow':'clear'):(r<.14?'rain':'clear')}
+const fxWeather=()=>FXS.w==='auto'?fxAutoWeather():FXS.w;
+const fxGlowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
+const FXG=new THREE.Group();FXG.frustumCulled=false;W.add(FXG);
+const FXN={rain:HQ?1300:600,snow:HQ?1500:650,ln:HQ?14:8},FXBOX=44,FXH=30;
+// rain: short slanted streaks that fall through a box around the camera and wrap
+const rainP=new Float32Array(FXN.rain*3),rainV=new Float32Array(FXN.rain),rainGeo=new THREE.BufferGeometry(),rainPos=new Float32Array(FXN.rain*6);
+for(let i=0;i<FXN.rain;i++){rainP[i*3]=(Math.random()-.5)*FXBOX;rainP[i*3+1]=Math.random()*FXH;rainP[i*3+2]=(Math.random()-.5)*FXBOX;rainV[i]=24+Math.random()*10}
+rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
+const rainMat=new THREE.LineBasicMaterial({color:0xdfe9f4,transparent:true,opacity:0,depthWrite:false,fog:false}),rainObj=new THREE.LineSegments(rainGeo,rainMat);rainObj.frustumCulled=false;rainObj.visible=false;FXG.add(rainObj);
+// snow: soft white flakes drifting down and sideways
+const snowP=new Float32Array(FXN.snow*3),snowV=new Float32Array(FXN.snow),snowPh=new Float32Array(FXN.snow),snowGeo=new THREE.BufferGeometry(),snowPos=new Float32Array(FXN.snow*3);
+for(let i=0;i<FXN.snow;i++){snowP[i*3]=(Math.random()-.5)*FXBOX;snowP[i*3+1]=Math.random()*FXH;snowP[i*3+2]=(Math.random()-.5)*FXBOX;snowV[i]=1.1+Math.random()*1.4;snowPh[i]=Math.random()*6.28}
+snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPos,3));
+const snowMat=new THREE.PointsMaterial({color:0xffffff,map:fxGlowTex,size:.5,sizeAttenuation:true,transparent:true,opacity:0,depthWrite:false,fog:false}),snowObj=new THREE.Points(snowGeo,snowMat);snowObj.frustumCulled=false;snowObj.visible=false;FXG.add(snowObj);
+// lanterns: little glowing paper lanterns that rise slowly and drift
+const lnBody=new THREE.MeshBasicMaterial({color:0xffb457,transparent:true,opacity:0,fog:false,depthWrite:false}),lnGlow=new THREE.SpriteMaterial({map:fxGlowTex,color:0xff9a3c,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),
+  lnGeo=new THREE.CylinderGeometry(.22,.17,.42,8,1,true),lnCap=new THREE.CircleGeometry(.17,8),LN=[];
+for(let i=0;i<FXN.ln;i++){const g=new THREE.Group(),b=new THREE.Mesh(lnGeo,lnBody),t=new THREE.Mesh(lnCap,lnBody),s=new THREE.Sprite(lnGlow);t.rotation.x=-Math.PI/2;s.scale.setScalar(4.2);b.scale.setScalar(2.2);t.scale.setScalar(2.2);t.position.y=-.44;g.add(b,t,s);g.visible=false;FXG.add(g);
+  LN.push({g,x:0,y:0,z:0,age:0,life:0,vx:0,vz:0,ph:Math.random()*6.28,on:false})}
+function lnSpawn(l,first){const a=Math.random()*6.28,d=8+Math.random()*34,x=P.position.x+Math.cos(a)*d,z=P.position.z+Math.sin(a)*d,gy=Math.max(groundY(x,z),0);
+  l.x=x;l.z=z;l.y=gy+(first?2+Math.random()*24:1.5+Math.random()*3);l.life=45+Math.random()*25;l.age=first?Math.random()*l.life*.5:0;l.vx=(Math.random()-.3)*.5;l.vz=(Math.random()-.5)*.4;l.on=true}
+const FXGREY=new THREE.Color();
+function fxTick(dt){
+  const wk=fxWeather();
+  if(FXS.seenW===null)FXS.seenW=wk;else if(FXS.seenW!==wk){FXS.seenW=wk;if(tmode===0)toast('',wk==='snow'?'It started snowing ❄️':wk==='rain'?'It started raining 🌧️':'The weather cleared up 🌤️',true)}
+  const k=Math.min(1,dt/4);   // (about 4 s to fade in or out)
+  FXS.ir+=((wk==='rain'?1:0)-FXS.ir)*k;FXS.is+=((wk==='snow'?1:0)-FXS.is)*k;
+  const wi=Math.max(FXS.ir,FXS.is),ffT=FXS.f==='on'?1:FXS.f==='off'?0:sstep(.5,1,nt)*(1-wi),lnT=FXS.l==='on'?1:FXS.l==='off'?0:sstep(.55,.85,nt)*(1-wi);
+  FXS.ff+=(ffT-FXS.ff)*k;FXS.ln+=(lnT-FXS.ln)*k;
+  const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z;
+  // a grey, closer, dimmer day (and a dark grey night) while it rains or snows
+  if(wi>.003){FXGREY.setRGB(.62,.66,.7).multiplyScalar(1-nt*.82);
+    W.fog.color.lerp(FXGREY,.55*wi);W.fog.near=80*(1-.6*wi);W.fog.far=280*(1-.5*wi);
+    domeU.uTop.value.lerp(FXGREY,.6*wi);domeU.uHor.value.lerp(FXGREY,.7*wi);domeU.uBot.value.lerp(FXGREY,.7*wi);
+    key.intensity*=1-.6*wi;hemi.intensity*=1-.2*wi;cloudU.uLit.value.multiplyScalar(1-.3*wi);cloudU.uShade.value.multiplyScalar(1-.3*wi);cloudU.uOp.value=lerp(cloudU.uOp.value,1,wi)}
+  else{W.fog.near=80;W.fog.far=280}
+  // rain
+  rainObj.visible=FXS.ir>.01;
+  if(rainObj.visible){rainMat.opacity=.65*FXS.ir;const sx=.18,len=.9;
+    for(let i=0;i<FXN.rain;i++){let y=rainP[i*3+1]-rainV[i]*dt;if(y<0){y+=FXH;rainP[i*3]=(Math.random()-.5)*FXBOX;rainP[i*3+2]=(Math.random()-.5)*FXBOX}rainP[i*3+1]=y;
+      const x=cx+((rainP[i*3]-cx+FXBOX*1e3)%FXBOX)-FXBOX/2+0,z=cz+((rainP[i*3+2]-cz+FXBOX*1e3)%FXBOX)-FXBOX/2,yy=cy-12+y;
+      rainPos[i*6]=x;rainPos[i*6+1]=yy;rainPos[i*6+2]=z;rainPos[i*6+3]=x+sx*len;rainPos[i*6+4]=yy+len;rainPos[i*6+5]=z}
+    rainGeo.attributes.position.needsUpdate=true}
+  // snow
+  snowObj.visible=FXS.is>.01;
+  if(snowObj.visible){snowMat.opacity=.9*FXS.is;const t=performance.now()/1000;
+    for(let i=0;i<FXN.snow;i++){let y=snowP[i*3+1]-snowV[i]*dt;if(y<0){y+=FXH;snowP[i*3]=(Math.random()-.5)*FXBOX;snowP[i*3+2]=(Math.random()-.5)*FXBOX}snowP[i*3+1]=y;
+      const sx=Math.sin(t*.7+snowPh[i])*.8,sz=Math.cos(t*.6+snowPh[i]*1.3)*.8;
+      snowPos[i*3]=cx+((snowP[i*3]-cx+FXBOX*1e3)%FXBOX)-FXBOX/2+sx;snowPos[i*3+1]=cy-12+y;snowPos[i*3+2]=cz+((snowP[i*3+2]-cz+FXBOX*1e3)%FXBOX)-FXBOX/2+sz}
+    snowGeo.attributes.position.needsUpdate=true}
+  fireMat.uniforms.uNight.value=FXS.ff;   // (the world's own fireflies: Auto is the usual dusk-to-dawn glow, but none in rain or snow)
+  // lanterns
+  const lv=FXS.ln>.01;LN.forEach(l=>l.g.visible=lv&&l.on);
+  if(lv){lnBody.opacity=.92*FXS.ln;lnGlow.opacity=.8*FXS.ln;const t=performance.now()/1000;
+    LN.forEach(l=>{if(!l.on||Math.hypot(l.x-P.position.x,l.z-P.position.z)>75||l.age>l.life)lnSpawn(l,!l.on);
+      l.age+=dt;l.y+=dt*(.85+.1*Math.sin(l.ph+t*.3));l.x+=l.vx*dt;l.z+=l.vz*dt;
+      l.g.position.set(l.x+Math.sin(t*.5+l.ph)*.5,l.y,l.z);l.g.scale.setScalar(clamp(Math.min(l.age/3,(l.life-l.age)/3),0,1)*(.9+.15*Math.sin(t*3+l.ph)))})}}
 
 /* =========================== AMBIENT SOUND (synthesised, no files) =========================== */
 let AC=null,mute=false,amb,master=null,nbt=0,nsp=0,fireT=0;const A={tm:{}};
@@ -3241,7 +3324,7 @@ function layer(type,freq,q,hz,depth){const s=AC.createBufferSource(),f=AC.create
   s.buffer=A.nb;s.loop=true;f.type=type;f.frequency.value=freq;f.Q.value=q;g.gain.value=1-depth;lv.gain.value=0;o.frequency.value=hz;og.gain.value=depth;
   o.connect(og);og.connect(g.gain);o.start();s.connect(f);f.connect(g);g.connect(lv);lv.connect(amb);s.start();return lv}
 function snd(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}
-  amb=AC.createGain();amb.gain.value=.5;master=AC.createGain();master.gain.value=mute?0:VOL*VOL;amb.connect(master);master.connect(AC.destination);A.nb=noiseBuf(3);A.wn=whiteBuf(1);A.wave=layer('lowpass',650,.7,.13,.7);A.wind=layer('bandpass',500,.5,.07,.5);A.river=layer('bandpass',1250,.8,.55,.45);A.crowd=layer('bandpass',820,.55,.33,.4);A.rustle=layer('bandpass',3400,.35,.17,.6);A.fire=layer('lowpass',420,.6,.9,.55);A.fsb=AC.createGain();A.fsb.gain.value=.5;A.fsb.connect(amb);
+  amb=AC.createGain();amb.gain.value=.5;master=AC.createGain();master.gain.value=mute?0:VOL*VOL;amb.connect(master);master.connect(AC.destination);A.nb=noiseBuf(3);A.wn=whiteBuf(1);A.wave=layer('lowpass',650,.7,.13,.7);A.wind=layer('bandpass',500,.5,.07,.5);A.river=layer('bandpass',1250,.8,.55,.45);A.crowd=layer('bandpass',820,.55,.33,.4);A.rustle=layer('bandpass',3400,.35,.17,.6);A.fire=layer('lowpass',420,.6,.9,.55);A.rain=layer('highpass',2400,.3,.35,.5);A.fsb=AC.createGain();A.fsb.gain.value=.5;A.fsb.connect(amb);
   A.mus=AC.createGain();A.mus.gain.value=0;A.mus.connect(amb);const dl=AC.createDelay(1),fb=AC.createGain(),wet=AC.createGain();dl.delayTime.value=.32;fb.gain.value=.32;wet.gain.value=.4;A.mus.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(amb)}
   if(AC.state==='suspended')AC.resume()}
 addEventListener('pointerdown',snd);addEventListener('keydown',snd);
@@ -3352,7 +3435,7 @@ function ambient(dt){if(!AC)return;const px=P.position.x,pz=P.position.z,nr=s=>c
   const set=(k,v)=>{const c=A[k+'v']||0,n=c+((mute?0:v)-c)*Math.min(1,dt*3);A[k+'v']=n;A[k].gain.value=n};
   const gm=zl(GYM.x,GYM.z,7,24),cp=zl(CAMP[0],CAMP[1],5,24),bh=zl(SPOTS[1].x,SPOTS[1].z,8,26),ss=Math.max(zl(SPOTS[6].x,SPOTS[6].z,9,34),zl(SUNPT.x,SUNPT.z,9,34)),sm=zl(SPOTS[3].x,SPOTS[3].z,6,26),hz=zl(SPOTS[0].x,SPOTS[0].z,6,26),
     rc=Math.max(zl(SPOTS[4].x,SPOTS[4].z,10,42),zl(TRK.cx,TRK.cz,24,52)),hb=zl(HUB[0],HUB[1],6,24),lA=zl(LH.x,LH.z,10,40),lB=zl(LH2.x,LH2.z,10,40),lh=Math.max(lA,lB),lk=zl(LAKE.x,LAKE.z,LAKE.rs+3,LAKE.rs+30);
-  set('wave',sw*.55);set('wind',Math.max(hk*.35,clamp((P.position.y-6)/16,0,1)*.42));
+  set('wave',sw*.55);set('wind',Math.max(hk*.35,clamp((P.position.y-6)/16,0,1)*.42,FXS.is*.2));set('rain',FXS.ir*.3);
   const rr=riverNear(px,pz);set('river',Math.max(rr?clamp(1-(rr.d-rAt(rr.R.W,rr.f))/14,0,1)*.32:0,clamp(1-FALLP.distanceTo(P.position)/32,0,1)*.6));
   set('crowd',rc*.2);set('rustle',Math.max(hz,cp*.7)*.12*(1-nt*.4));set('fire',cp*.28);
   const bird=Math.max(sw*.9,hk*.7,bc)*(1-nt);if(bird>.1&&!mute&&AC.currentTime>nbt){chirp(bird);nbt=AC.currentTime+1.5+Math.random()*3.5}
