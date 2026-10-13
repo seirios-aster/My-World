@@ -337,7 +337,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="lap" role="status" aria-live="polite"></div>
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
-  <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -3164,13 +3165,14 @@ const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
 async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);FXS.loaded=true;syncFx()}   // (undefined: can't be read, keep what we have)
 {const note=t=>{$('gmfx').textContent=t};
-  ['gmw','gmf'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value};note('Saving...');[...document.querySelectorAll('#gmw,#gmf')].forEach(x=>x.disabled=true);
+  const gmSel='#gmw,#gmf,#gmm1,#gms1';
+  ['gmw','gmf','gmm1','gms1'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
     try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
     catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
-    finally{[...document.querySelectorAll('#gmw,#gmf')].forEach(x=>x.disabled=false)}}})}
+    finally{[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=false)}}})}
 const pinFor=gm=>{const b=$('bx');b.hidden=!gm;if(!gm&&coordOn)b.onclick();$('bgm').hidden=!gm;if(!gm){$('gmp').style.display='none';clearInterval(gmTimer)}};   // (the coordinates pin is for the GM only)
 /* ---- the GM panel: who is online (with their ping), kick, ban. The buttons only ask the gm-admin Edge Function, which checks on the server that you are a GM;
    the list of people comes from a table every signed-in game writes to about once a minute, so the ids are real (see supabase-gm-tools.sql) ---- */
@@ -3265,11 +3267,12 @@ const MS={k:0,q:[],shower:false,nid:null,toldN:null,nightOn:false,sayCd:0},_mc=n
 // a seeded random sequence (same seed -> same numbers on every device); Math.random() would give every player their own sky
 const mhash=(a,b)=>{let h=Math.imul(a^0x9e3779b9,0x85ebca6b)^Math.imul((b+0x7f4a7c15)|0,0xc2b2ae35);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;h=Math.imul(h,0x297a2d39);return(h^h>>>15)>>>0};
 const mrng=a=>()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296};
-const showerOn=n=>mhash(n,77)/4294967296<.25;                                        // 1 night in 4
+const SHOWER_P={auto:.25,off:0,rare:.08,always:1.1},STAR_X={auto:1,off:0,rare:.35,often:3};   // the GM's choices: how many nights have a shower, and how many lone shooting stars
+const showerOn=n=>mhash(n,77)/4294967296<SHOWER_P[FXS.s];                                  // normally 1 night in 4
 const nightId=()=>{const w=wall();return Math.floor(Date.UTC(w.y,w.mo-1,w.d,w.h,w.mi,w.s)/864e5-.5)};   // changes at noon, so a whole night has one id
 function radiantFor(n,out){const r=mrng(mhash(n,5)),el=(50+r()*20)*Math.PI/180,az=r()*6.283;return out.set(Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az))}
 // what, if anything, streaks across the sky during second k of night n. The same numbers are drawn in the same order whether or not there is a streak.
-function metEvent(k,n,pk){const r=mrng(mhash(k,n)),sh=showerOn(n),p=(sh?((k%30)<16?.29:0):.07)*(.7+.6*pk);
+function metEvent(k,n,pk){const r=mrng(mhash(k,n)),sh=showerOn(n),p=(sh?((k%30)<16?.29:0):.07*STAR_X[FXS.m])*(.7+.6*pk);
   const u=r(),at=k*1000+r()*1000,big=r()<1/30,a=r(),b=r(),g=[r()*2-1,r()*2-1,r()*2-1],neg=r(),lf=r(),sp=r();
   return u<p?{at,big,a,b,g,neg,lf,sp,sh,n}:null}
 function metSnd(big,vol){if(!AC||mute||AC.state!=='running')return;const t=AC.currentTime,dur=big?1.7:.75,n=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
@@ -3290,8 +3293,9 @@ function metSpawn(e,late){const m=MET.find(q=>!q.on);if(!m)return;
 function meteorTick(dt){
   metMat.uniforms.pr.value=pixelRatio();MS.sayCd-=dt;
   const night=nt>.6&&HQ,n=nightId();
-  if(night&&(!MS.nightOn||MS.nid!==n)){MS.nightOn=true;MS.nid=n;MS.shower=showerOn(n);if(MS.shower&&MS.toldN!==n&&tmode===0){MS.toldN=n;toast('','Meteor shower tonight 🌠',true)}}   // (once per night; the game clock can change what night it is)
+  if(night&&(!MS.nightOn||MS.nid!==n)){MS.nightOn=true;MS.nid=n}   // (the game clock can change what night it is)
   else if(nt<.3)MS.nightOn=false;
+  if(night){MS.shower=showerOn(n);if(MS.shower&&MS.toldN!==n&&tmode===0){MS.toldN=n;toast('','Meteor shower tonight 🌠',true)}}   // (every tick, so the GM's choice takes effect straight away)
   if(night){const T=Date.now(),k1=Math.floor(T/1000);
     if(!MS.k||Math.abs(k1-MS.k)>5){MS.k=k1-1;MS.q.length=0}                                         // just arrived, the tab was asleep or the clock was put back: start from now, don't replay the past
     const h=(clockH()+12)%24,pk=Math.sin(Math.PI*clamp((h-6)/12,0,1));   // (from the shared clock, not the time-lapse one, so everybody has the same streaks)
@@ -3346,8 +3350,8 @@ function skyTick(dt){
    Every one is Auto or set by the GM (stored in world_settings.fx, see supabase-world-weather.sql, and read the same way as the game clock).
    Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
    fireflies come out at dusk and stay till dawn. The GM's choice only overrides what Auto would do. */
-const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off']};
-const FXS={w:'auto',f:'auto',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
+const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always']};
+const FXS={w:'auto',f:'auto',m:'auto',s:'auto',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
 setTimeout(()=>{FXS.loaded=true},6000);   // (if it can't be read at all, Auto takes over after 6 s)
 function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}return ch}
 const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
