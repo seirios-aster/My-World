@@ -406,7 +406,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-13b';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-13c';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -3927,12 +3927,25 @@ function vTalk(on){if(on===VC.talk||(on&&!VC.on))return;VC.talk=on;
 const vSelfFlag=()=>{try{sendPos(true,sent.m<0?0:sent.m)}catch(_){}};
 function voiceOff(){if(!VC.on&&!VC.peers.size)return;VC.on=false;VC.talk=false;VC.latch=false;[...VC.peers.keys()].forEach(k=>vClose(k,0));vDropMic();
   if(AC&&amb)amb.gain.setTargetAtTime(.5,AC.currentTime,.3);vSelfFlag();vui()}
-async function voiceToggle(){if(VC.on){voiceOff();return}
+const vPref=(v)=>{try{if(v==null)return localStorage.getItem('myworld.voicepref');localStorage.setItem('myworld.voicepref',v)}catch(_){return null}};
+const vConsent=()=>{try{return VC.askd||localStorage.getItem('myworld.voiceok2')==='1'}catch(_){return VC.askd}};
+/* turns voice on. quiet = on its own after sign-in: listen only, and the microphone is only opened if the browser has already allowed it (otherwise at the first press of talk), so nobody gets a permission prompt just for signing in */
+async function voiceStart(quiet){if(VC.on)return;if(!AC)snd();if(AC&&AC.state!=='running')AC.resume().catch(()=>{});
+  VC.on=true;vSelfFlag();vui();
+  if(quiet){try{const q=await navigator.permissions.query({name:'microphone'});if(q.state==='granted')vMic()}catch(_){}toast('','Voice is on 🎧 You can hear people near you. Hold 🎙️ (or V) to talk',true)}
+  else{vMic();toast('','Voice is on 🎧 Hold 🎙️ (or V) to talk to people near you',true)}}
+const vAsk=()=>ask({title:'Hear other players?',text:'Turn on voice chat to hear people near you, and talk to them if you want to: you only talk while you hold the mic button (or V). Voice goes straight between players\u2019 devices, so they can see your network address (IP) while you are connected. Nothing is recorded. You can turn it off any time with the 🎧 button.',ok:'Turn on',cancel:'Not now'});
+async function voiceToggle(){if(VC.on){vPref('off');voiceOff();return}
   if(typeof RTCPeerConnection==='undefined'||!navigator.mediaDevices){toast('','Voice chat is not supported on this browser',true);return}
-  let ok=VC.askd;try{ok=ok||localStorage.getItem('myworld.voiceok2')==='1'}catch(_){}
-  if(!ok){if(!await ask({title:'Turn on voice chat?',text:'You will hear people near you who also turned it on, and you talk by holding the mic button (or V). Your microphone stays open but muted while voice is on, so your browser will show its microphone indicator. Voice goes straight between players’ devices, so they can see your network address (IP) while you are connected. Nothing is recorded.',ok:'Turn on',cancel:'Not now'}))return;try{localStorage.setItem('myworld.voiceok2','1')}catch(_){}}
-  VC.askd=true;if(!AC)snd();if(AC&&AC.state!=='running')AC.resume().catch(()=>{});
-  VC.on=true;vSelfFlag();vui();vMic();toast('','Voice is on 🎧 Hold 🎙️ (or V) to talk to people near you',true)}
+  if(!vConsent()){if(!await vAsk())return;try{localStorage.setItem('myworld.voiceok2','1')}catch(_){}}
+  VC.askd=true;vPref('on');voiceStart(false)}
+/* after signing in: the first time ever, ask once; after that, voice comes back on by itself (until you turn it off) */
+let vAutoDone=false;
+function voiceAuto(){if(vAutoDone||VC.on||typeof RTCPeerConnection==='undefined'||!navigator.mediaDevices||!storage.auth.user())return;
+  const pk=$('pick');if(!WS.connected()||gateOn||(pk&&getComputedStyle(pk).display!=='none')||of.style.display==='flex')return;   // (wait until the world is up and nothing else is in the way)
+  if(vPref()==='off'){vAutoDone=true;return}
+  if(!vConsent()){vAutoDone=true;vAsk().then(y=>{if(!y){vPref('off');return}try{localStorage.setItem('myworld.voiceok2','1')}catch(_){}VC.askd=true;vPref('on');voiceStart(true)});return}
+  if(AC&&AC.state==='running'){vAutoDone=true;voiceStart(true)}}   // (browsers only start sound after a tap, so this waits for the first one)
 async function vStat(p){try{const st=await p.pc.getStats();let id=null,pair=null;const c={};st.forEach(r=>{if(r.type==='transport'&&r.selectedCandidatePairId)id=r.selectedCandidatePairId;if(r.type==='local-candidate'||r.type==='remote-candidate')c[r.id]=r});
   st.forEach(r=>{if(r.type==='candidate-pair'&&(r.id===id||(!id&&r.nominated&&r.state==='succeeded')))pair=r});
   if(pair)p.pair={l:(c[pair.localCandidateId]||{}).candidateType||'?',r:(c[pair.remoteCandidateId]||{}).candidateType||'?',rtt:Math.round((pair.currentRoundTripTime||0)*1000)}}catch(_){}}
@@ -3974,7 +3987,7 @@ vApply();
   addEventListener('keyup',e=>{if(e.code==='KeyV'&&!VC.latch)vTalk(false)});
   addEventListener('blur',()=>{if(!VC.latch)vTalk(false)});document.addEventListener('visibilitychange',()=>{if(document.hidden)release();else if(VC.on&&AC&&AC.state!=='running')AC.resume().catch(()=>{})});
   ['pointerup','touchend','keydown'].forEach(ev=>addEventListener(ev,()=>{if(VC.on&&AC&&AC.state!=='running')AC.resume().catch(()=>{})},true));   // (any tap or key wakes the sound if the phone paused it)
-  storage.auth.onChange(()=>{if(!storage.auth.user())voiceOff()});setInterval(()=>voiceTick(.08),80);vbtn.hidden=false;vui()}
+  storage.auth.onChange(()=>{if(!storage.auth.user())voiceOff()});setInterval(()=>voiceTick(.08),80);setInterval(voiceAuto,1000);vbtn.hidden=false;vui()}
 
 /* ---- telling the others about me ---- */
 const seatNow=()=>!sitting?null:sitting.kind==='ground'&&!SEATS.includes(sitting)?-1:SEATS.indexOf(sitting);
