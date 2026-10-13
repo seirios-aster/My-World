@@ -406,7 +406,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 // the people's body models (the chibi knight and princess) start downloading right away (while the world is built); null if one can't be had in time (no knight: the older figures are used)
-const BUILD='2026-10-12t';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
+const BUILD='2026-10-13a';   // shown at the bottom of the character menu, so you can tell which version of the page you are looking at (and put on the model addresses so a cached copy of a model is never used)
 const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTFLoader().loadAsync(new URL(u,location.href).href),new Promise((_,no)=>setTimeout(()=>no(new Error('timed out')),9000))])}catch(e){console.warn('[chibi] '+u+' not loaded:',e&&e.message||e);return null}};return Promise.all([get('models/knight/chibi-knight.glb?v='+BUILD),get('models/princess/princess-chibi.glb?v='+BUILD)])})();
 
 /* ============================== EDIT ME ============================== */
@@ -2734,12 +2734,13 @@ function makeCloudAdapter(cfg,prepare,fallback){
     async close(){const c=ch;ch=null;rok=rlive=false;PR.wait.delete(c);if(c&&sb){const p=(async()=>{try{await sb.removeChannel(c)}catch(_){}})();rclosing=p;await p;if(rclosing===p)rclosing=null}}};
   /* the shared world: a second Realtime channel. Broadcast 'p' carries positions (not acknowledged, nothing stored); presence carries who is on which bike / seat. */
   // (wclosing: a close still in flight; re-opening the same topic before it ends lets the old leave kill the new channel)
+  const WTAB=Math.random().toString(36).slice(2,7),whist=[];   // WTAB: this tab's own name for the world channel, kept for as long as the page is open (so a reconnect replaces our old entry instead of leaving a ghost of ourselves behind); whist: the last connection events, for ?debug
   let wch=null,wkey='',wok=false,wclosing=null;const wh={};const wfire=(t,a)=>(wh[t]||[]).forEach(f=>{try{f(a)}catch(_){}});
   const world={connected:()=>wok,key:()=>wkey,on:(t,f)=>{(wh[t]||(wh[t]=[])).push(f)},
     send(t,data){if(wch&&wok){try{Promise.resolve(wch.send({type:'broadcast',event:t,payload:data})).catch(()=>{})}catch(_){}}},
-    track(st){if(wch&&wok)ptrack(wch,st)},presence:pstat,
+    track(st){if(wch&&wok)ptrack(wch,st)},presence:pstat,hist:()=>whist,
     state(){try{return wch&&wok?wch.presenceState():{}}catch(_){return{}}},
-    async open(){await ready;if(wclosing)await wclosing;if(fail||!sb||!user||wch)return !!wch;wkey=user.id+':'+Math.random().toString(36).slice(2,7);   // (a second tab of yours is a second character)
+    async open(){await ready;if(wclosing)await wclosing;if(fail||!sb||!user||wch)return !!wch;wkey=user.id+':'+WTAB;   // (a second tab of yours is a second character)
       const me=wch=sb.channel(cfg.room+'-world',{config:{broadcast:{self:false,ack:false},presence:{key:wkey}}});
       wch.on('broadcast',{event:'p'},m=>wfire('p',m&&m.payload));
       wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
@@ -2748,7 +2749,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
       wch.on('broadcast',{event:'gm'},m=>wfire('gm',m&&m.payload));   // (a nudge only: "someone was just removed, check yourself". Forging one does nothing, the truth is the world_bans row)
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
-      wch.subscribe(st=>{if(me!==wch)return;const ok=st==='SUBSCRIBED';if(ok!==wok){wok=ok;wfire('status',ok)}if(!ok)wfire('down',st)});
+      wch.subscribe((st,err)=>{if(me!==wch)return;whist.push({t:Date.now(),s:st,e:err?String(err.message||err).slice(0,90):''});if(whist.length>10)whist.shift();const ok=st==='SUBSCRIBED';if(ok!==wok){wok=ok;wfire('status',ok)}if(!ok)wfire('down',st)});
       return true},
     async close(){const c=wch;wch=null;PR.wait.delete(c);if(wok){wok=false;wfire('status',false)}if(c&&sb){const p=(async()=>{try{await sb.removeChannel(c)}catch(_){}})();wclosing=p;await p;if(wclosing===p)wclosing=null}}};
   /* the account's saved state (one row, one small JSON document: look, names, the friend, where you stand; see supabase-profiles.sql).
@@ -3977,14 +3978,15 @@ WS.on('sync',onSync);
 WS.on('gm',d=>{const u=storage.auth&&storage.auth.user();if(d&&u&&d.u===u.id)checkBan()});   // (a GM just removed someone: if it was me, check)
 // somebody new: say where I am straight away, and again a moment later (their first look at the room may not have caught up yet)
 WS.on('join',()=>{if(on)sendPos(true,sent.m<0?0:sent.m);[600,1800].forEach(ms=>setTimeout(()=>{if(on)sendPos(true,sent.m<0?0:sent.m)},ms))});
+let downT=0;
 WS.on('status',ok=>{
   console.info('[world] '+(ok?'connected':'disconnected'));
-  if(ok){myKey=WS.key();on=true;my.s=seatNow();my.st=my.st||Date.now();lastSig=mySig();pushState(true);sendPos(true,0);[700,1800].forEach(ms=>setTimeout(()=>{if(on)sendPos(true,sent.m<0?0:sent.m)},ms))}
-  else{on=false;remotes.forEach(dropRemote);reconcile()}
+  if(ok){clearTimeout(downT);downT=0;myKey=WS.key();on=true;my.s=seatNow();my.st=my.st||Date.now();lastSig=mySig();pushState(true);sendPos(true,0);[700,1800].forEach(ms=>setTimeout(()=>{if(on)sendPos(true,sent.m<0?0:sent.m)},ms))}
+  else{clearTimeout(downT);downT=setTimeout(()=>{downT=0;if(WS.connected())return;on=false;remotes.forEach(dropRemote);reconcile()},5000)}   // (a blip of a few seconds does not make everybody vanish and come back)
   if(ok)rc.t=0});
-// the channel can be closed on us (too many presence updates, a dropped network ...) and it does not always come back by itself: bring it back, politely (2 s, 4 s, 8 s ... at most 30 s apart)
+// the channel can be closed on us (too many presence updates, a dropped network ...) and it does not always come back by itself: bring it back, politely (6 s, 12 s, 24 s, then every 30 s)
 let retryT=0;
-WS.on('down',why=>{if(retryT)return;rc.last=String(why);retryT=setTimeout(async()=>{retryT=0;if(WS.connected()||!storage.auth.user()||!storage.session.active())return;rc.n++;rc.t++;try{await WS.close();await WS.open()}catch(_){}},Math.min(30000,2000*2**Math.min(rc.t,4)))});
+WS.on('down',why=>{if(retryT)return;rc.last=String(why);retryT=setTimeout(async()=>{retryT=0;if(WS.connected()||!storage.auth.user()||!storage.session.active())return;rc.n++;rc.t++;try{await WS.close();await WS.open()}catch(_){}},Math.min(30000,6000*2**Math.min(rc.t,3)))});   // (the library rejoins by itself within a few seconds, so the first rebuild waits 6 s, then 12, 24, 30: tearing a channel down mid-rejoin only makes more joins and a ghost of ourselves)
 const sync=async()=>{if(storage.auth.user()&&storage.session.active()){try{await WS.open()}catch(_){}}else{try{await WS.close()}catch(_){}}};
 storage.ready.then(sync);storage.auth.onChange(()=>{sync()});storage.session.onChange(()=>{sync()});
 
@@ -3998,7 +4000,7 @@ function tick(dt,t){
     acc+=dt;if(acc>=.25){const d=acc;acc=0;const x=P.position.x,z=P.position.z,v=Math.hypot(x-lp.x,z-lp.z)/d;lp.x=x;lp.z=z;const mv=v>.8?1:0;
       if(mv||mv!==sent.m||Math.abs(wrapA(P.rotation.y-sent.r))>.05||performance.now()-lastSend>(remotes.size?4000:20000))sendPos(false,mv)}   // standing still: a small 'still here' every 4 s with company (so nobody stays invisible for long), every 20 s alone
     // heal a missed update: if the list of who is here (from the server) disagrees with who we are showing, take the server's list
-    if(performance.now()-lastHeal>3000){lastHeal=performance.now();const st=WS.state(),n=Math.min(MAXR,Object.keys(st).filter(k=>k!==myKey).length);if(n!==remotes.size)onSync(st)}}
+    if(performance.now()-lastHeal>3000&&WS.connected()){lastHeal=performance.now();const st=WS.state(),n=Math.min(MAXR,Object.keys(st).filter(k=>k!==myKey).length);if(n!==remotes.size)onSync(st)}}
   const now=performance.now();
   remotes.forEach(R=>{if(!R.has)return;const g=R.rig,root=g.root,seat=sOf(R),ride=!seat&&R.b>=0;
     // where: smoothly toward the last known place (a little ahead of it while they are moving)
@@ -4019,7 +4021,7 @@ function tags(){remotes.forEach(R=>{const q=R.rig.root.position;
   if(R.has&&!open)tagAt(R.tag,q.x,q.y,q.z,8,70);else R.tag.style.display='none';
   if(R.has&&!open&&R.sayUntil>performance.now())tagAt(R.say,q.x,q.y+4.4,q.z,-8,70,true);else if(R.say.style.display!=='none')R.say.style.display='none'})}
 function dbg(){const o=Object.entries(WS.state()).filter(([k])=>k!==myKey),now=performance.now();
-  return{conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
+  return{hist:WS.hist?WS.hist():[],conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
 return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe,voiceStats:async()=>{const out=[];for(const[k,p]of VC.peers){const st=await p.pc.getStats();const o={k:k.slice(-5)};st.forEach(r=>{if(r.type==='inbound-rtp')o.in={bytes:r.bytesReceived,packets:r.packetsReceived,level:r.audioLevel};if(r.type==='outbound-rtp')o.out={bytes:r.bytesSent,packets:r.packetsSent}});o.recv=p.pc.getReceivers().map(x=>({muted:x.track&&x.track.muted,state:x.track&&x.track.readyState}));o.send=p.send&&p.send.track?{en:p.send.track.enabled,state:p.send.track.readyState,muted:p.send.track.muted}:null;out.push(o)}return out},voice:()=>({on:VC.on,talk:VC.talk,mic:!!VC.track,retry:Object.keys(VC.retry).length,peers:[...VC.peers].map(([k,p])=>({k:k.slice(-5),init:p.init,conn:p.pc.connectionState,ice:p.pc.iceConnectionState,sig:p.pc.signalingState,ok:p.ok,hear:!!p.el,gain:p.gain?+p.gain.gain.value.toFixed(2):null,lvl:p.lvl|0,ac:AC?AC.state:'none'})),remotes:[...remotes.values()].map(R=>({vc:R.vc,has:R.has,d:+Math.hypot(R.tx-P.position.x,R.tz-P.position.z).toFixed(1)}))})}})();
 /*MP-END*/
 // add ?debug to the address to see what the connection is doing (handy when "I can't see anyone" needs a real reason)
@@ -4027,7 +4029,7 @@ if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
 if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.style.cssText="position:fixed;left:8px;top:96px;z-index:60;margin:0;padding:6px 9px;background:rgba(20,18,30,.8);color:#d6ffe8;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;border-radius:8px;pointer-events:none;max-width:78vw;white-space:pre-wrap";document.body.appendChild(d);
   setInterval(()=>{const g=MP.dbg(),S=storage.session,A=storage.auth&&storage.auth.user();
     d.textContent=['signed in: '+(A?'yes':'no (guest)'),'session: '+(S?S.state():'n/a'),'world: '+(g?(g.conn?'connected':'NOT connected'):'n/a'),'game clock: '+(WTZ==='device'?'each device\'s own ('+TZ+')':WTZ)+(SET?'':' (not available)'),
-      g&&g.pres?'presence updates in the last 30 s: '+g.pres.used+' of '+g.pres.max+' allowed'+(g.pres.waiting?', '+g.pres.waiting+' waiting':'')+'; times brought back: '+g.rc.n+(g.rc.last?' (last: '+g.rc.last+')':''):'',g?'server lists '+g.listed+' other(s); showing '+g.shown+' ('+g.withPos+' with a position)':'',...(g?g.peers.map(x=>'   '+x):[]),
+      g&&g.pres?'presence updates in the last 30 s: '+g.pres.used+' of '+g.pres.max+' allowed'+(g.pres.waiting?', '+g.pres.waiting+' waiting':'')+'; times brought back: '+g.rc.n+(g.rc.last?' (last: '+g.rc.last+')':''):'',g&&g.hist&&g.hist.length?'connection events (newest last): '+g.hist.map(h=>h.s+(h.e?' ['+h.e+']':'')+' '+Math.round((Date.now()-h.t)/1000)+'s ago').join(' | ')+'  - '+g.hist.filter(h=>Date.now()-h.t<120000&&h.s!=='SUBSCRIBED').length+' problem(s) in the last 2 min':'',g?'server lists '+g.listed+' other(s); showing '+g.shown+' ('+g.withPos+' with a position)':'',...(g?g.peers.map(x=>'   '+x):[]),
       g&&g.drops.bad?'unusable position messages: '+g.drops.bad+' e.g. '+g.drops.last:'','my heading: '+P.rotation.y.toFixed(2)+' rad','saved state: '+PST].filter(Boolean).join('\n')},1000)}
 
 const clockT=new THREE.Clock();let t=0,walkPh=0,walkAmt=0,frames=0,lift=0,lastStep=0;
