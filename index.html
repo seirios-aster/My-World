@@ -48,10 +48,10 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .round{width:40px;height:40px;border:0;border-radius:50%;background:var(--paper);color:var(--ink);font-size:18px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);display:grid;place-items:center;padding:0;line-height:1}
 #bchat{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));z-index:2}
 #bfs{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:2}
-#vol{position:fixed;display:none;align-items:center;gap:8px;background:var(--paper);color:var(--ink);padding:5px 14px 5px 5px;border-radius:999px;box-shadow:var(--shadow);z-index:3}
+#vol{position:fixed;display:none;flex-direction:column;gap:4px;background:var(--paper);color:var(--ink);padding:5px 14px 5px 5px;border-radius:22px;box-shadow:var(--shadow);z-index:3}#vol .vrow{display:flex;align-items:center;gap:8px}#vol .vlb{font:700 12px var(--body);width:40px}
 #vol .round{width:32px;height:32px;font-size:15px;box-shadow:none;background:var(--paper-2)}
-#vsl{width:118px;accent-color:var(--sun);margin:0;height:28px;touch-action:none}
-#vpc{font:700 12px var(--body);min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
+#vsl,#vcsl{width:118px;accent-color:var(--sun);margin:0;height:28px;touch-action:none}
+#vpc,#vcpc{font:700 12px var(--body);min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 #bcar img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
@@ -327,7 +327,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
 <div id="clk"></div>
-<div id="vol" role="group" aria-label="Volume"><button type="button" class="round" id="vmute" aria-label="Mute"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Volume"><span id="vpc">85%</span></div>
+<div id="vol" role="group" aria-label="Volume"><div class="vrow"><button type="button" class="round" id="vmute" aria-label="Mute"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button><span class="vlb">Game</span><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Game volume"><span id="vpc">85%</span></div><div class="vrow" id="vcrow"><button type="button" class="round" id="vcmute" aria-label="Mute voices">🎧</button><span class="vlb">Voice</span><input id="vcsl" type="range" min="0" max="100" step="5" value="100" aria-label="Voice chat volume"><span id="vcpc">100%</span></div></div>
 <div id="fsmsg" role="status"></div>
 <button class="round" id="bchat" title="Send a message to everyone here · Enter" aria-label="Send a message" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.7 7L4 20.5l1.6-4.6A8 8 0 1 1 21 12z"/><circle cx="8.6" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="15.4" cy="12" r=".6" fill="currentColor"/></svg></button>
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -3357,6 +3357,7 @@ function applyVol(){mute=MUTED||VOL<.01;const ic=mute?IC.v0:VOL<.34?IC.v1:VOL<.7
     const w=vp.offsetWidth,h=vp.offsetHeight;vp.style.right='auto';   // beside the button if there is room on its left, otherwise just under it
     if(r.left-8-w>=8){vp.style.left=(r.left-8-w)+'px';vp.style.top=Math.max(8,Math.min(innerHeight-h-8,r.top+r.height/2-h/2))+'px'}
     else{vp.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';vp.style.top=Math.max(8,Math.min(innerHeight-h-8,r.bottom+8))+'px'}arm()};
+  vp.addEventListener('input',arm);vp.addEventListener('pointerdown',arm);
   $('vsl').oninput=()=>{VOL=+$('vsl').value/100;if(VOL>=.01)MUTED=false;applyVol();arm()};
   $('vmute').onclick=()=>{if(mute){MUTED=false;if(VOL<.01)VOL=.5}else MUTED=true;applyVol();arm()};
   addEventListener('pointerdown',e=>{if(vp.style.display==='flex'&&!vp.contains(e.target)&&e.target!==$('bs'))hideV()},true);
@@ -3859,7 +3860,7 @@ function bikeChanged(){const now=Date.now();
 /* ---- voice chat (peer to peer): you hear people close to you who also turned voice on; hold the mic button (or V) to talk.
    Audio goes straight between the players' devices (WebRTC); the world channel only carries the set-up messages ('v': an offer or an answer, addressed to one person).
    Nothing is recorded or stored anywhere. Players within about 26 steps connect (at most 6 at once), and volume fades with distance. ---- */
-const VC={on:false,talk:false,latch:false,track:null,stream:null,peers:new Map(),retry:{},t:0,askd:false};
+const VC={on:false,talk:false,latch:false,out:null,track:null,stream:null,peers:new Map(),retry:{},t:0,askd:false};
 const VR=26,VRX=34,VMAX=6,ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}];
 const vbtn=$('bvc'),pbtn=$('bptt');
 function vui(){vbtn.classList.toggle('on',VC.on);vbtn.setAttribute('aria-pressed',VC.on?'true':'false');vbtn.title=VC.on?'Voice chat is on (tap to turn off)':'Voice chat: hear people near you and talk to them';
@@ -3871,9 +3872,10 @@ function vGather(pc){return new Promise(res=>{if(pc.iceGatheringState==='complet
 function vClose(key){const p=VC.peers.get(key);if(!p)return;VC.peers.delete(key);try{p.pc.ontrack=p.pc.onconnectionstatechange=null;p.pc.close()}catch(_){}
   try{p.src&&p.src.disconnect();p.gain&&p.gain.disconnect();p.pan&&p.pan.disconnect();p.an&&p.an.disconnect()}catch(_){}if(p.el)p.el.srcObject=null;
   VC.retry[key]=performance.now()+4000;const R=remotes.get(key);if(R)R.tag.classList.remove('spk')}
+function vOut(){const c=AC;if(!VC.out){VC.out=c.createGain();VC.out.gain.value=vGain();VC.out.connect(c.destination)}return VC.out}
 function vHear(p,st){const c=AC;p.el=new Audio();p.el.srcObject=st;p.el.muted=!!c;p.el.play().catch(()=>{});   // (muted element: some browsers only deliver the stream to Web Audio while it is playing somewhere)
   if(!c)return;p.src=c.createMediaStreamSource(st);p.gain=c.createGain();p.gain.gain.value=0;p.an=c.createAnalyser();p.an.fftSize=256;p.buf=new Uint8Array(p.an.fftSize);
-  p.src.connect(p.an);p.src.connect(p.gain);let tail=p.gain;if(c.createStereoPanner){p.pan=c.createStereoPanner();p.gain.connect(p.pan);tail=p.pan}tail.connect(master||c.destination)}   // (through the game's volume, so its slider and mute work on voices too)
+  p.src.connect(p.an);p.src.connect(p.gain);let tail=p.gain;if(c.createStereoPanner){p.pan=c.createStereoPanner();p.gain.connect(p.pan);tail=p.pan}tail.connect(vOut())}   // (voices have their own volume, separate from the game's)
 function vPeer(key,init){const pc=new RTCPeerConnection({iceServers:ICE}),p={key,pc,init,t0:performance.now(),spk:0,ok:false,send:null};
   if(init){const tr=pc.addTransceiver('audio',{direction:'sendrecv'});p.send=tr.sender;if(VC.track)tr.sender.replaceTrack(VC.track).catch(()=>{})}
   pc.ontrack=e=>{if(p.el)return;vHear(p,e.streams[0]||new MediaStream([e.track]))};
@@ -3913,6 +3915,14 @@ function voiceTick(dt){if(!VC.on&&!VC.peers.size)return;const now=performance.no
       if(p.pan){const e=cam.matrixWorld.elements,rl=Math.hypot(e[0],e[2])||1;p.pan.pan.setTargetAtTime(clamp((dx*e[0]+dz*e[2])/rl/(d||1),-1,1)*.85*Math.min(1,d/3),t,.1)}}   // (voices come from the side they are on)
     if(p.an){p.an.getByteTimeDomainData(p.buf);let m=0;for(let i=0;i<p.buf.length;i++){const v=Math.abs(p.buf[i]-128);if(v>m)m=v}p.lvl=m;if(m>6)p.spk=now}
     R.tag.classList.toggle('spk',now-p.spk<300)})}
+/* the voice volume has its own slider and mute in the sound pop-up (separate from the game's), saved on this device */
+let VVOL=1,VMUTED=false;try{const v=localStorage.getItem('myworld.vvol');if(v!=null&&v!==''&&!isNaN(+v))VVOL=clamp(+v,0,1);VMUTED=localStorage.getItem('myworld.vmuted')==='1'}catch(_){}
+const vGain=()=>VMUTED||VVOL<.01?0:VVOL*VVOL;
+function vApply(){const m=VMUTED||VVOL<.01;$('vcmute').textContent=m?'🔇':'🎧';$('vcsl').value=Math.round(VVOL*100);$('vcpc').textContent=m?'off':Math.round(VVOL*100)+'%';
+  if(VC.out&&AC)VC.out.gain.setTargetAtTime(vGain(),AC.currentTime,.05);try{localStorage.setItem('myworld.vvol',String(VVOL));localStorage.setItem('myworld.vmuted',VMUTED?'1':'0')}catch(_){}}
+$('vcsl').oninput=()=>{VVOL=+$('vcsl').value/100;if(VVOL>=.01)VMUTED=false;vApply()};
+$('vcmute').onclick=()=>{if(VMUTED||VVOL<.01){VMUTED=false;if(VVOL<.01)VVOL=.6}else VMUTED=true;vApply()};
+vApply();
 {let down=0;
   vbtn.onclick=voiceToggle;
   pbtn.addEventListener('pointerdown',e=>{e.preventDefault();try{pbtn.setPointerCapture(e.pointerId)}catch(_){}if(VC.latch){VC.latch=false;vTalk(false);down=0;return}down=performance.now();vTalk(true)});
