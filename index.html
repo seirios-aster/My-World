@@ -195,6 +195,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #gate.out{opacity:0;pointer-events:none}
 #gate .scene{position:absolute;inset:0;width:100%;height:100%}
 @media (max-aspect-ratio:1/1){#gate .scene{top:auto;bottom:0;height:auto}}   /* portrait: the whole skyline fits the width, the sky gradient fills above */
+#g3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#gate.g3 .tower,#gate.g3 .beam{display:none}   /* the 3D lighthouse takes over from the flat one */
 #gate .beam{transform-box:view-box;transform-origin:1010px 362px;animation:gsweep 11s ease-in-out infinite alternate}
 @keyframes gsweep{from{transform:rotate(-9deg)}to{transform:rotate(7deg)}}
 @media (prefers-reduced-motion:reduce){#gate .beam{animation:none}#gate{transition:none}}
@@ -364,7 +366,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
  <path fill="#767db4" d="M0 470C140 420 260 430 380 460C520 495 640 410 800 430C940 448 1060 410 1200 440L1200 700L0 700Z"/>
  <path fill="#5a8c93" d="M0 540C120 500 260 510 400 540C540 570 700 500 860 510C1000 520 1100 500 1200 520L1200 700L0 700Z"/>
  <g class="beam"><path d="M1010 362L300 318L300 410Z" fill="url(#gbeam)"/><path d="M1010 362L1200 348L1200 378Z" fill="#fff4c4" opacity=".28"/></g>
- <g><polygon points="992,515 1028,515 1020,380 1000,380" fill="#f4efe6"/><g clip-path="url(#gtower)" fill="#d4574a"><rect x="985" y="426" width="50" height="26"/><rect x="985" y="480" width="50" height="26"/></g>
+ <g class="tower"><polygon points="992,515 1028,515 1020,380 1000,380" fill="#f4efe6"/><g clip-path="url(#gtower)" fill="#d4574a"><rect x="985" y="426" width="50" height="26"/><rect x="985" y="480" width="50" height="26"/></g>
   <rect x="994" y="372" width="32" height="8" fill="#3b3f58"/><rect x="1003" y="352" width="14" height="20" fill="#ffe9a8"/><polygon points="999,352 1021,352 1010,336" fill="#3b3f58"/><circle cx="1010" cy="362" r="30" fill="url(#glamp)"/></g>
  <g><circle cx="156" cy="504" r="20" fill="#ffd47a" opacity=".35"/><rect x="130" y="490" width="62" height="28" fill="#2f3a52"/><polygon points="122,492 161,466 200,492" fill="#3a2f45"/><rect x="178" y="468" width="8" height="16" fill="#3a2f45"/>
   <rect x="150" y="498" width="12" height="11" fill="#ffd47a"/><rect x="172" y="503" width="9" height="15" fill="#1f2638"/></g>
@@ -372,6 +374,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
  <g fill="#1f4a3a"><path d="M70 554l-12 24h24zM70 566l-15 30h30z"/><path d="M112 562l-12 24h24zM112 574l-15 30h30z"/><path d="M520 570l-12 24h24zM520 582l-15 30h30z"/><path d="M562 578l-12 24h24zM562 590l-15 30h30z"/><path d="M1090 542l-12 24h24zM1090 554l-15 30h30z"/><path d="M1134 540l-12 24h24zM1134 552l-15 30h30z"/></g>
  <path fill="#2b5a46" d="M0 670C200 635 420 650 620 672C800 692 1000 640 1200 660L1200 700L0 700Z"/>
 </svg>
+<canvas id="g3d" aria-hidden="true"></canvas>
 <div id="gcard">
  <div id="gpin"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="#f39a3c" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg></div>
  <h1 id="gtitle">Tambayan</h1>
@@ -2840,8 +2843,69 @@ const gate=$('gate'),gbtn=$('gbtn'),gstat=$('gstat'),gmsg=$('gmsg'),gskip=$('gsk
 function gateUI(mode,text){gateMode=mode;$('gconf').hidden=mode!=='conflict';gstat.hidden=mode!=='check';gbtn.hidden=!(mode==='in'||mode==='busy'||mode==='error');gbtn.disabled=mode==='busy';
   $('gbtxt').textContent=mode==='busy'?'Opening Google…':'Continue with Google';gmsg.textContent=text||'';gmsg.hidden=!text;gskip.hidden=mode!=='offline'}
 function showGate(mode,text){if(gateSkipped)return;gateOn=true;gate.classList.remove('out');gate.style.display='flex';clearInput();if(open)hide();if(chatEl.style.display==='flex')closeChat();
-  gateUI(mode,text);if(mode==='in'||mode==='error')gbtn.focus({preventScroll:true})}
-function hideGate(){gateOn=false;gate.classList.add('out');setTimeout(()=>{if(!gateOn)gate.style.display='none'},650);cv.focus()}
+  gate3dStart();gateUI(mode,text);if(mode==='in'||mode==='error')gbtn.focus({preventScroll:true})}
+function hideGate(){gateOn=false;gate.classList.add('out');setTimeout(()=>{if(!gateOn){gate.style.display='none';gate3dStop()}},650);cv.focus()}
+/* the gate's 3D set dressing: a few little floating islands and crystals over the dusk skyline. Built when the gate opens, freed when it closes; if WebGL is
+   not available the flat skyline simply stays as it is */
+const G3={r:null,raf:0,on:false};
+function gate3dStop(){G3.on=false;cancelAnimationFrame(G3.raf);if(G3.r){G3.dispose&&G3.dispose();G3.r.dispose();try{G3.r.forceContextLoss()}catch(_){}G3.r=null;$('gate').classList.remove('g3')}}
+function gate3dStart(){
+  if(G3.r)return;
+  const cvs=$('g3d');let r;try{r=new THREE.WebGLRenderer({canvas:cvs,alpha:true,antialias:true,powerPreference:'low-power'})}catch(_){return}
+  G3.r=r;G3.on=true;$('gate').classList.add('g3');r.setClearColor(0,0);r.outputColorSpace=THREE.SRGBColorSpace;
+  const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,.1,60);cam.position.set(0,0,12);
+  sc.add(new THREE.HemisphereLight(0xffd9c4,0x5d68a5,1.7));const dl=new THREE.DirectionalLight(0xffe0b0,2.6);dl.position.set(-5,4,6);sc.add(dl);
+  const geos=[],mats=[],M=(c,o)=>{const m=new THREE.MeshStandardMaterial(Object.assign({color:c,flatShading:true,roughness:.85,metalness:0},o));mats.push(m);return m},
+    mesh=(g,m,x,y,z)=>{geos.push(g);const o=new THREE.Mesh(g,m);o.position.set(x||0,y||0,z||0);return o};
+  const grass=M('#4f9b6b'),rock=M('#7d6f86'),wood=M('#7a5236'),pine=M('#2b6a50'),pine2=M('#37805d'),white=M('#f4efe6'),red=M('#d4574a'),roofM=M('#c9604f'),wall=M('#f1d9b5'),dark=M('#3b3f58'),
+    lamp=M('#ffe9a8',{emissive:'#ffcf6a',emissiveIntensity:1.6});
+  function island(kind){
+    const g=new THREE.Group();
+    g.add(mesh(new THREE.CylinderGeometry(1.15,1.05,.26,8),grass,0,0,0));
+    const c=mesh(new THREE.ConeGeometry(1.05,1.5,8),rock,0,-.88,0);c.rotation.x=Math.PI;g.add(c);
+    if(kind==='tree'){
+      g.add(mesh(new THREE.CylinderGeometry(.09,.12,.5,6),wood,.1,.38,0));
+      [[.62,.7,.9],[.48,1.1,.75],[.34,1.45,.6]].forEach((t,i)=>g.add(mesh(new THREE.ConeGeometry(t[2],.8,7),i%2?pine2:pine,.1,t[1]+.1,0)));
+      g.add(mesh(new THREE.ConeGeometry(.3,.6,7),pine,-.7,.43,.25));
+      g.add(mesh(new THREE.DodecahedronGeometry(.16),rock,.6,.2,.5));
+    }else if(kind==='light'){
+      g.add(mesh(new THREE.CylinderGeometry(.22,.34,1.5,8),white,0,.88,0));
+      [.5,1.1].forEach(y=>g.add(mesh(new THREE.CylinderGeometry(.27,.3,.28,8),red,0,y,0)));
+      g.add(mesh(new THREE.CylinderGeometry(.34,.26,.1,8),dark,0,1.66,0));
+      g.add(mesh(new THREE.CylinderGeometry(.15,.15,.3,8),lamp,0,1.86,0));
+      g.add(mesh(new THREE.ConeGeometry(.24,.3,8),dark,0,2.16,0));
+      g.userData.lamp=true;g.add(mesh(new THREE.DodecahedronGeometry(.14),rock,-.7,.2,.4));
+    }else{
+      g.add(mesh(new THREE.BoxGeometry(1.1,.65,.8),wall,0,.45,0));
+      const rf=mesh(new THREE.ConeGeometry(.95,.55,4),roofM,0,1.05,0);rf.rotation.y=Math.PI/4;g.add(rf);
+      g.add(mesh(new THREE.BoxGeometry(.2,.4,.2),dark,.3,1.15,-.1));
+      g.add(mesh(new THREE.BoxGeometry(.2,.32,.04),wood,0,.31,.41));
+      g.add(mesh(new THREE.ConeGeometry(.28,.6,7),pine,-.85,.4,.2));
+    }
+    return g}
+  const isl=[island('tree'),island('light'),island('home')],
+    cr=[];for(let i=0;i<6;i++){const o=mesh(new THREE.OctahedronGeometry(.16+.07*(i%3)),M(i%2?'#ff9ec0':'#8ee6ff',{emissive:i%2?'#ff6fa0':'#4fc9ff',emissiveIntensity:1.1,roughness:.3}),0,0,0);o.userData.s=i;cr.push(o);sc.add(o)}
+  isl.forEach(o=>sc.add(o));
+  let W=0,H=0,half=4.37,px=0,py=0;
+  const place=()=>{const w=innerWidth,h=innerHeight;if(w!==W||h!==H){W=w;H=h;r.setPixelRatio(Math.min(devicePixelRatio||1,2));r.setSize(w,h,false);cam.aspect=w/h;
+      half=Math.tan(THREE.MathUtils.degToRad(20))*12;cam.updateProjectionMatrix()}};
+  const hw=()=>half*cam.aspect;
+  function layout(){   // wide screens: one island each side of the card and one low in the corner; tall screens: all along the top
+    const a=cam.aspect,w=hw();let P;
+    if(a>1.1){const s=Math.min(.95,w*.15);P=[[-w*.7,half*.12,s],[w*.72,half*.18,s],[w*.5,-half*.55,s*.7]]}
+    else{const s=Math.min(.6,w*.22);P=[[-w*.52,half*.62,s],[w*.56,half*.5,s],[0,half*.8,s*.6]]}
+    isl.forEach((o,i)=>{o.userData.b=P[i];o.scale.setScalar(P[i][2])})}
+  let t0=performance.now(),quiet=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const mv=e=>{px=(e.clientX/innerWidth-.5)*2;py=(e.clientY/innerHeight-.5)*2};addEventListener('pointermove',mv);
+  G3.dispose=()=>{removeEventListener('pointermove',mv);geos.forEach(g=>g.dispose());mats.forEach(m=>m.dispose())};
+  function frame(){
+    if(!G3.on)return;G3.raf=requestAnimationFrame(frame);
+    place();layout();const t=quiet?0:(performance.now()-t0)/1000;
+    isl.forEach((o,i)=>{const b=o.userData.b;o.position.set(b[0],b[1]+Math.sin(t*.8+i*2.1)*.14*b[2],0);o.rotation.set(.18,t*.25*(i%2?-1:1)+i*1.3,Math.sin(t*.5+i)*.03)});
+    cr.forEach((o,i)=>{const a=t*.4+i*1.05,B=isl[i%3].userData.b;o.position.set(B[0]+Math.cos(a)*1.5*B[2],B[1]+.5*B[2]+Math.sin(a*1.3)*.5*B[2],Math.sin(a)*.8);o.rotation.set(t*.9+i,t*1.3,0);o.scale.setScalar(Math.max(.5,B[2]))});
+    cam.position.x+=(px*.5-cam.position.x)*.05;cam.position.y+=(-py*.3-cam.position.y)*.05;cam.lookAt(0,0,0);
+    r.render(sc,cam)}
+  frame()}
 function gateSync(){const A=storage.auth;if(!A||gateSkipped)return;
   if(!A.available())showGate('offline',"Can't reach sign-in right now. Check your connection and reload, or carry on without it.");
   else if(A.user()){const s=storage.session.state();
