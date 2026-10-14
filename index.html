@@ -222,20 +222,30 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #gcancel{margin:10px auto 0;display:block;border:0;background:none;color:var(--ink);font:700 14px var(--body);text-decoration:underline;cursor:pointer;padding:8px}
 @media (max-height:520px){#gcard{padding:14px 20px 12px;margin-top:0}#gpin{display:none}#gcard h1{font-size:28px;margin-bottom:4px}#gcard p{margin-bottom:12px;font-size:13.5px}#gbtn{min-height:46px}#gnote{display:none}}
 #map{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:140px;height:140px;border-radius:16px;border:3px solid var(--paper);box-shadow:var(--shadow);background:var(--paper-2)}
-#acts{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
+/* controls laid out the way a phone game has them: emotes and voice under the chat button on the left; on the right the attack button with jump and the two skills round it, and sit / talk along the bottom */
+#acts{display:contents}
+:root{--sr:env(safe-area-inset-right,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--st:env(safe-area-inset-top,0px)}
+#bem{position:fixed;left:calc(12px + var(--sl));top:calc(106px + var(--st));z-index:2}
+#bvc{position:fixed;left:calc(12px + var(--sl));top:calc(154px + var(--st));z-index:2}
+#bjump{position:fixed;right:calc(49px + var(--sr));bottom:calc(132px + var(--sb));z-index:3;width:46px;height:46px}
+#bsit{position:fixed;right:calc(84px + var(--sr));bottom:calc(8px + var(--sb));z-index:3}
+#bptt{position:fixed;right:calc(136px + var(--sr));bottom:calc(8px + var(--sb));z-index:3}
 /* monsters: the fight buttons, my HP bar, slime health bars, floating damage numbers */
 #mon{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
 .mhp{position:absolute;left:0;top:0;width:46px;height:6px;border-radius:4px;background:rgba(20,18,30,.62);overflow:hidden;display:none;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
 .mhp i{display:block;height:100%;width:100%;background:#e8564a;transform-origin:left center}
 .dmg{position:absolute;left:0;top:0;display:none;font:700 20px var(--display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.8);white-space:nowrap}
 .dmg.xp{color:#ffd24a;font-size:16px}.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
-#herobar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:8px;z-index:3}
+#herobar{position:fixed;left:50%;bottom:calc(21px + var(--sb));transform:translateX(-50%);display:none;align-items:center;gap:8px;z-index:3}
 #herobar.on{display:flex}#bhero{width:38px;height:38px;font:700 12px var(--display);padding:0;flex:none}
 #hpb{position:relative;width:min(280px,44vw);height:18px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:block;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
-@media (max-height:600px){#herobar{bottom:calc(66px + env(safe-area-inset-bottom,0px))}}   /* a phone on its side: the bar floats above the row of action buttons instead of running into them */#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
+@media (max-height:600px){#herobar{left:calc(205px + var(--sl));transform:none}#hpb{width:max(110px,min(280px,calc(100vw - 560px)))}}   /* a phone on its side: the bar sits on the bottom row between the clock and the action buttons */#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
 #hpb b{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
-#fight{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(68px + env(safe-area-inset-bottom,0px));display:none;align-items:flex-end;gap:10px;z-index:3}
-#fight.show{display:flex}#fight .round{position:relative;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}#fight #batk{width:62px;height:62px;font-size:30px}
+#fight{display:none}
+#fight.show{display:contents}#fight .round{position:fixed;z-index:3;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}
+#fight #batk{right:calc(76px + var(--sr));bottom:calc(58px + var(--sb));width:66px;height:66px;font-size:32px}
+#fight #bslam{right:calc(160px + var(--sr));bottom:calc(74px + var(--sb))}
+#fight #bdash{right:calc(25px + var(--sr));bottom:calc(26px + var(--sb))}
 #fight .round::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(10,10,20,.55) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
 #rpg{position:fixed;right:calc(84px + env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);width:min(320px,max(42vw,250px));max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;display:none;flex-direction:column;gap:6px;padding:10px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:3;font:700 13px var(--body)}
 #rpg.on{display:flex}#rph{display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font:600 16px var(--display)}#rph.drag{cursor:grabbing}#rph .gmgrip{opacity:.45;font-weight:400;margin-left:6px}#rpg .round{width:30px;height:30px;font-size:14px}
@@ -254,7 +264,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 @keyframes askin{from{transform:translateY(8px) scale(.97);opacity:0}to{transform:none;opacity:1}}
 #asktitle{margin:0 0 6px;font:800 18px var(--body)}#asktext{margin:0 0 16px;color:var(--ink);opacity:.82;line-height:1.4}#askbtns{display:flex;gap:8px;justify-content:flex-end}
 #askbtns button{border:0;border-radius:999px;padding:9px 18px;font:800 14px var(--body);cursor:pointer;background:var(--paper-2);color:var(--ink)}#askbtns button#askok{background:var(--sun);color:#fff}#askbtns button#askok.danger{background:#b3382c}#askbtns button:focus-visible{outline:3px solid color-mix(in srgb,var(--sun) 55%,transparent);outline-offset:2px}
-#emo{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(66px + env(safe-area-inset-bottom,0px));display:none;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:30}
+#emo{position:fixed;left:calc(64px + var(--sl));top:calc(60px + var(--st));display:none;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:30}
 #emo .emb{border:0;border-radius:12px;background:var(--paper-2);color:var(--ink);padding:6px 10px;font:700 12px var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}#emo .emb span{font-size:24px;line-height:1.1}#acts svg{width:24px;height:24px}
 
 #panel{position:fixed;inset:0;background:var(--scrim);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
