@@ -4359,7 +4359,7 @@ const MOB=(()=>{
     if(t.dataset.a==='close'){SEL=null;gearDraw();return}
     if(t.dataset.a){const sel=SEL;if(!sel)return;const a=t.dataset.a;
       if(a==='eq'){const it=INV.bag[sel.i];if(!it)return;if(it[0]===0&&ic(it)!==RPG.c){toast('','That is a '+CLS[ic(it)].n+' weapon: switch to '+CLS[ic(it)].n+' to use it',true);return}
-        const old=INV.eq[it[0]];INV.eq[it[0]]=it;INV.bag.splice(sel.i,1);if(old)INV.bag.push(old);SEL={k:'e',i:it[0]}}
+        const old=INV.eq[it[0]];INV.eq[it[0]]=it;INV.bag.splice(sel.i,1);if(old)INV.bag.push(old);SEL=null}
       else if(a==='un'){const it=INV.eq[sel.i];if(!it)return;if(INV.bag.length>=BAGMAX){toast('','Your bag is full',true);return}INV.eq[sel.i]=null;INV.bag.push(it);SEL=null}
       else if(a==='drop'){const it=INV.bag[sel.i];if(!it)return;if(it[1]>=1&&!await ask({title:'Discard '+gName(it)+'?',text:'This '+RAR[it[1]].n.toLowerCase()+' item will be gone for good.',ok:'Discard',cancel:'Keep'}))return;if(INV.bag[sel.i]===it)INV.bag.splice(sel.i,1);SEL=null}
       rpgApply();rpgSave();return}
