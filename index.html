@@ -2778,6 +2778,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
       wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
       wch.on('broadcast',{event:'e'},m=>wfire('e',m&&m.payload));
       wch.on('broadcast',{event:'v'},m=>wfire('v',m&&m.payload));   // (voice chat set-up: an offer or an answer addressed to one person; see VC)   // (an emote: who + which one; see EMO)
+      ['m','h','d','fx'].forEach(ev=>wch.on('broadcast',{event:ev},m=>wfire(ev,m&&m.payload)));   // (monsters: where they are (m), a hit on one (h), a bite on someone (d), a swing to show (fx); see MOB. A message nobody subscribed to is never delivered, which is why a second player saw no monsters)
       wch.on('broadcast',{event:'gm'},m=>wfire('gm',m&&m.payload));   // (a nudge only: "someone was just removed, check yourself". Forging one does nothing, the truth is the world_bans row)
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
