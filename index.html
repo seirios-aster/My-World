@@ -227,7 +227,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 :root{--sr:env(safe-area-inset-right,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--st:env(safe-area-inset-top,0px)}
 #bem{position:fixed;left:calc(12px + var(--sl));top:calc(106px + var(--st));z-index:2}
 #bvc{position:fixed;left:calc(12px + var(--sl));top:calc(154px + var(--st));z-index:2}
-#bjump{position:fixed;right:calc(49px + var(--sr));bottom:calc(132px + var(--sb));z-index:3;width:46px;height:46px}
+#bjump{position:fixed;right:calc(49px + var(--sr));bottom:calc(138px + var(--sb));z-index:3;width:46px;height:46px;touch-action:none;user-select:none;-webkit-user-select:none}
 #bsit{position:fixed;right:calc(84px + var(--sr));bottom:calc(8px + var(--sb));z-index:3}
 #bptt{position:fixed;right:calc(136px + var(--sr));bottom:calc(8px + var(--sb));z-index:3}
 /* monsters: the fight buttons, my HP bar, slime health bars, floating damage numbers */
@@ -236,16 +236,16 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .mhp i{display:block;height:100%;width:100%;background:#e8564a;transform-origin:left center}
 .dmg{position:absolute;left:0;top:0;display:none;font:700 20px var(--display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.8);white-space:nowrap}
 .dmg.xp{color:#ffd24a;font-size:16px}.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
-#herobar{position:fixed;left:50%;bottom:calc(21px + var(--sb));transform:translateX(-50%);display:none;align-items:center;gap:8px;z-index:3}
-#herobar.on{display:flex}#bhero{width:38px;height:38px;font:700 12px var(--display);padding:0;flex:none}
+#herobar{position:fixed;left:50%;bottom:calc(12px + var(--sb));transform:translateX(-50%);display:none;align-items:flex-end;gap:8px;z-index:3}   /* (bottom 12px: level with the clock's bottom edge) */
+#herobar.on{display:flex}#bhero{width:30px;height:30px;font:700 12px var(--display);padding:0;flex:none}
 #hpb{position:relative;width:min(280px,44vw);height:18px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:block;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
-@media (max-height:600px){#herobar{left:calc(205px + var(--sl));transform:none}#hpb{width:max(110px,min(280px,calc(100vw - 560px)))}}   /* a phone on its side: the bar sits on the bottom row between the clock and the action buttons */#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
+@media (max-height:600px){#hpb{width:max(100px,min(280px,calc(100vw - 530px)))}}   /* a phone on its side: still centred, and narrower on a narrow screen so it keeps clear of the clock (left) and the sit / talk buttons (right) */#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
 #hpb b{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
 #fight{display:none}
 #fight.show{display:contents}#fight .round{position:fixed;z-index:3;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}
-#fight #batk{right:calc(76px + var(--sr));bottom:calc(58px + var(--sb));width:66px;height:66px;font-size:32px}
-#fight #bslam{right:calc(160px + var(--sr));bottom:calc(74px + var(--sb))}
-#fight #bdash{right:calc(25px + var(--sr));bottom:calc(26px + var(--sb))}
+#fight #batk{right:calc(69px + var(--sr));bottom:calc(57px + var(--sb));width:80px;height:80px;font-size:38px}
+#fight #bslam{right:calc(160px + var(--sr));bottom:calc(80px + var(--sb))}
+#fight #bdash{right:calc(25px + var(--sr));bottom:calc(32px + var(--sb))}
 #fight .round::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(10,10,20,.55) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
 #rpg{position:fixed;right:calc(84px + env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);width:min(320px,max(42vw,250px));max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;display:none;flex-direction:column;gap:6px;padding:10px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:3;font:700 13px var(--body)}
 #rpg.on{display:flex}#rph{display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font:600 16px var(--display)}#rph.drag{cursor:grabbing}#rph .gmgrip{opacity:.45;font-weight:400;margin-left:6px}#rpg .round{width:30px;height:30px;font-size:14px}
@@ -3687,7 +3687,8 @@ function sitDown(){if(riding||open)return;const s=nearSeat();
   bsit.innerHTML=I_STAND;bsit.title='Stand up · C';JUMP.y=JUMP.v=0}
 function standUp(){if(!sitting)return;sitting.who=null;sitting=null;standPose(me);bsit.innerHTML=I_SIT;bsit.title='Sit down (on a bench or chair if one is close) · C'}
 const sitToggle=()=>sitting?standUp():sitDown();
-bsit.onclick=sitToggle;bjump.onclick=doJump;
+bsit.onclick=sitToggle;
+bjump.addEventListener('pointerdown',e=>{e.preventDefault();doJump()});bjump.onclick=e=>{if(e.detail===0)doJump()};   // (on press, not on release-and-click: a click is easily lost while the other thumb is down on the stick; a click with no pointer, from the keyboard, still jumps)
 function buildRaceText(){const font=s=>'600 '+s+'px Fredoka, Nunito, system-ui, sans-serif';
   RACE_NUMS.forEach((m,i)=>{m.map=canvasTex(128,128,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='#fbfaf6';g.font=font(108);g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),w/2,h/2+6)});m.needsUpdate=true});
   [1.05,.72,.48].forEach((hh,i)=>{const col=['#d9a21b','#8f96a3','#b06a30'][i],H2=Math.round(hh*200);
