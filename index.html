@@ -256,6 +256,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #rpg.on{display:flex}#rph{display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font:600 16px var(--display)}#rph.drag{cursor:grabbing}#rph .gmgrip{opacity:.45;font-weight:400;margin-left:6px}#rpg .round{width:30px;height:30px;font-size:14px}
 #hpw{position:relative;height:170px;flex:none;border-radius:12px;overflow:hidden;touch-action:none;background:var(--pvw)}
 @media (max-height:600px){#hpw{height:120px}}
+#ofnote{margin:0 0 8px;font:600 12px/1.4 var(--body);color:var(--ink-soft)}
 #rpcls{display:flex;gap:6px}#rpcls button{flex:1;border:0;border-radius:999px;padding:6px 4px;background:var(--paper-2);color:var(--ink);font:700 12px var(--body);cursor:pointer}#rpcls button.on{background:var(--ink);color:var(--paper)}
 #rpxp{position:relative;height:16px;border-radius:8px;background:var(--paper-2);overflow:hidden}#rpxp i{position:absolute;inset:0;background:linear-gradient(90deg,#f2b441,#ffd96a);transform-origin:left center}#rpxp small{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:var(--ink)}
 #rpg .rps{margin-top:4px;font:600 14px var(--display);display:flex;justify-content:space-between;align-items:baseline}#rpg .rps small{font:700 12px var(--body);color:var(--ink-soft)}
@@ -376,13 +377,13 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
   <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
-  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
       <div class="pane" id="p_face" role="tabpanel" aria-labelledby="t_face"><div class="lbl">Gender</div><div class="chips" id="chgender"></div><div class="lbl">Skin tone</div><div class="sws" id="swskin"></div><div class="lbl">Face</div><div class="chips" id="chface"></div><div class="lbl">Eye colour</div><div class="sws" id="sweye"></div></div>
       <div class="pane" id="p_hair" role="tabpanel" aria-labelledby="t_hair"><div class="lbl">Hair colour</div><div class="sws" id="swhair"></div><div class="lbl">Hair style</div><div class="chips" id="chhair"></div></div>
-      <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><div id="oflist"></div></div></div></div>
+      <div class="pane" id="p_out" role="tabpanel" aria-labelledby="t_out"><p id="ofnote" class="hint">Your outfit comes from your class (Knight, Mage or Archer). You can change class in the Hero window.</p><div id="oflist"></div></div></div></div>
   <div id="ostat"><div class="lbl">Status</div><div class="chips" id="chstat"></div></div>
   <div id="onames"><label id="mnl">Your name<input id="myname" maxlength="16" autocomplete="off" spellcheck="false"></label>
   <label id="fnl">Friend's name<input id="fname" maxlength="16" autocomplete="off" spellcheck="false"></label>
@@ -2340,7 +2341,8 @@ function bake(list){const geos=list.map(q=>wash(q.geo.clone())),outs=list.map(q=
   const ix=geos.every(g=>g.index),fix=g=>!ix&&g.index?g.toNonIndexed():g;return{geo:mergeGeometries(geos.map(fix)),ogeo:mergeGeometries(outs.map(fix))}}
 const part=(geo,c,gl=.08,k)=>({geo:paint(geo,c,gl),ink:inkOf(c,k||.42)});   // (one coloured part, from a hex or a Color)
 /* ---- the two models (the parts, pivots and Dev outfit of each; every person is built from one of them, by gender) ---- */
-const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},SUNO={n:'Sunny',ic:'🌻',top:{c:0xf2b84b},bot:{c:0x5a7cb0}},
+const DEVO={n:'Dev',ic:'💻',top:{c:0x25272e},bot:{c:0x383b47}},SUNO={n:'Sunny',ic:'🌻',top:{c:0xf2b84b},bot:{c:0x5a7cb0}},MAGEO={n:'Mage',ic:'🔮',top:{c:0x4b3bbf},bot:{c:0x2b2350}},ARCHO={n:'Archer',ic:'🏹',top:{c:0x2f7a43},bot:{c:0x6b4a2e}},
+  MAGEV={id:'mage',top:0x4b3bbf,bot:0x2b2350},ARCHV={id:'archer',top:0x2f7a43,bot:0x6b4a2e},   /* the class outfits: a deep-blue robe and wizard hat, and a green hunter's tunic with a quiver and a feathered cap */
   SUNV={id:'sunny',top:0xf2b84b,bot:0x5a7cb0}   /* the Sunny outfit: a yellow hoodie and denim (the Dev's colours are the plain defaults) */,TIARA=['TiaraBand','TiaraGem','TiaraPeak','TiaraPearl','TiaraWing'];
 // how shiny each of the models' materials is (metals are mirror-like; clearcoat leathers, hair, boots and eyes glossy; skin barely)
 const GLOSS={CK_Steel:.9,CK_SteelDark:.85,CK_Gold:.88,CK_Black:.4,CK_Leather:.35,CK_LeatherDark:.35,CK_Boot:.6,CK_Glove:.35,CK_Hair:.6,CK_Skin:.22,CK_Ear:.2,CK_Nose:.3,CK_Mouth:.3,CK_EyeExport:.9,
@@ -2353,12 +2355,12 @@ const CFG=[
   head:['Head','Lid','Ear','Nose','Mouth','Hair','Brow','Eye','Shine','Shine2'],arm:['UpperArm','Pauldron','PauldronRim','Lame1','Lame2','Vambrace','VambPlate','Glove','Fingers'],leg:['Tasset','Greave','Boot','BootCuff'],
   skin:['Head','Lid','Fingers','Ear','Nose','Mouth'],hair:['Hair','Brow'],eye:['Eye'],eyefix:[],shine:['Shine','Shine2'],hat:[],dev:{Boot:'#f4f4f4',BootCuff:'#d9d4c8'},print:[0,.72,.28],
   dv:{body:[[.001,.33],[.27,.33],[.31,.38],[.315,.55],[.30,.75],[.25,.90],[.19,.97],[.001,1.0]],hem:[.345,.30],pocket:[0,.5,.245],hood:[.99,.2],blob:[0,1.0,-.2],str:[.06,.95,.19,.07,.72,.235],A:[.34,.90,0],B:[.45,.45,.02],ar:[.115,.092],la:[.23,.50,.04],lb:[.215,.19,.03],lr:[.115,.092],ph:{cx:.74,cy:1.36,bx:.74,by:.9}},
-  outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO,SUNO]},
+  outfits:[{n:'Knight',ic:'⚔️',top:{c:0xc9ccd6},bot:{c:0x40424a}},DEVO,SUNO,MAGEO,ARCHO]},
  {id:'princess',S:1.55,EYEY:1.32,pre:/^PR_/,ARM:[[-.33,.80,0],[.33,.80,0]],LEG:[[-.12,.36,.02],[.12,.36,.02]],sy:.47,pv:.56,ride:[1.05,-.42,.22],
   head:['Blush','Brow','Ear','Eye','Hair','Head','Iris','Lash','LashA','Mouth','Nose','Pupil','Shine','Shine2',...TIARA],arm:['Cuff','Hand','Puff','Sleeve'],leg:['Leg','Shoe'],
   skin:['Head','Hand','Ear','Leg','Neck','Blush','Nose','Mouth'],hair:['Hair','Brow'],eye:['Iris'],eyefix:['Eye','Pupil','Lash','LashA'],shine:['Shine','Shine2'],hat:TIARA,dev:{Shoe:'#f4f4f4'},recolor:{PR_Dress:'#fbf9ff',PR_Dress2:'#ebe6f5',PR_Lace:'#fcfaff',PR_Shoe:'#f6f3fa'},print:[0,.70,.255],
   dv:{body:[[.001,.34],[.26,.34],[.30,.39],[.31,.52],[.29,.70],[.25,.84],[.19,.93],[.001,.98]],hem:[.355,.29],pocket:[0,.5,.24],hood:[.955,.19],blob:[0,.99,-.17],str:[.05,.9,.16,.06,.68,.22],A:[.34,.84,0],B:[.43,.57,.02],ar:[.105,.088],la:[.12,.52,.02],lb:[.12,.13,.02],lr:[.095,.08],ph:{cx:.80,cy:1.30,bx:.78,by:.86}},
-  outfits:[{n:'Princess',ic:'👑',top:{c:0xfbf9ff},bot:{c:0xd5c9ee}},DEVO,SUNO]}];
+  outfits:[{n:'Princess',ic:'👑',top:{c:0xfbf9ff},bot:{c:0xd5c9ee}},DEVO,SUNO,MAGEO,ARCHO]}];
 const MC=new Map();   // merged meshes already made (the same for everyone), by name
 // the model's own geometry as plain (not interleaved) float attributes: just positions, normals and the index
 function plain(g){const o=new THREE.BufferGeometry();for(const k of ['position','normal']){const a=g.attributes[k],n=a.count,f=new Float32Array(n*3);for(let i=0;i<n;i++){f[i*3]=a.getX(i);f[i*3+1]=a.getY(i);f[i*3+2]=a.getZ(i)}o.setAttribute(k,new THREE.Float32BufferAttribute(f,3))}
@@ -2409,6 +2411,10 @@ function devParts(g,limb,V={}){const m=CFG[g],d=m.dv,navy=V.top??0x25272e,bot=V.
     out.push(part(new THREE.TorusGeometry(d.hem[1],.022,10,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0],0),dark));
     out.push(part(ellG(.17,.07,.03,d.pocket),cshade(navy,.88)));if(!V.id){out.push(part(ghDecal(d,.7,.2),0xeceef3,.05));}   // (the GitHub mark is the Dev's)
    
+    if(V.id==='mage'){const sk=lathe([[.001,.1],[.41,.1],[.38,.2],[.34,.33],[.001,.34]],44);sk.scale(1,1,.86);out.push(part(sk,navy),part(new THREE.TorusGeometry(.4,.026,8,44).rotateX(Math.PI/2).scale(1,.86,1).translate(0,.105,0),0xe8c25a,.5),part(new THREE.TorusGeometry(d.hem[1]+.01,.03,8,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0]+.02,0),0xe8c25a,.5))}   // (a long robe with a gold hem)
+    if(V.id==='archer'){out.push(part(new THREE.CylinderGeometry(.075,.06,.6,12).rotateZ(.38).translate(.17,.78,-.3),0x6b4528,.2),part(new THREE.CylinderGeometry(.082,.082,.05,12).rotateZ(.38).translate(.255,1.055,-.3),0x3d2814,.2));
+      [[.0,.02],[.06,-.04],[.11,.03]].forEach(([dx,dz],i)=>out.push(part(tube([.27+dx*.6,1.0,-.3+dz],[.31+dx*.7,1.2,-.3+dz],.012,.012,6),0xe9dcc0,.2),part(ellG(.025,.06,.025,[.31+dx*.7,1.24,-.3+dz],6),i===1?0xd9503f:0xf4f4f4,.2)));   // (a quiver with three feathered arrows)
+      out.push(part(tube([-.2,1.0,.15],[.22,.55,.2],.02,.02,8),0x3d2814,.2),part(new THREE.TorusGeometry(d.hem[1]-.04,.03,8,40).rotateX(Math.PI/2).scale(1,.84,1).translate(0,d.hem[0]+.16,0),0x3d2814,.3))}   // (a strap across the chest and a belt)
     out.push(part(new THREE.TorusGeometry(d.hood[1],.07,10,32).rotateX(Math.PI/2-.25).translate(0,d.hood[0],-.02),navy),part(ellG(.23,.15,.12,d.blob),navy));
     [-1,1].forEach(s=>out.push(part(tube([s*d.str[0],d.str[1],d.str[2]],[s*d.str[3],d.str[4],d.str[5]],.016,.016,8),'#f2f2f2')))}
   if(/^arm/.test(limb)){const i=limb==='arm0'?0:1,s=i?1:-1,A=[s*d.A[0],d.A[1],d.A[2]],B=[s*d.B[0],d.B[1],d.B[2]];
@@ -2428,6 +2434,15 @@ function phonesParts(g){const p=CFG[g].dv.ph,y=0xc4c8d2,d=0x2b2b36,o=[];
   [-1,1].forEach(s=>{o.push(part(new THREE.CylinderGeometry(.19,.19,.14,28).rotateZ(Math.PI/2).translate(s*p.cx,p.cy,0),y,.5),part(new THREE.CylinderGeometry(.13,.13,.06,24).rotateZ(Math.PI/2).translate(s*(p.cx+.08),p.cy,0),d,.4))});
   const b=new THREE.TorusGeometry(1,.035,10,48,Math.PI);b.scale(p.bx,p.by,p.bx);o.push(part(b.translate(0,p.cy,0),d,.4));return o}
 
+function wizardHat(g){const p=CFG[g].dv.ph,y0=p.cy+p.by*.7,o=[];   // a pointed blue hat with a gold band and a bent tip
+  o.push(part(new THREE.CylinderGeometry(.98,1.0,.05,32).translate(0,y0,0),0x3a2f9a,.2),part(new THREE.TorusGeometry(.62,.045,8,32).rotateX(Math.PI/2).translate(0,y0+.1,0),0xe8c25a,.5));
+  o.push(part(new THREE.ConeGeometry(.64,.8,24).translate(0,y0+.4,0),0x3a2f9a,.2));
+  const tip=new THREE.ConeGeometry(.3,.62,20);tip.translate(0,.31,0);tip.rotateX(-.55);tip.translate(0,y0+.72,-.06);o.push(part(tip,0x3a2f9a,.2));
+  o.push(part(ellG(.07,.07,.07,[0,y0+1.2,-.36],8),0xffe9a0,.8));return o}
+function archerHat(g){const p=CFG[g].dv.ph,y0=p.cy+p.by*.72,o=[];   // a green hunter's cap with a feather
+  const cap=new THREE.SphereGeometry(.78,24,14,0,Math.PI*2,0,Math.PI/2);cap.scale(1,.55,1);cap.translate(0,y0,0);o.push(part(cap,0x2f7a43,.2),part(new THREE.CylinderGeometry(.84,.88,.05,28).translate(0,y0,0),0x24603a,.2));
+  o.push(part(tube([.55,y0+.18,.1],[.78,y0+.62,-.2],.035,.012,8),0xf4f4f4,.2),part(tube([.55,y0+.18,.1],[.66,y0+.4,-.04],.04,.03,8),0xd9503f,.2));return o}
+
 /* ---- one person: the arms and legs are groups made once (the game keeps hold of them); the body is put together for the gender, and the outfit on top ---- */
 const mkM=(par,key,pick,mat,omat)=>{const m=merged(key,pick);if(!m)return;const a=new THREE.Mesh(m.geo,mat);a.castShadow=true;par.add(a);if(omat){const b=new THREE.Mesh(m.ogeo,omat);par.add(b)}};
 function make(parent=W){
@@ -2446,14 +2461,14 @@ function assemble(p,g){const c=p.cb,m=CFG[g],keep=new Set([...p.arms,...p.legs])
   mkM(c.eyeG,g+'|eye',()=>eyeOf(g,'eye'),c.eye,null);mkM(c.eyeG,g+'|eyefix',()=>eyeOf(g,'eyefix'),VCM,null);mkM(c.eyeG,g+'|shine',()=>eyeOf(g,'shine'),WHITE,null);
   for(const l of ['arm0','arm1','leg0','leg1'])mkM(c.limbs[l],g+'|skin|'+l,()=>skinOf(g,l),c.skin,c.skinOL);
   p.sy=m.sy;p.pv=m.pv;[p.rideY,p.rideZ,p.rideT]=m.ride}
-function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,V=oi===2?SUNV:{},key=g+(oi===2?'|sun|':dev?'|dev|':'|main|');c.out.forEach(o=>o.parent&&o.parent.remove(o));c.out=[];
+function clothe(p,oi){const c=p.cb,g=c.g,m=CFG[g],dev=!!oi,V=oi===2?SUNV:oi===3?MAGEV:oi===4?ARCHV:{},key=g+['|main|','|dev|','|sun|','|mage|','|arch|'][oi];c.out.forEach(o=>o.parent&&o.parent.remove(o));c.out=[];
   for(const limb of ['torso','arm0','arm1','leg0','leg1']){const par=c.limbs[limb],before=par.children.length;
     mkM(par,key+limb,()=>[...fixedOf(g,limb,dev),...(dev?devParts(g,limb,V):[])],VCM,VCO);
     if(oi===1&&limb==='torso')par.add(lgtmMesh(g));
     c.out.push(...par.children.slice(before))}
   c.hatG.children.slice().forEach(o=>c.hatG.remove(o));
-  mkM(c.hatG,key+'hat',()=>oi===2?[]:dev?phonesParts(g):hatOf(g),VCM,VCO)}
-function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=Math.min(Math.max(cfg.outfit|0,0),2),g=(cfg.gender|0)>0&&CFG[1].parts?1:0;
+  mkM(c.hatG,key+'hat',()=>oi===2?[]:oi===3?wizardHat(g):oi===4?archerHat(g):dev?phonesParts(g):hatOf(g),VCM,VCO)}
+function dress(p,cfg){const c=p.cb,s=p.st,eye=cfg.eye|0,oi=Math.min(Math.max(cfg.outfit|0,0),4),g=(cfg.gender|0)>0&&CFG[1].parts?1:0;
   if(c.g!==g){assemble(p,g);s.oi=undefined}
   if(s.skin!==cfg.skin){const sc=SKINS[cfg.skin][1],ink=inkOf(cshade(sc,.78),.6);c.skin.color.set(sc);c.skinOL.color.copy(ink)}
   if(s.hcol!==cfg.hcol){const hc=HAIRC[cfg.hcol][1];c.hair.color.set(hc);c.hairOL.color.copy(inkOf(hc,.4))}
@@ -2987,6 +3002,7 @@ const of=$('outfits'),ofl=$('oflist'),fname=$('fname'),myname=$('myname'),tagP=$
 /* ---- your state follows your account: look, names, the friend, who you play and where you stand. This device keeps a copy (so a guest, or no network, still gets it back);
    a signed-in account also keeps it in the cloud, so a new device or a cleared browser starts where you left off. Nothing is written to the cloud until what is saved there
    has been read, so a slow or failed read can never wipe it. ---- */
+let LVL=1;   // my level, told to the others with my position (a level 99 hero has an aura everyone can see)
 let rpgHook=null;   // (the monster block's level and skills: how they are saved to, and read back from, the account)
 let cloud=false,dirty=false,saveT=0,posDone=false,lastPos=null,myCustom='',PST='not started';   // PST: what the saved-state sync is doing, shown by ?debug
    // myCustom: the name you chose for yourself ('' = follow your Google name)   // cloud: the saved state was read (or there is none yet), so changes may be written
@@ -3072,10 +3088,10 @@ const TABS=['face','hair','out'];
 function tab(n){TABS.forEach(t=>{const on=t===n;$('t_'+t).classList.toggle('on',on);$('t_'+t).setAttribute('aria-selected',on);$('p_'+t).classList.toggle('on',on)});PV.focus(n)}
 TABS.forEach(t=>$('t_'+t).onclick=()=>tab(t));tab('out');
 function refreshPeople(){const c=PPL[ctl];
-  if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)';b.hidden=i===1&&IS_GM!==true});   // (the Dev is only shown to the GM)   // (the first outfit is the knight's armour or the princess's gown)
+  if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)';b.hidden=IS_GM!==true});   // (the Dev is only shown to the GM)   // (the first outfit is the knight's armour or the princess's gown)
   Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
-  $('who').textContent=c.name;PV.show(c);HPV.show(c);
+  $('who').textContent=c.name;$('ofnote').hidden=IS_GM===true;PV.show(c);HPV.show(c);
   if(document.activeElement!==dname)dname.value=dogName;if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
 $('bo').onclick=()=>{of.style.display=of.style.display==='flex'?'none':'flex';if(of.style.display==='flex')PV.start()};
 // the menu closes with its x, by tapping anywhere outside it, or with Escape
@@ -3117,7 +3133,10 @@ Object.keys(EMOSVG).forEach(k=>{const b=document.createElement('button');b.type=
     chatIn.value=n;const c=Math.min(a+EMOCH[k].length,n.length);chatIn.focus();try{chatIn.setSelectionRange(c,c)}catch(_){}emoShow(false)};emoPick.appendChild(b)});
 emoBtn.onclick=()=>{emoShow(!emoPick.classList.contains('on'));chatIn.focus()};
 addEventListener('pointerdown',e=>{if(emoPick.classList.contains('on')&&!emoPick.contains(e.target)&&e.target!==emoBtn)emoShow(false)},true);
-function sendChat(){const t=clean(chatIn.value).slice(0,80);if(!t||!room)return;
+function sendChat(){const t=clean(chatIn.value).slice(0,80);
+  const cm=/^\/level(?:\s+(\d{1,3}))?\s*$/i.exec(t);   // a command for the GM alone: "/level 99" sets your own level (to try things out, like the level 99 aura). Nothing is sent to anyone.
+  if(cm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cm[1])toast('','Type /level and a number from 1 to 99, like /level 99',true);else if(rpgHook)rpgHook.setLevel(+cm[1]);return}
+  if(!t||!room)return;
   if(performance.now()-lastSend<1200)return;
   if(!room.connected()){toast('','Not connected yet - try again in a moment',true);return}
   lastSend=performance.now();chatIn.value='';
@@ -3160,7 +3179,7 @@ const hasLook=u=>{try{return !!localStorage.getItem(LKEY(u))}catch(_){return fal
 // the first time (no saved look on this device or in the account): pick the knight or the princess. Each starts with its own hair colour (black / white) and eyes.
 const DEFHAIR=()=>[0,HAIRC.length-1];
 let IS_GM=null;   // null until we know; the Dev outfit is the GM's alone
-function devGate(){if(IS_GM===false&&PPL[0].outfit===1){PPL[0].outfit=0;dress(me,PPL[ctl]);saveLook(0);refreshPeople()}}   // (anyone else wearing it goes back to their own first outfit: the knight or the princess)
+function devGate(){if(IS_GM!==false)return;const w=rpgHook&&rpgHook.outfit?rpgHook.outfit():0;if(PPL[0].outfit!==w){PPL[0].outfit=w;dress(me,PPL[ctl]);saveLook(0);refreshPeople()}}   // (everyone but the GM wears their class's outfit: the knight's own armour or gown, the mage's robe, the archer's tunic)   // (anyone else wearing it goes back to their own first outfit: the knight or the princess)
 function pairUp(){if(!CB||CB.genders<2)return;const g=1-(PPL[0].gender|0),f=PPL[1],o=g?0:2;if((f.gender|0)===g&&f.outfit===o)return;if(f.gender!==g&&f.hcol===DEFHAIR()[1-g])f.hcol=DEFHAIR()[g];f.gender=g;f.outfit=o;saveLook(1)}   // the friend is always the other gender from you (you pick yours; theirs follows), and always in that gender's own look: the princess if she is a girl, the Sunny outfit if he is a boy (the Dev is the GM's)
 function askCharacter(){if(!CB||CB.genders<2)return;const el=$('pick');if(!el.hidden)return;
   if(gateOn){clearTimeout(askCharacter.t);askCharacter.t=setTimeout(askCharacter,400);return}   // (not over the login screen: wait until it is gone, whether they sign in or carry on without)
@@ -4119,7 +4138,7 @@ function pushState(force){const now=performance.now();if(!on)return;
   lastTrack=now;trackDue=false;dueMin=500;const p=PPL[ctl];
   WS.track({n:clean(p.name).slice(0,16)||'Someone',a:packLook(p),u:MYST,x:+P.position.x.toFixed(1),z:+P.position.z.toFixed(1),r:+wrapA(P.rotation.y).toFixed(2),b:my.b,bt:my.bt,s:my.s,st:my.st,pk:my.pk})}
 function sendPos(force,mv){const now=performance.now();lastSend=now;sent.m=mv;sent.r=P.rotation.y;
-  WS.send('p',{k:myKey,x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2),m:mv,v:VC.on?1:0})}
+  WS.send('p',{k:myKey,x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2),m:mv,v:VC.on?1:0,l:LVL})}
 // a position can arrive a moment BEFORE that person's presence entry (they are two separate messages): keep the latest one per person and use it as soon as they appear,
 // otherwise a standing-still stranger would stay invisible until they moved
 const early=new Map();
@@ -4128,7 +4147,8 @@ function applyPos(R,d){const x=num(d.x,-2000,2000),z=num(d.z,-2000,2000),r0=num(
   const r=wrapA(r0),now=performance.now(),mv=d.m?1:0;
   if(!R.has){R.has=true;R.x=R.tx=x;R.z=R.tz=z;R.r=r;R.vx=R.vz=0;R.rig.root.visible=true}
   else{const dt=(now-R.lastP)/1000;if(mv&&dt>.05&&dt<1.5){R.vx=(x-R.tx)/dt;R.vz=(z-R.tz)/dt}else R.vx=R.vz=0}
-  R.tx=x;R.tz=z;R.tr=r;R.m=mv;R.lastP=now;if(d.v===1||d.v===0){R.vc=d.v===1;R.vcp=true}}   // (d.v: whether they have voice on)
+  R.tx=x;R.tz=z;R.tr=r;R.m=mv;R.lastP=now;if(d.v===1||d.v===0){R.vc=d.v===1;R.vcp=true}
+  const lv=num(d.l,1,99);if(lv!=null)R.lv=lv|0}   // (d.v: whether they have voice on)
 WS.on('p',d=>{if(!d||typeof d.k!=='string'||d.k===myKey)return;const R=remotes.get(d.k);
   if(R){applyPos(R,d);return}
   early.delete(d.k);early.set(d.k,d);if(early.size>64)early.delete(early.keys().next().value)});
@@ -4237,7 +4257,7 @@ const MOB=(()=>{
     v3=new THREE.Vector3(),fxs=[],nums=[];
   let simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0],bossDead=-1e9,toldLair=false,fightUntil=0,host=true;
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
-  const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=30,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
+  const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3),
     maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1)),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
     cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])),RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
@@ -4254,11 +4274,11 @@ const MOB=(()=>{
     if(sum(s)>3*(l-1)||sum(k)-3>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
     RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;RPG.c=+a[8]===1||+a[8]===2?+a[8]:0;return true}
   function rpgSave(){try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
-  function rpgApply(){const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);
-    const c=RPG.c,kd=KDEF();btn.b.textContent=BRSI[c];btn.b.title=BRST[c][1]+' · R';btn.a.textContent=ATKI[c];btn.z.textContent=SLMI[c];btn.d.textContent=DSHI[c];btn.a.title=kd[0][1]+' · F';btn.z.title=kd[1][1]+' · G';btn.d.title=kd[2][1]+' · Q';rpgDraw()}
+  function rpgApply(){LVL=RPG.l;const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);
+    const c=RPG.c,kd=KDEF();if(typeof devGate==='function')devGate();btn.b.textContent=BRSI[c];btn.b.title=BRST[c][1]+' · R';btn.a.textContent=ATKI[c];btn.z.textContent=SLMI[c];btn.d.textContent=DSHI[c];btn.a.title=kd[0][1]+' · F';btn.z.title=kd[1][1]+' · G';btn.d.title=kd[2][1]+' · Q';rpgDraw()}
   function rpgDraw(){bHero.textContent='Lv'+RPG.l;if(!rpgEl.classList.contains('on'))return;
     document.querySelectorAll('#rpcls button').forEach(b=>{const on=+b.dataset.c===RPG.c;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
-    $('rplv').textContent='Lv '+RPG.l;const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
+    $('rplv').textContent='Lv '+RPG.l+(RPG.l>=AURAL?' ✨':'');const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
     const sp=spLeft(),kp=kpLeft();$('rpsp').textContent=sp+' point'+(sp===1?'':'s')+' to spend';$('rpkp').textContent=kp+' point'+(kp===1?'':'s')+' to spend';
     $('rpst').innerHTML=SDEF.map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+'<small>'+d[1]+'</small></div><span class="rpv">'+RPG.s[i]+'</span><button type="button" class="rpb" data-s="'+i+'" aria-label="Add a point to '+d[0]+'"'+(sp>0?'':' disabled')+'>+</button></div>').join('');
     $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst<small>'+BRST[RPG.c][2]+'. It charges as you fight, then press 🌟R.</small></div></div>'}
@@ -4268,9 +4288,9 @@ const MOB=(()=>{
   $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3<=0)return;if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.',ok:'Reset',cancel:'Keep'})){RPG.s=[0,0,0];RPG.k=[1,1,1];rpgApply();rpgSave()}};
   function gainXp(n){n=Math.max(1,Math.round(n*Math.max(.3,1-.05*(RPG.l-1))));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP','xp');let up=0;
     while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
-    if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('','Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
+    if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
-  rpgHook={out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+  rpgHook={setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false')};
@@ -4299,6 +4319,22 @@ const MOB=(()=>{
     g.position.set(x0,y0,z0);W.add(g);if(kind!=='o')g.lookAt(x1,y1,z1);
     const mats=[mat];if(mat.userData&&mat.userData.x)mats.push(mat.userData.x);
     fxs.push({o:g,k:'p',p:[x0,y0,z0,x1,y1,z1],t0:performance.now(),dur:Math.max(90,Math.hypot(x1-x0,y1-y0,z1-z0)/spd*1000),mats,done})}
+  /* ---- the aura of a level 99 hero: a golden glow standing round them, a ring on the ground, and sparks rising ---- */
+  const AURAL=99,auraTex=(()=>{const cv=document.createElement('canvas');cv.width=4;cv.height=64;const x=cv.getContext('2d'),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,'rgba(255,214,90,0)');g.addColorStop(.5,'rgba(255,214,90,.5)');g.addColorStop(1,'rgba(255,240,170,.95)');x.fillStyle=g;x.fillRect(0,0,4,64);return new THREE.CanvasTexture(cv)})(),
+    auraCylG=new THREE.CylinderGeometry(1.05,1.3,3.6,28,1,true).translate(0,1.8,0),auraRingG=new THREE.RingGeometry(.95,1.6,40).rotateX(-Math.PI/2),
+    auraCylM=new THREE.MeshBasicMaterial({map:auraTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),auraRingM=new THREE.MeshBasicMaterial({color:'#ffd45a',transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),
+    auraPtsM=new THREE.PointsMaterial({color:'#ffe27a',size:.14,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),auras=new Map();
+  function auraOn(root){let a=auras.get(root);if(a)return a;const g=new THREE.Group(),cyl=new THREE.Mesh(auraCylG,auraCylM),ring=new THREE.Mesh(auraRingG,auraRingM),N=26,pos=new Float32Array(N*3),pg=new THREE.BufferGeometry();
+    ring.position.y=.06;pg.setAttribute('position',new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(pg,auraPtsM);pts.frustumCulled=false;g.add(cyl,ring,pts);root.add(g);a={g,cyl,ring,pg,pos,N,live:true};auras.set(root,a);return a}
+  function auraOff(root){const a=auras.get(root);if(!a)return;root.remove(a.g);a.pg.dispose();auras.delete(root)}
+  function auraTick(t,now){const want=new Set();
+    if(RPG.l>=AURAL)want.add(P);
+    NET.peers().forEach(R=>{if((R.lv|0)>=AURAL)want.add(R.rig.root)});
+    want.forEach(r=>auraOn(r));[...auras.keys()].forEach(r=>{if(!want.has(r))auraOff(r)});   // (a figure is handed on to the next arrival when someone leaves: its aura goes with them)
+    auraCylM.opacity=.8+.2*Math.sin(t*2.4);auraRingM.opacity=.45+.2*Math.sin(t*3.1);
+    auras.forEach(a=>{a.cyl.rotation.y=t*.4;a.ring.rotation.y=-t*.6;a.ring.scale.setScalar(1+.08*Math.sin(t*3.1));
+      for(let i=0;i<a.N;i++){const f=((t*.55+i/a.N)%1),ang=i*2.399+t*1.3,r=.75+.25*Math.sin(t*2+i);a.pos[i*3]=Math.cos(ang)*r;a.pos[i*3+1]=f*3.3;a.pos[i*3+2]=Math.sin(ang)*r}
+      a.pg.attributes.position.needsUpdate=true})}
   function burst(x,y,z,col){const g=new THREE.Group(),mat=fxMat(col,.9),vs=[];g.position.set(x,y+.5,z);
     for(let i=0;i<9;i++){const p=new THREE.Mesh(pG,mat),a=i*.7+Math.random();p.userData.v=[Math.cos(a)*(2+Math.random()*2),2+Math.random()*3,Math.sin(a)*(2+Math.random()*2)];g.add(p)}
     W.add(g);fxs.push({o:g,k:'b',t0:performance.now(),dur:650,mats:[mat]})}
@@ -4476,7 +4512,7 @@ const MOB=(()=>{
       if(T.boss&&m.st!==3&&d<50)bossM=m;
       const sc=m.st!==3&&!T.boss&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
       if(sc){m.el.style.display='block';m.el.style.transform='translate('+(sc[0]-23)+'px,'+sc[1]+'px)';m.el.firstChild.style.transform='scaleX('+Math.max(0,m.hp/m.hpm)+')'}else m.el.style.display='none'});
-    fxTick(dt,now);
+    fxTick(dt,now);auraTick(t,now);
     if(ANIM.k){const sec=(now-ANIM.t0)/1000;if(sec<DUR[ANIM.k])poseAt(me,ANIM.k,sec,ANIM.c);else{endPose(me);ANIM.k=''}}
     NET.peers().forEach(R=>{const a=R.fxa;if(!a)return;const sec=(now-a.t0)/1000;if(sec<DUR[a.k])poseAt(R.rig,a.k,sec,a.c);else{endPose(R.rig);R.fxa=null}});
     for(let i=nums.length-1;i>=0;i--){const n=nums[i],a=(now-n.t)/900;if(a>=1){n.el.remove();nums.splice(i,1);continue}const p=onScr(n.x,n.y+a*1.2,n.z);if(p){n.el.style.display='block';n.el.style.transform='translate('+p[0]+'px,'+p[1]+'px) translate(-50%,-50%)';n.el.style.opacity=1-a*a}else n.el.style.display='none'}
@@ -4499,6 +4535,7 @@ const MOB=(()=>{
     [-1,1].forEach(sd=>{const arm=new THREE.Mesh(new THREE.BoxGeometry(1.4,2.6,2.6),stone);at(arm,bx+sd*3.9,bz+1.3,1.0);arm.castShadow=true;g.add(arm);const c=new THREE.Mesh(new THREE.ConeGeometry(.7,3.6,5),cry);at(c,bx+sd*2.7,bz-.2,6.6);c.rotation.z=-sd*.25;g.add(c)});
     const top=new THREE.Mesh(new THREE.ConeGeometry(1.1,4.6,5),cry);at(top,bx,bz,8.4);g.add(top);W.add(g)}
   buildLair();
+  {const b=$('gmlvb');if(b)b.onclick=()=>{if(rpgHook)rpgHook.setLevel($('gmlv').value)}}   // (the GM's own "set my level", for trying things out, such as the level 99 aura)
   rpgApply();
   return{tick,list,HP,CD,RPG,EN,attack,slam,dash,monsOn,gainXp}})();
 
