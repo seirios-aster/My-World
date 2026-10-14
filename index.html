@@ -228,13 +228,22 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .mhp{position:absolute;left:0;top:0;width:46px;height:6px;border-radius:4px;background:rgba(20,18,30,.62);overflow:hidden;display:none;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
 .mhp i{display:block;height:100%;width:100%;background:#e8564a;transform-origin:left center}
 .dmg{position:absolute;left:0;top:0;display:none;font:700 20px var(--display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.8);white-space:nowrap}
-.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
-#hpb{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(230px,42vw);height:16px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:none;z-index:3;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
-#hpb.show{display:block}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
+.dmg.xp{color:#ffd24a;font-size:16px}.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
+#herobar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:8px;z-index:3}
+#herobar.on{display:flex}#bhero{width:38px;height:38px;font:700 12px var(--display);padding:0;flex:none}
+#hpb{position:relative;width:min(190px,34vw);height:16px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:none;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
+#hpb.show{display:block}#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
 #hpb b{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
 #fight{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(68px + env(safe-area-inset-bottom,0px));display:none;align-items:flex-end;gap:10px;z-index:3}
 #fight.show{display:flex}#fight .round{position:relative;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}#fight #batk{width:62px;height:62px;font-size:30px}
 #fight .round::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(10,10,20,.55) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
+#rpg{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));top:calc(90px + env(safe-area-inset-top,0px));width:min(320px,calc(100vw - 90px));max-height:calc(100vh - 110px);overflow:auto;box-sizing:border-box;display:none;flex-direction:column;gap:6px;padding:10px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:3;font:700 13px var(--body)}
+#rpg.on{display:flex}#rph{display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font:600 16px var(--display)}#rph.drag{cursor:grabbing}#rph .gmgrip{opacity:.45;font-weight:400;margin-left:6px}#rpg .round{width:30px;height:30px;font-size:14px}
+#rpxp{position:relative;height:16px;border-radius:8px;background:var(--paper-2);overflow:hidden}#rpxp i{position:absolute;inset:0;background:linear-gradient(90deg,#f2b441,#ffd96a);transform-origin:left center}#rpxp small{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:var(--ink)}
+#rpg .rps{margin-top:4px;font:600 14px var(--display);display:flex;justify-content:space-between;align-items:baseline}#rpg .rps small{font:700 12px var(--body);color:var(--ink-soft)}
+#rpg .rpr{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--paper-2)}#rpg .rpn{flex:1;min-width:0}#rpg .rpn small{display:block;font:600 11.5px/1.3 var(--body);color:var(--ink-soft)}#rpg .rpv{min-width:34px;text-align:center;font:700 15px var(--display)}
+#rpg .rpb{border:0;border-radius:50%;width:28px;height:28px;background:var(--ink);color:var(--paper);font:700 16px var(--body);cursor:pointer;flex:none}#rpg .rpb:disabled{opacity:.25;cursor:default}
+#rpreset{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:6px 12px;font:700 12px var(--body);cursor:pointer;align-self:flex-start;margin-top:4px}
 body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 90px 22px rgba(220,40,40,.55)}
 #acts .round{width:44px;height:44px}#bem,#bvc,#bptt{font-size:22px}#bvc[hidden]{display:none}#bvc.on{background:#3fa66b;color:#fff}#bptt{display:none;touch-action:none;user-select:none;-webkit-user-select:none}#bptt.show{display:grid}#bptt.talk{background:#d9503f;color:#fff;box-shadow:0 0 0 5px rgba(217,80,63,.3)}#bptt.latch{outline:3px solid #d9503f;outline-offset:2px}
 .tag.spk{background:rgba(52,150,96,.88);box-shadow:0 0 0 3px rgba(52,150,96,.35)}.tag.spk::before{content:'🔊 '}
@@ -310,9 +319,9 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 #loading span{font:700 15px var(--body);color:#2f5368}
 @media (prefers-reduced-motion:reduce){#loading,#hud{transition:none}}
 /* see-through chat bar, messages and speech bubbles (last, so it wins over their plain backgrounds) */
-#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#gmp,#vol,#emo{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
+#chat,.toast,#mysay,.rsay,#say,.round,#clk,#prompt,#lap,#coords,#outfits,#gmp,#rpg,#vol,#emo{background:color-mix(in srgb,var(--paper) var(--see),transparent);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3)}
 #mysay::after,.rsay::after{border-top-color:color-mix(in srgb,var(--paper) var(--see),transparent)}
-:root[data-theme=dark] #gmp,:root[data-theme=dark] #emo,:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
+:root[data-theme=dark] #gmp,:root[data-theme=dark] #rpg,:root[data-theme=dark] #emo,:root[data-theme=dark] #outfits{background:color-mix(in srgb,var(--paper) 68%,transparent)}   /* the profile menu is mostly small text: a bit more solid in dark, so the labels stay readable over bright ground */
 :root[data-theme=dark] #gms small{opacity:.8}
 :root[data-theme=dark] input::placeholder{color:var(--ink-soft);opacity:.95}   /* the "Say something…" hint and the name fields' hints: the browser's dark grey was hard to read on the dark panels */
 #gmp{position:fixed;right:calc(60px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));color:var(--ink);border-radius:14px;padding:10px;display:none;flex-direction:column;gap:6px;box-shadow:var(--shadow);z-index:2;max-height:calc(100vh - 120px);overflow:auto;width:min(340px,calc(100vw - 84px - env(safe-area-inset-right,0px)));box-sizing:border-box;font:700 13px var(--body)}
@@ -363,7 +372,8 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
   <div id="obuild"></div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
-<div id="mon"></div><div id="hpb"><i></i><b></b></div>
+<div id="mon"></div><div id="herobar"><button type="button" class="round" id="bhero" title="Hero: level, stats and skills" aria-label="Hero" aria-expanded="false">Lv1</button><div id="hpb"><i></i><b></b><s></s></div></div>
+<div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="rpxp"><i></i><small></small></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><button type="button" id="rpreset">Reset points</button></div>
 <div id="fight"><button type="button" class="round" id="bdash" title="Dash · Q" aria-label="Dash">💨</button><button type="button" class="round" id="bslam" title="Slam · G" aria-label="Slam">💥</button><button type="button" class="round" id="batk" title="Attack · F" aria-label="Attack">⚔️</button></div>
 <div id="pick" role="dialog" aria-modal="true" aria-labelledby="pktitle" hidden><div id="pkbox"><h2 id="pktitle">Choose your character</h2><p>You can change it any time in the character menu.</p><div id="pkrow"><button type="button" class="pkc" data-g="0"><b>♂</b><small>Male</small></button><button type="button" class="pkc" data-g="1"><b>♀</b><small>Female</small></button></div></div></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
@@ -2957,12 +2967,13 @@ const of=$('outfits'),ofl=$('oflist'),fname=$('fname'),myname=$('myname'),tagP=$
 /* ---- your state follows your account: look, names, the friend, who you play and where you stand. This device keeps a copy (so a guest, or no network, still gets it back);
    a signed-in account also keeps it in the cloud, so a new device or a cleared browser starts where you left off. Nothing is written to the cloud until what is saved there
    has been read, so a slow or failed read can never wipe it. ---- */
+let rpgHook=null;   // (the monster block's level and skills: how they are saved to, and read back from, the account)
 let cloud=false,dirty=false,saveT=0,posDone=false,lastPos=null,myCustom='',PST='not started';   // PST: what the saved-state sync is doing, shown by ?debug
    // myCustom: the name you chose for yourself ('' = follow your Google name)   // cloud: the saved state was read (or there is none yet), so changes may be written
 const POSK=u=>'myworld.pos.'+(u&&u.id?u.id:'guest');
 const posNow=()=>({x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2)});
 function stateOut(){
-  return{v:1,name:myCustom,look:packLook(PPL[0]),friend:{name:PPL[1].name,look:packLook(PPL[1])},dog:dogName,ctl,pos:posNow()}}
+  return{v:1,name:myCustom,look:packLook(PPL[0]),friend:{name:PPL[1].name,look:packLook(PPL[1])},dog:dogName,ctl,pos:posNow(),rpg:rpgHook?rpgHook.out():undefined}}
 function touchState(now){if(!cloud)return;dirty=true;if(now)flushState();else if(!saveT)saveT=setTimeout(flushState,3000)}
 function flushState(){clearTimeout(saveT);saveT=0;const S=storage.session;
   if(cloud&&dirty&&S&&!S.active()){PST='waiting: this tab has not been confirmed as your active session yet ('+S.state()+')';return}
@@ -2986,9 +2997,10 @@ function stateIn(s,u){const put=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}
   if(Array.isArray(f.look)){Object.assign(PPL[1],unpackLook(f.look));put('myworld.look.friend',JSON.stringify(packLook(PPL[1])))}
   if(fn){PPL[1].name=fn;put('myworld.friend',fn)}
   const dn=clean(s.dog).slice(0,16);if(dn){dogName=dn;put('myworld.dog',dn);tagD.textContent=dn;dname.value=dn}
+  if(Array.isArray(s.rpg)&&rpgHook)rpgHook.in(s.rpg,u);
   applyMyName();applyMyLook();pairUp();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople();restorePos(s)}
 async function syncState(){applyMyName();applyMyLook();   // (what this device remembers, straight away)
-  const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;if(u&&typeof checkBan==='function')checkBan();
+  const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;if(rpgHook)rpgHook.load(u);if(u&&typeof checkBan==='function')checkBan();
   const local=()=>{let j=null;try{j=JSON.parse(localStorage.getItem(POSK(u))||'null')}catch(_){}restorePos(j)};
   if(!u||!storage.profile){PST=u?'no cloud profile here':'guest: kept on this device only';local();if(!had)askCharacter();return}
   PST='reading your saved state...';let s;try{s=await storage.profile.load()}catch(_){s=undefined}
@@ -4176,7 +4188,7 @@ function tags(){remotes.forEach(R=>{const q=R.rig.root.position;
   if(R.has&&!open&&R.sayUntil>performance.now())tagAt(R.say,q.x,q.y+4.4,q.z,-8,70,true);else if(R.say.style.display!=='none')R.say.style.display='none'})}
 function dbg(){const o=Object.entries(WS.state()).filter(([k])=>k!==myKey),now=performance.now();
   return{vc:vLine(),hist:WS.hist?WS.hist():[],conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
-return{net:{key:()=>myKey,send:(t,d)=>WS.send(t,d),on:(t,f)=>WS.on(t,f),peers:()=>[...remotes.values()].filter(R=>R.has&&R.rig.root.visible),isHost:()=>{for(const R of remotes.values())if(R.has&&before(R.st||1e15,R.key,my.st||1e15,myKey))return false;return true}},dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe,voiceStats:async()=>{const out=[];for(const[k,p]of VC.peers){const st=await p.pc.getStats();const o={k:k.slice(-5)};st.forEach(r=>{if(r.type==='inbound-rtp')o.in={bytes:r.bytesReceived,packets:r.packetsReceived,level:r.audioLevel};if(r.type==='outbound-rtp')o.out={bytes:r.bytesSent,packets:r.packetsSent}});o.recv=p.pc.getReceivers().map(x=>({muted:x.track&&x.track.muted,state:x.track&&x.track.readyState}));o.send=p.send&&p.send.track?{en:p.send.track.enabled,state:p.send.track.readyState,muted:p.send.track.muted}:null;out.push(o)}return out},voice:()=>({on:VC.on,talk:VC.talk,mic:!!VC.track,retry:Object.keys(VC.retry).length,peers:[...VC.peers].map(([k,p])=>({k:k.slice(-5),init:p.init,conn:p.pc.connectionState,ice:p.pc.iceConnectionState,sig:p.pc.signalingState,ok:p.ok,hear:!!p.el,gain:p.gain?+p.gain.gain.value.toFixed(2):null,lvl:+(p.lvl||0).toFixed(4),ac:AC?AC.state:'none'})),remotes:[...remotes.values()].map(R=>({vc:R.vc,has:R.has,d:+Math.hypot(R.tx-P.position.x,R.tz-P.position.z).toFixed(1)}))})}})();
+return{net:{key:()=>myKey,send:(t,d)=>WS.send(t,d),on:(t,f)=>WS.on(t,f),peers:()=>[...remotes.values()].filter(R=>R.has&&R.rig.root.visible),isHost:()=>{for(const R of remotes.values())if(R.has&&before(R.st||1e15,R.key,my.st||1e15,myKey))return false;return true}},dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe,emoStop,voiceStats:async()=>{const out=[];for(const[k,p]of VC.peers){const st=await p.pc.getStats();const o={k:k.slice(-5)};st.forEach(r=>{if(r.type==='inbound-rtp')o.in={bytes:r.bytesReceived,packets:r.packetsReceived,level:r.audioLevel};if(r.type==='outbound-rtp')o.out={bytes:r.bytesSent,packets:r.packetsSent}});o.recv=p.pc.getReceivers().map(x=>({muted:x.track&&x.track.muted,state:x.track&&x.track.readyState}));o.send=p.send&&p.send.track?{en:p.send.track.enabled,state:p.send.track.readyState,muted:p.send.track.muted}:null;out.push(o)}return out},voice:()=>({on:VC.on,talk:VC.talk,mic:!!VC.track,retry:Object.keys(VC.retry).length,peers:[...VC.peers].map(([k,p])=>({k:k.slice(-5),init:p.init,conn:p.pc.connectionState,ice:p.pc.iceConnectionState,sig:p.pc.signalingState,ok:p.ok,hear:!!p.el,gain:p.gain?+p.gain.gain.value.toFixed(2):null,lvl:+(p.lvl||0).toFixed(4),ac:AC?AC.state:'none'})),remotes:[...remotes.values()].map(R=>({vc:R.vc,has:R.has,d:+Math.hypot(R.tx-P.position.x,R.tz-P.position.z).toFixed(1)}))})}})();
 /*MP-END*/
 // add ?debug to the address to see what the connection is doing (handy when "I can't see anyone" needs a real reason)
 if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
@@ -4193,18 +4205,57 @@ if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.
    Trade-off: the host's game is the referee, so it is not cheat-proof, which is fine for a friends' hangout. */
 const MOB=(()=>{
   const NET=MP.net,ZONES=[{n:'the misty woods',x:-132,z:78,r:34},{n:'the summit slopes',x:-20,z:-74,r:30}],
-    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a'},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0'}],
-    list=new Map(),box=$('mon'),hpb=$('hpb'),hpf=hpb.firstElementChild,hpt=hpb.lastElementChild,fight=$('fight'),btn={a:$('batk'),z:$('bslam'),d:$('bdash')},
-    HP={v:100,max:100,hurt:-1e9,inv:0},CD={a:0,z:0,d:0},CDM={a:.5,z:7,d:3.5},DASH={t:0,x:0,z:0},
+    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a',xp:10},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0',xp:40}],
+    list=new Map(),box=$('mon'),hpb=$('hpb'),hpf=hpb.firstElementChild,hpt=hpb.querySelector('b'),fight=$('fight'),btn={a:$('batk'),z:$('bslam'),d:$('bdash')},
+    HP={v:100,max:100,hurt:-1e9,inv:0},CD={a:0,z:0,d:0},CDB={a:.5,z:7,d:3.5},DASH={t:0,x:0,z:0,sp:35},ANIM={k:'',t0:0},DUR={a:.42,z:.7,d:.26},
     bodyG=new THREE.SphereGeometry(.72,16,12),eyeG=new THREE.SphereGeometry(.13,8,6),pupG=new THREE.SphereGeometry(.07,6,5),
     slashG=new THREE.RingGeometry(.8,1.9,20,1,-Math.PI*.42,Math.PI*.84).rotateX(-Math.PI/2),ringG=new THREE.RingGeometry(.9,1.1,36).rotateX(-Math.PI/2),pG=new THREE.SphereGeometry(.12,6,5),
     eyeM=new THREE.MeshBasicMaterial({color:'#ffffff'}),pupM=new THREE.MeshBasicMaterial({color:'#1b1b2b'}),
     v3=new THREE.Vector3(),fxs=[],nums=[];
   let simT=0,sendT=0,sentAny=false,spawnAt=[0,0],fightUntil=0,host=true;
+  /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
+  const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1]},MAXL=30,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
+    spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3),
+    maxHp=()=>100+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1)),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
+    cdOf=k=>Math.max(.4,(CDB[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])),
+    SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+1.5% crit chance, 2% faster cooldowns each']],
+    KDEF=[['⚔️','Slash',r=>'Damage '+(100+12*(r-1))+'% · reach '+(3.3+.2*(r-1)).toFixed(1)+' m'],['💥','Slam',r=>'Damage '+(100+15*(r-1))+'% · radius '+(5.5+.4*(r-1)).toFixed(1)+' m'],['💨','Dash',r=>'Cooldown '+(3.5-.3*(r-1)).toFixed(1)+' s · distance '+(7+.6*(r-1)).toFixed(1)+' m']];
+  const rpgEl=$('rpg'),bHero=$('bhero'),hud=$('herobar');
+  const rpgKey=u=>'myworld.rpg.'+(u&&u.id?u.id:'guest');let rpgUser=null;
+  const rpgOut=()=>[RPG.l,RPG.xp,...RPG.s,...RPG.k];
+  function rpgSet(a){const n=x=>Math.max(0,Math.floor(+x)||0);if(!Array.isArray(a)||a.length<8)return false;
+    const l=Math.min(MAXL,Math.max(1,n(a[0]))),s=[n(a[2]),n(a[3]),n(a[4])],k=[1,2,3].map(i=>Math.min(5,Math.max(1,n(a[4+i])||1)));
+    if(sum(s)>3*(l-1)||sum(k)-3>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
+    RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;return true}
+  function rpgSave(){try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
+  function rpgApply(){const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);rpgDraw()}
+  function rpgDraw(){bHero.textContent='Lv'+RPG.l;if(!rpgEl.classList.contains('on'))return;
+    $('rplv').textContent='Lv '+RPG.l;const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
+    const sp=spLeft(),kp=kpLeft();$('rpsp').textContent=sp+' point'+(sp===1?'':'s')+' to spend';$('rpkp').textContent=kp+' point'+(kp===1?'':'s')+' to spend';
+    $('rpst').innerHTML=SDEF.map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+'<small>'+d[1]+'</small></div><span class="rpv">'+RPG.s[i]+'</span><button type="button" class="rpb" data-s="'+i+'" aria-label="Add a point to '+d[0]+'"'+(sp>0?'':' disabled')+'>+</button></div>').join('');
+    $('rpsk').innerHTML=KDEF.map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')}
+  rpgEl.addEventListener('click',e=>{const b=e.target.closest('button[data-s],button[data-k]');if(!b||b.disabled)return;
+    if(b.dataset.s!=null&&spLeft()>0)RPG.s[+b.dataset.s]++;else if(b.dataset.k!=null&&kpLeft()>0&&RPG.k[+b.dataset.k]<5)RPG.k[+b.dataset.k]++;else return;rpgApply();rpgSave()});
+  $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3<=0)return;if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.',ok:'Reset',cancel:'Keep'})){RPG.s=[0,0,0];RPG.k=[1,1,1];rpgApply();rpgSave()}};
+  function gainXp(n){n=Math.max(1,Math.round(n*Math.max(.3,1-.05*(RPG.l-1))));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP','xp');let up=0;
+    while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
+    if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('','Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
+    rpgApply();rpgSave()}
+  rpgHook={out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+    in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
+  bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw()}};
+  $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false')};
+  let rpgFit=()=>{};
+  {const h=$('rph'),KEY='myworld.rpgpos';let pos=null,dr=null;try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&isFinite(v.x)&&isFinite(v.y))pos=v}catch(_){}
+    rpgFit=()=>{if(!pos||!rpgEl.classList.contains('on'))return;const w=rpgEl.offsetWidth,hh=rpgEl.offsetHeight;pos.x=clamp(pos.x,0,Math.max(0,innerWidth-w));pos.y=clamp(pos.y,0,Math.max(0,innerHeight-Math.min(hh,60)));rpgEl.style.left=pos.x+'px';rpgEl.style.top=pos.y+'px';rpgEl.style.right='auto'};
+    h.addEventListener('pointerdown',e=>{if(e.target.closest('button')||(e.button!=null&&e.button>0))return;const r=rpgEl.getBoundingClientRect();dr={id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};pos={x:r.left,y:r.top};h.classList.add('drag');try{h.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
+    h.addEventListener('pointermove',e=>{if(!dr||e.pointerId!==dr.id)return;pos.x=e.clientX-dr.dx;pos.y=e.clientY-dr.dy;rpgFit()});
+    const end=e=>{if(!dr||e.pointerId!==dr.id)return;dr=null;h.classList.remove('drag');try{localStorage.setItem(KEY,JSON.stringify({x:Math.round(pos.x),y:Math.round(pos.y)}))}catch(_){}};
+    h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);addEventListener('resize',rpgFit)}
   const night=()=>{const h=clockH();return h>=19||h<5},monsOn=()=>FXS.mo==='always'||(FXS.mo!=='off'&&night()),rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
   const players=()=>{const a=[];if(HP.v>0)a.push({key:'',x:P.position.x,z:P.position.z,me:true});NET.peers().forEach(R=>a.push({key:R.key,x:R.x,z:R.z}));return a};
   function sfx(k){if(!AC||mute||AC.state!=='running'||!master)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
-    const S={hit:['triangle',420,170,.1,.09],slash:['sawtooth',760,260,.09,.05],hurt:['sine',240,100,.2,.12],slam:['square',140,45,.28,.12],die:['sine',420,880,.16,.08],dash:['sine',300,700,.12,.05]}[k];if(!S)return;
+    const S={hit:['triangle',420,170,.1,.09],slash:['sawtooth',760,260,.09,.05],hurt:['sine',240,100,.2,.12],slam:['square',140,45,.28,.12],die:['sine',420,880,.16,.08],lvl:['triangle',500,1300,.35,.1],dash:['sine',300,700,.12,.05]}[k];if(!S)return;
     o.type=S[0];o.frequency.setValueAtTime(S[1],t);o.frequency.exponentialRampToValueAtTime(S[2],t+S[3]);g.gain.setValueAtTime(S[4],t);g.gain.exponentialRampToValueAtTime(.0005,t+S[3]+.04);o.connect(g);g.connect(master);o.start(t);o.stop(t+S[3]+.06)}
   // ---- the little pictures: a slash, a ring, a puff when a slime pops, floating numbers ----
   const fxMat=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false,side:THREE.DoubleSide,fog:false});
@@ -4229,7 +4280,7 @@ const MOB=(()=>{
   function dropMon(m){W.remove(m.g);m.mat.dispose();m.el.remove();list.delete(m.id)}
   function kill(m){m.st=3;m.hp=0;m.deadAt=performance.now()}
   // ---- hits on a slime (anyone's): the host decides; everyone else shows it at once and tells the host ----
-  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;const ny=m.y+1.3*TY[m.ty].sc;numAt(m.x,ny,m.z,(crit?'💥 ':'')+d,crit?'crit':'');m.flash=1;sfx('hit');
+  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;m.mine=true;const ny=m.y+1.3*TY[m.ty].sc;numAt(m.x,ny,m.z,(crit?'💥 ':'')+d,crit?'crit':'');m.flash=1;sfx('hit');
     if(host){m.hp-=d;m.x+=dx*.8;m.z+=dz*.8;m.tp='';if(m.hp<=0)kill(m)}
     else{m.hp-=d;m.pt=performance.now();NET.send('h',{id:m.id,d,x:P.position.x,z:P.position.z})}}
   NET.on('h',d=>{if(!host||!d||typeof d.id!=='string')return;const m=list.get(d.id),dm=Math.min(40,Math.max(1,Math.round(+d.d)||0));if(!m||m.st===3||!dm)return;
@@ -4275,17 +4326,35 @@ const MOB=(()=>{
     const hx=HUB[0],hz=HUB[1]+4;P.position.set(hx,groundY(hx,hz),hz);DOG.reset=1;HP.v=HP.max;HP.inv=3}
   NET.on('d',d=>{if(d&&d.to===NET.key()&&NET.key())hurtMe(+d.d||1,+d.x||P.position.x,+d.z||P.position.z)});
   NET.on('fx',d=>{if(!d||typeof d.k!=='string')return;const R=NET.peers().find(r=>r.key===d.k);if(!R)return;
-    if(d.t==='a')slashFx(R.x,R.z,R.r);else if(d.t==='z')ringFx(R.x,R.z,5.5,'#ffd27a',380);else if(d.t==='d')ringFx(R.x,R.z,2.2,'#9fe8ff',250)});
+    if(!DUR[d.t])return;R.fxa={k:d.t,t0:performance.now()};
+    if(d.t==='a')setTimeout(()=>slashFx(R.x,R.z,R.r),170);else if(d.t==='z')setTimeout(()=>ringFx(R.x,R.z,5.5,'#ffd27a',380),380);else ringFx(R.x,R.z,2.2,'#9fe8ff',250)});
+  // ---- the swing: arm, body, a sword in the hand while it lasts (mine, and everybody else's, from the 'fx' message) ----
+  const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x),Lp=(a,b,t)=>a+(b-a)*ease(t);
+  function swordOf(p){if(!p.sword){const g=new THREE.Group(),M=(c,r,m)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m}),bl=new THREE.Mesh(new THREE.BoxGeometry(.09,.05,1.15),M('#e6edf5',.25,.8)),gd=new THREE.Mesh(new THREE.BoxGeometry(.4,.07,.08),M('#d4a63c',.4,.5)),gp=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.3),M('#6a4a2f',.8,0));
+      bl.position.z=.75;gd.position.z=.3;gp.position.z=.12;g.add(bl,gd,gp);g.position.set(0,-.8,.05);g.visible=false;p.sword=g;p.arms[1].add(g)}return p.sword}
+  function poseAt(p,k,s){const A=p.arms,B=p.body,u=s/DUR[k];swordOf(p).visible=true;
+    if(k==='a'){let ax,by,bz;if(u<.4){const t=u/.4;ax=Lp(0,-2.7,t);by=Lp(0,-.5,t);bz=0}else if(u<.6){const t=(u-.4)/.2;ax=Lp(-2.7,-.4,t);by=Lp(-.5,.6,t);bz=Lp(0,.3,t)}else{const t=(u-.6)/.4;ax=Lp(-.4,0,t);by=Lp(.6,0,t);bz=Lp(.3,0,t)}
+      A[1].rotation.x=ax;A[1].rotation.z=.12;A[0].rotation.x=-ax*.35;B.rotation.y=by;B.position.set(0,0,bz)}
+    else if(k==='z'){let ax,bx,by;if(u<.55){const t=u/.55;ax=Lp(0,-2.9,t);bx=Lp(0,-.18,t);by=Lp(0,.2,t)}else if(u<.72){const t=(u-.55)/.17;ax=Lp(-2.9,-.3,t);bx=Lp(-.18,.45,t);by=Lp(.2,-.1,t)}else{const t=(u-.72)/.28;ax=Lp(-.3,0,t);bx=Lp(.45,0,t);by=Lp(-.1,0,t)}
+      A.forEach((a,i)=>{a.rotation.x=ax;a.rotation.z=(i?1:-1)*.2});B.rotation.set(bx,0,0);B.position.set(0,u<.55?.16*ease(u/.55):Lp(.16,0,(u-.55)/.2),0)}
+    else{const t=Math.sin(Math.PI*Math.min(1,u));B.rotation.set(.55*t,0,0);B.position.set(0,0,.15*t);A.forEach((a,i)=>{a.rotation.x=.9*t;a.rotation.z=(i?1:-1)*.12})}}
+  function endPose(p){p.body.position.set(0,0,0);p.body.rotation.set(0,0,0);p.arms.forEach((a,i)=>{a.rotation.x=0;a.rotation.z=(i?1:-1)*.12});if(p.sword)p.sword.visible=false}
   const canAct=()=>!(sitting||riding||open||HP.v<=0||gateOn);
-  function attack(){if(CD.a>0||!canAct())return;CD.a=CDM.a;const r=P.rotation.y,fx=Math.sin(r),fz=Math.cos(r);let n=0;
-    list.forEach(m=>{if(n>=3||m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz),rad=.7*TY[m.ty].sc;
-      if(d<3.3+rad&&(dx*fx+dz*fz)/Math.max(d,.01)>.15){const crit=Math.random()<.12,dm=(10+rnd(0,4))*(crit?2:1);hitMon(m,dm,dx/Math.max(d,.01),dz/Math.max(d,.01),crit);n++}});
-    slashFx(P.position.x,P.position.z,r);sfx('slash');NET.send('fx',{k:NET.key(),t:'a'})}
-  function slam(){if(CD.z>0||!canAct())return;CD.z=CDM.z;let n=0;
-    list.forEach(m=>{if(m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz);if(d<5.5+.7*TY[m.ty].sc){hitMon(m,16+rnd(0,5),dx/Math.max(d,.01)*2.2,dz/Math.max(d,.01)*2.2,false);n++}});
-    ringFx(P.position.x,P.position.z,5.5,'#ffd27a',380);sfx('slam');NET.send('fx',{k:NET.key(),t:'z'})}
-  function dash(){if(CD.d>0||!canAct())return;CD.d=CDM.d;DASH.t=.2;DASH.x=Math.sin(P.rotation.y);DASH.z=Math.cos(P.rotation.y);HP.inv=Math.max(HP.inv,.35);
-    ringFx(P.position.x,P.position.z,2.2,'#9fe8ff',250);sfx('dash');NET.send('fx',{k:NET.key(),t:'d'})}
+  const doAnim=k=>{ANIM.k=k;ANIM.t0=performance.now();NET.send('fx',{k:NET.key(),t:k})};
+  function attack(){if(CD.a>0||!canAct())return;CD.a=cdOf('a');MP.emoStop(true);
+    let tg=null,td=4.5;list.forEach(m=>{if(m.st===3)return;const d=Math.hypot(m.x-P.position.x,m.z-P.position.z);if(d<td){td=d;tg=m}});
+    if(tg)P.rotation.y=Math.atan2(tg.x-P.position.x,tg.z-P.position.z);   // (a swing turns towards the nearest slime: a big help on a touch screen)
+    doAnim('a');sfx('slash');
+    setTimeout(()=>{const r=P.rotation.y,fx=Math.sin(r),fz=Math.cos(r),reach=3.3+.2*(RPG.k[0]-1);let n=0;   // (the blade lands partway through the swing)
+      list.forEach(m=>{if(n>=3||m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz),rad=.7*TY[m.ty].sc;
+        if(d<reach+rad&&(dx*fx+dz*fz)/Math.max(d,.01)>.15){const crit=Math.random()<critP(),dm=Math.max(1,Math.round((10+rnd(0,4))*dmgMul(0)*(crit?2:1)));hitMon(m,dm,dx/Math.max(d,.01),dz/Math.max(d,.01),crit);n++}});
+      slashFx(P.position.x,P.position.z,r)},170)}
+  function slam(){if(CD.z>0||!canAct())return;CD.z=cdOf('z');MP.emoStop(true);doAnim('z');
+    setTimeout(()=>{const R=5.5+.4*(RPG.k[1]-1);list.forEach(m=>{if(m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz);
+        if(d<R+.7*TY[m.ty].sc)hitMon(m,Math.max(1,Math.round((16+rnd(0,5))*dmgMul(1))),dx/Math.max(d,.01)*2.2,dz/Math.max(d,.01)*2.2,false)});
+      ringFx(P.position.x,P.position.z,R,'#ffd27a',380);sfx('slam')},380)}
+  function dash(){if(CD.d>0||!canAct())return;CD.d=cdOf('d');MP.emoStop(true);DASH.t=.2;DASH.x=Math.sin(P.rotation.y);DASH.z=Math.cos(P.rotation.y);HP.inv=Math.max(HP.inv,.35);
+    doAnim('d');ringFx(P.position.x,P.position.z,2.2,'#9fe8ff',250);sfx('dash')}
   const ACT={a:attack,z:slam,d:dash};
   Object.keys(btn).forEach(k=>{btn[k].addEventListener('pointerdown',e=>{e.preventDefault();ACT[k]()});btn[k].addEventListener('contextmenu',e=>e.preventDefault())});
   addEventListener('keydown',e=>{if(e.repeat||(e.target&&e.target.tagName==='INPUT')||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyF')attack();else if(e.code==='KeyG')slam();else if(e.code==='KeyQ')dash()});
@@ -4293,7 +4362,7 @@ const MOB=(()=>{
   function tick(dt,t){if(gateOn)return;const now=performance.now();host=NET.isHost();
     for(const k in CD)CD[k]=Math.max(0,CD[k]-dt);HP.inv=Math.max(0,HP.inv-dt);
     if(HP.v<HP.max&&now-HP.hurt>6000)HP.v=Math.min(HP.max,HP.v+2*dt);
-    if(DASH.t>0){DASH.t-=dt;const st=35*dt,nx=P.position.x+DASH.x*st,nz=P.position.z+DASH.z*st;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}}
+    if(DASH.t>0){DASH.t-=dt;const st=DASH.sp*dt,nx=P.position.x+DASH.x*st,nz=P.position.z+DASH.z*st;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}}
     if(host)hostTick(dt,now);
     let near=1e9;
     list.forEach(m=>{const T=TY[m.ty];
@@ -4303,16 +4372,19 @@ const MOB=(()=>{
       m.g.position.set(m.x,m.y+hop,m.z);m.g.rotation.y=m.ry;m.g.children[0].scale.set(1+(.8-sq)*.6,sq,1+(.8-sq)*.6);m.g.visible=d<170;
       if(m.flash>0)m.flash=Math.max(0,m.flash-dt*4);
       if(m.st===2)m.mat.emissive.setRGB(.55+.3*Math.sin(t*30),0,0);else m.mat.emissive.setScalar(m.flash*.8);
-      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die')}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
+      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.mine)gainXp(T.xp)}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
       const sc=m.st!==3&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
       if(sc){m.el.style.display='block';m.el.style.transform='translate('+(sc[0]-23)+'px,'+sc[1]+'px)';m.el.firstChild.style.transform='scaleX('+Math.max(0,m.hp/m.hpm)+')'}else m.el.style.display='none'});
     fxTick(dt,now);
+    if(ANIM.k){const sec=(now-ANIM.t0)/1000;if(sec<DUR[ANIM.k])poseAt(me,ANIM.k,sec);else{endPose(me);ANIM.k=''}}
+    NET.peers().forEach(R=>{const a=R.fxa;if(!a)return;const sec=(now-a.t0)/1000;if(sec<DUR[a.k])poseAt(R.rig,a.k,sec);else{endPose(R.rig);R.fxa=null}});
     for(let i=nums.length-1;i>=0;i--){const n=nums[i],a=(now-n.t)/900;if(a>=1){n.el.remove();nums.splice(i,1);continue}const p=onScr(n.x,n.y+a*1.2,n.z);if(p){n.el.style.display='block';n.el.style.transform='translate('+p[0]+'px,'+p[1]+'px) translate(-50%,-50%)';n.el.style.opacity=1-a*a}else n.el.style.display='none'}
     if(near<45)fightUntil=now+8000;
-    fight.classList.toggle('show',now<fightUntil||HP.v<HP.max);
-    hpb.classList.toggle('show',HP.v<HP.max||now-HP.hurt<6000||now<fightUntil);hpf.style.transform='scaleX('+Math.max(0,HP.v/HP.max)+')';hpt.textContent='HP '+Math.ceil(HP.v)+'/'+HP.max;
-    for(const k in btn)btn[k].style.setProperty('--cd',(CD[k]/CDM[k]).toFixed(2))}
-  return{tick,list,HP,CD,attack,slam,dash,monsOn}})();
+    const feat=FXS.mo!=='off';hud.classList.toggle('on',feat);fight.classList.toggle('show',feat);if(!feat&&rpgEl.classList.contains('on'))rpgEl.classList.remove('on');
+    hpb.classList.toggle('show',HP.v<HP.max||now-HP.hurt<6000||now<fightUntil);hpb.lastChild.style.transform='scaleX('+(RPG.l>=MAXL?0:RPG.xp/need(RPG.l))+')';hpf.style.transform='scaleX('+Math.max(0,HP.v/HP.max)+')';hpt.textContent='HP '+Math.ceil(HP.v)+'/'+HP.max;
+    for(const k in btn)btn[k].style.setProperty('--cd',(CD[k]/cdOf(k)).toFixed(2))}
+  rpgApply();
+  return{tick,list,HP,CD,RPG,attack,slam,dash,monsOn,gainXp}})();
 
 const clockT=new THREE.Clock();let t=0,walkPh=0,walkAmt=0,frames=0,lift=0,lastStep=0;
 function frame(){
