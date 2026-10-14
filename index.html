@@ -3136,8 +3136,6 @@ addEventListener('pointerdown',e=>{if(emoPick.classList.contains('on')&&!emoPick
 function sendChat(){const t=clean(chatIn.value).slice(0,80);
   const cm=/^\/level(?:\s+(\d{1,3}))?\s*$/i.exec(t);   // a command for the GM alone: "/level 99" sets your own level (to try things out, like the level 99 aura). Nothing is sent to anyone.
   if(cm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cm[1])toast('','Type /level and a number from 1 to 99, like /level 99',true);else if(rpgHook)rpgHook.setLevel(+cm[1]);return}
-  const am=/^\/aura(?:\s+([1-5]))?\s*$/i.exec(t);   // GM only: "/aura 1", "/aura 2" or "/aura 3" to look at the three shapes of the level 99 aura on your own screen
-  if(am){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook&&rpgHook.aura)rpgHook.aura(am[1]?+am[1]:0);return}
   const sm=/^\/(vit|str|agi)(?:\s+(\d{1,4}))?\s*$/i.exec(t);   // GM only too: "/str 999" puts all the stat points you have (up to 999) into strength; /agi and /vit likewise (no number = one point)
   if(sm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.addStat(['vit','str','agi'].indexOf(sm[1].toLowerCase()),Math.max(1,+sm[2]||1));return}
   if(!t||!room)return;
@@ -4294,7 +4292,7 @@ const MOB=(()=>{
     while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
     if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
-  rpgHook={aura(n){if(!n){toast('','Aura shape '+AURA.v+'. Type /aura 1 to /aura 5 to change it (you need level 99 to see it: /level 99)',true);return}AURA.v=n;toast('','Aura shape '+n+': '+['','six even waves','a smooth flare','eight flame petals','a 90 degree curve with waves','a 90 degree curve, smooth'][n],true)},addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
+  rpgHook={addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
       if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}};
@@ -4326,21 +4324,15 @@ const MOB=(()=>{
     fxs.push({o:g,k:'p',p:[x0,y0,z0,x1,y1,z1],t0:performance.now(),dur:Math.max(90,Math.hypot(x1-x0,y1-y0,z1-z0)/spd*1000),mats,done})}
   /* ---- the aura of a level 99 hero: a golden glow in waves round them, and sparks rising ---- */
   const AURAL=99,auraTex=(()=>{const cv=document.createElement('canvas');cv.width=4;cv.height=64;const x=cv.getContext('2d'),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,'rgba(255,214,90,0)');g.addColorStop(.5,'rgba(255,214,90,.5)');g.addColorStop(1,'rgba(255,240,170,.95)');x.fillStyle=g;x.fillRect(0,0,4,64);return new THREE.CanvasTexture(cv)})(),
-    auraCylG=new THREE.CylinderGeometry(1,1,1.9,48,10,true).translate(0,.95,0),auraBase=auraCylG.attributes.position.array.slice(),   // (a tall ring of many little pieces, bent every frame into a rolling wave: see auraWave)
+    auraCylG=new THREE.CylinderGeometry(1,1,.95,48,10,true).translate(0,.475,0),auraBase=auraCylG.attributes.position.array.slice(),   // (a tall ring of many little pieces, bent every frame into a rolling wave: see auraWave)
     
     auraCylM=new THREE.MeshBasicMaterial({map:auraTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),
     auraPtsM=new THREE.PointsMaterial({color:'#ffe27a',size:.14,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),auras=new Map();
   function auraOn(root){let a=auras.get(root);if(a)return a;const g=new THREE.Group(),cyl=new THREE.Mesh(auraCylG,auraCylM),N=24,pos=new Float32Array(N*3),pg=new THREE.BufferGeometry();
     pg.setAttribute('position',new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(pg,auraPtsM);pts.frustumCulled=false;g.add(cyl,pts);root.add(g);a={g,cyl,pg,pos,N,live:true};auras.set(root,a);return a}
-  const AURA={v:1};   // which shape of aura (1: even waves, 2: smooth flare, 3: flame petals); the GM can try them with /aura 1, /aura 2, /aura 3
-  function auraWave(t){const P=auraCylG.attributes.position.array,V=AURA.v;   // every shape repeats evenly all round (no lobes of different counts), so it looks the same from every side
-    for(let i=0;i<P.length;i+=3){const x=auraBase[i],y=auraBase[i+1],z=auraBase[i+2],h=y/1.9,a=Math.atan2(z,x),B=V>=4?1+.95*Math.sqrt(h):.95+.85*h*h*(1.25-.25*h);let R=B,Y=y;   // (4 and 5 leave the ground flat, at 90 degrees, and curve up: outward from the very first moment)
-      if(V===1){const w=Math.sin(a*6+t*2.4-h*5);R=B+.13*h*w;Y=y+.17*h*h*w}   // six waves rolling round, the edge rising where the glow bulges
-      else if(V===4){const w=Math.sin(a*6+t*2.4-h*5);R=B+.1*h*w;Y=y+.15*h*h*w}   // the 90 degree curve with six even waves on its edge
-      else if(V===5){R=B+.04*h*Math.sin(t*2.2-h*4)}   // the 90 degree curve, smooth and breathing
-      else if(V===2){R=B+.05*h*Math.sin(t*2.2-h*4)}   // a perfectly round flare that breathes
-      else{const pet=Math.pow(Math.abs(Math.cos(a*4+t*.7)),2.2);R=B+.12*h*pet;Y=y*(1+.24*h*h*pet)}   // eight flame petals, tips pointing up
-      P[i]=Math.cos(a)*R;P[i+1]=Y;P[i+2]=Math.sin(a)*R}
+  function auraWave(t){const P=auraCylG.attributes.position.array;   // leaves the ground flat (at 90 degrees) and curves up, with six even waves rolling round its edge: it repeats evenly all round, so it looks the same from every side
+    for(let i=0;i<P.length;i+=3){const x=auraBase[i],y=auraBase[i+1],z=auraBase[i+2],h=y/.95,a=Math.atan2(z,x),B=1+.95*Math.sqrt(h),w=Math.sin(a*6+t*2.4-h*5),R=B+.1*h*w;
+      P[i]=Math.cos(a)*R;P[i+1]=y+.08*h*h*w;P[i+2]=Math.sin(a)*R}
     auraCylG.attributes.position.needsUpdate=true}
   function auraOff(root){const a=auras.get(root);if(!a)return;root.remove(a.g);a.pg.dispose();auras.delete(root)}
   function auraTick(t,now){const want=new Set();
@@ -4349,7 +4341,7 @@ const MOB=(()=>{
     want.forEach(r=>auraOn(r));[...auras.keys()].forEach(r=>{if(!want.has(r))auraOff(r)});   // (a figure is handed on to the next arrival when someone leaves: its aura goes with them)
     auraCylM.opacity=.8+.2*Math.sin(t*2.4);if(auras.size)auraWave(t);
     auras.forEach(a=>{a.cyl.rotation.y=t*.4;
-      for(let i=0;i<a.N;i++){const m=AURA.v===3?3:4,f=((t*.55+(i%m)/m)%1),ang=i/a.N*6.2832+t*1.1,r=AURA.v>=4?1+.95*Math.sqrt(f):.95+.85*f*f;a.pos[i*3]=Math.cos(ang)*r;a.pos[i*3+1]=f*1.9;a.pos[i*3+2]=Math.sin(ang)*r}   // (sparks drift outwards as they rise)
+      for(let i=0;i<a.N;i++){const f=((t*.55+(i%4)/4)%1),ang=i/a.N*6.2832+t*1.1,r=1+.95*Math.sqrt(f);a.pos[i*3]=Math.cos(ang)*r;a.pos[i*3+1]=f*.95;a.pos[i*3+2]=Math.sin(ang)*r}   // (sparks drift outwards as they rise)
       a.pg.attributes.position.needsUpdate=true})}
   function burst(x,y,z,col){const g=new THREE.Group(),mat=fxMat(col,.9),vs=[];g.position.set(x,y+.5,z);
     for(let i=0;i<9;i++){const p=new THREE.Mesh(pG,mat),a=i*.7+Math.random();p.userData.v=[Math.cos(a)*(2+Math.random()*2),2+Math.random()*3,Math.sin(a)*(2+Math.random()*2)];g.add(p)}
@@ -4553,7 +4545,7 @@ const MOB=(()=>{
   buildLair();
   {const b=$('gmlvb');if(b)b.onclick=()=>{if(rpgHook)rpgHook.setLevel($('gmlv').value)}}   // (the GM's own "set my level", for trying things out, such as the level 99 aura)
   rpgApply();
-  return{tick,list,HP,CD,RPG,EN,AURA,attack,slam,dash,monsOn,gainXp}})();
+  return{tick,list,HP,CD,RPG,EN,attack,slam,dash,monsOn,gainXp}})();
 
 const clockT=new THREE.Clock();let t=0,walkPh=0,walkAmt=0,frames=0,lift=0,lastStep=0;
 function frame(){
