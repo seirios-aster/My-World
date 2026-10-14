@@ -4888,8 +4888,8 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
   {const fy=Math.atan2(HUB[0]-SHOP.x,HUB[1]-SHOP.z),gy=groundY(SHOP.x,SHOP.z);NPC.root.position.set(SHOP.x,gy,SHOP.z);NPC.root.rotation.y=fy;
     const st=new THREE.Group(),wood=new THREE.MeshStandardMaterial({color:'#8a5a34',roughness:.9}),cl=[0xd9483b,0xfff4e0],fx=Math.sin(fy),fz=Math.cos(fy),mk=(g,m,x,y,z,r)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);if(r)o.rotation.y=r;o.castShadow=o.receiveShadow=true;st.add(o);return o};
     mk(new THREE.BoxGeometry(2.8,1,.9),wood,fx*1.15,.5,fz*1.15,fy);   // the counter, between her and you
-    for(let i=0;i<7;i++)mk(new THREE.BoxGeometry(.5,.1,2.4),new THREE.MeshStandardMaterial({color:cl[i%2],roughness:.8}),-fx*.2+Math.cos(fy)*(i-3)*.46,3.05,fz*-.2-Math.sin(fy)*(i-3)*.46,fy+Math.PI/2*0).rotation.x=0;
-    [-1,1].forEach(sd=>mk(new THREE.CylinderGeometry(.07,.07,3,6),wood,-fx*.2+Math.cos(fy)*sd*1.5,1.5,-fz*.2-Math.sin(fy)*sd*1.5));
+    for(let i=0;i<7;i++)mk(new THREE.BoxGeometry(.5,.1,2.4),new THREE.MeshStandardMaterial({color:cl[i%2],roughness:.8}),-fx*.2+Math.cos(fy)*(i-3)*.46,4.1,fz*-.2-Math.sin(fy)*(i-3)*.46,fy+Math.PI/2*0).rotation.x=0;
+    [-1,1].forEach(sd=>mk(new THREE.CylinderGeometry(.07,.07,4.1,6),wood,-fx*.2+Math.cos(fy)*sd*1.5,2.05,-fz*.2-Math.sin(fy)*sd*1.5));
     mk(new THREE.BoxGeometry(1.2,.5,.08),new THREE.MeshStandardMaterial({color:'#f3d9a4'}),fx*1.3,1.3,fz*1.3,fy);
     st.position.set(SHOP.x,gy,SHOP.z);W.add(st)}
   /* ---- the forge: Brann the blacksmith works under a shelter near the base camp, at the foot of the mountains. Refining is done here. ---- */
