@@ -451,7 +451,7 @@ const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTF
 
 /* ============================== EDIT ME ============================== */
 // Your places. media = a photo/video as a data: URI (leave it out for a placeholder tile)
-const LAIR={n:'the Slime Throne',x:-120,z:100,r:18};   // the boss slime's lair: a flat ring of standing stones in the west meadows (built in MOB; no trees grow here)
+const LAIR={n:'the Slime Throne',x:-25,z:75,r:18};   // the boss slime's lair: a flat ring of standing stones in the quiet southern valley, off every trail and well away from the sports complex (built in MOB; no trees grow here)
 const SPOTS=[
  {name:'Hiking',emoji:'⛰️',x:-36,z:-64,text:'Trails I have walked. Pick a hike below.',items:[
   {title:'Sunrise Summit',place:'Mt. Example, Region',date:'Jan 2026',caption:''},
@@ -4222,7 +4222,7 @@ if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.
    "this slime hit you" ('d') and your own game takes the damage. If the host leaves, the next player takes over from the monsters they were already seeing.
    Trade-off: the host's game is the referee, so it is not cheat-proof, which is fine for a friends' hangout. */
 const MOB=(()=>{
-  const NET=MP.net,ZONES=[{n:'the misty woods',x:-132,z:78,r:34},{n:'the summit slopes',x:-20,z:-74,r:30},{n:'the east meadow',x:28,z:-45,r:22},{n:'the middle fields',x:-45,z:12,r:22},{n:'the west meadow',x:-105,z:-40,r:22},{n:'the coast woods',x:-150,z:25,r:22},{n:'the north woods',x:-60,z:-70,r:20},{n:'the far woods',x:-140,z:120,r:22}],
+  const NET=MP.net,ZONES=[{n:'the misty woods',x:-132,z:78,r:34},{n:'the summit slopes',x:-20,z:-74,r:30},{n:'the middle fields',x:-45,z:12,r:22},{n:'the west meadow',x:-105,z:-40,r:22},{n:'the coast woods',x:-150,z:25,r:22},{n:'the north woods',x:-60,z:-70,r:20},{n:'the far woods',x:-140,z:120,r:22}],
     CAP=16,   // (never more than this many slimes alive at once, wherever they are)
     TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a',xp:10},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0',xp:40},{hp:900,dmg:22,sp:2.4,ag:26,sc:3.4,col:'#e2b43c',xp:300,boss:true}],
     list=new Map(),box=$('mon'),hpb=$('hpb'),hpf=hpb.firstElementChild,hpt=hpb.querySelector('b'),fight=$('fight'),btn={a:$('batk'),z:$('bslam'),d:$('bdash')},
