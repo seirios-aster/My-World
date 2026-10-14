@@ -746,9 +746,9 @@ function gobH(x,z,h){const dx=x-GOB.x,dz=z-GOB.z,d=Math.hypot(dx,dz);if(d>46)ret
     base=lerp(1.15,h,sstep(GOB.fr+1,GOB.fr+9,d)),ring=8.5*Math.exp(-t*t)*(1-open*.93)*(1+.3*(ridged(x*.09+4,z*.09+2)-.5));
   return base+ring}
 function wildsH(x,z,h){const w=wildsW(x,z);if(w<=0)return h;return smax(h+w*(3.6*(fbm(x*.045+11,z*.045+3)-.5)+2.6*(ridged(x*.06+2,z*.06+8)-.42)),.85,1.2)}   // low, rough hills
-function ruinH(x,z,h){const dx=x-RUIN.x,dz=z-RUIN.z;if(Math.abs(dx)>RUIN.hx*2||Math.abs(dz)>RUIN.hz*2)return h;   // the courtyard is sunk below banks of earth that run round it, with a ramp in the north side
-  const q=Math.max(Math.abs(dx)/RUIN.hx,Math.abs(dz)/RUIN.hz),qq=(q-1.3)/.3,bank=4.6*Math.exp(-qq*qq)*(1+.25*(ridged(x*.08+9,z*.08+5)-.5)),
-    gap=dz<0?1-sstep(3,6.5,Math.abs(dx)):0,base=q<1?1.05:lerp(1.05,h,sstep(1,1.9,q));
+function ruinH(x,z,h){const dx=x-RUIN.x,dz=z-RUIN.z;if(Math.abs(dx)>RUIN.hx*2||Math.abs(dz)>RUIN.hz*2)return h;   // the courtyard is a shallow bowl that slopes gently up into the meadow all round (no wall of earth)
+  const q=Math.max(Math.abs(dx)/RUIN.hx,Math.abs(dz)/RUIN.hz),qq=(q-1.25)/.4,bank=.9*Math.exp(-qq*qq)*(1+.4*(ridged(x*.08+9,z*.08+5)-.5)),
+    gap=0,base=q<1?1.05:lerp(1.05,h,sstep(1,1.9,q));
   let pl=0;if(q<1.05)for(const[px,pz,pr,ph]of RPL){const d=Math.hypot(dx-px,dz-pz);pl=Math.max(pl,ph*(1-sstep(pr,pr+ph*1.15,d)))}   // a flat top with sides gentle enough to climb
   return base+bank*(1-gap*.95)+pl}
 function Hpre(x,z){let h=rawH(x,z);for(const p of PADS){const d=Math.hypot(x-p.x,z-p.z);if(d<p.r+p.b)h=lerp(p.h,h,sstep(p.r,p.r+p.b,d))}
@@ -4842,6 +4842,18 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
     // the graveyard, in the east corner: three rows of leaning stones and a few crosses
     for(let r=0;r<3;r++)for(let k=0;k<4;k++){const x=cx+7.2+r*2.3,z=cz-9+k*2.9+(r%2)*.8,h=1+((r*5+k*3)%4)*.18,st=at(new THREE.Mesh(new B(.75,h,.28),(r+k)%3?stone:dark),x,z,h/2-.1);st.rotation.set(0,.2*Math.sin(r+k*2),((r*3+k)%5-2)*.06);at(new THREE.Mesh(new THREE.SphereGeometry(.3,6,4),moss),x-.7,z,-.1).scale.set(1.5,.35,.7)}
     [[8,-11.2],[12.5,-4],[10,11.2]].forEach(([dx,dz],i)=>{const x=cx+dx,z=cz+dz;at(new THREE.Mesh(new B(.16,1.7,.16),wood),x,z,.8).rotation.z=(i-1)*.12;at(new THREE.Mesh(new B(.8,.16,.16),wood),x,z,1.25).rotation.z=(i-1)*.12});
+    // a low iron graveyard fence round the courtyard, broken in places and open at the four gates
+    {const iron=M('#2d2f38',.7),fx=RUIN.hx*1.12,fz=RUIN.hz*1.12,pts=[];
+      for(let t=-fx;t<=fx;t+=2.5){pts.push([t,-fz,0],[t,fz,0])}for(let t=-fz+2.5;t<fz;t+=2.5){pts.push([-fx,t,1],[fx,t,1])}
+      pts.forEach(([a,b,v],i)=>{const x=cx+(v?a:a),z=cz+(v?b:b),gate=v?Math.abs(b)<3.5:Math.abs(a)<3.5;if(gate||(i*7)%11===0)return;
+        const h=1.5-((i*5)%4)*.12,p=at(new THREE.Mesh(new B(.14,h,.14),iron),x,z,h/2-.1);p.rotation.z=((i*3)%5-2)*.025;at(new THREE.Mesh(new THREE.ConeGeometry(.13,.3,4),iron),x,z,h+.05);
+        if((i*3)%7!==0){const r=at(new THREE.Mesh(new B(v?.06:2.5,.07,v?2.5:.06),iron),x+(v?0:1.25),z+(v?1.25:0),h*.75);r.rotation.z=((i*2)%3-1)*.03}});
+      // stone gate posts with a blue lantern at each of the four gates
+      [[0,-fz],[0,fz],[-fx,0],[fx,0]].forEach(([gx,gz],gi)=>{[-1,1].forEach(sd=>{const x=cx+gx+(gz?sd*3.8:0),z=cz+gz+(gz?0:sd*3.8);at(new THREE.Mesh(new B(.9,2.6,.9),stone),x,z,1.2);at(new THREE.Mesh(new B(1.1,.25,1.1),dark),x,z,2.55);
+          const f=at(new THREE.Mesh(new THREE.ConeGeometry(.16,.5,6),blue),x,z,2.95);RFX.flames.push(f);if(sd>0){const gl=glowSprite('rgba(110,210,255,.7)',2.8);gl.position.set(x,groundY(x,z)+3,z);g.add(gl);RFX.flames.push(gl)}})})}
+    // more graves out on the slopes, in loose clusters
+    for(let i=0;i<22;i++){const a=i*2.399+.4,rr=1.28+((i*7)%5)*.1,x=cx+Math.cos(a)*RUIN.hx*rr*.93,z=cz+Math.sin(a)*RUIN.hz*rr*.93;if(Math.abs(Math.cos(a))<.18||Math.abs(Math.sin(a))<.18)continue;
+      const h=.8+((i*3)%4)*.2,st=at(new THREE.Mesh(new B(.7,h,.26),i%3?stone:dark),x,z,h/2-.1);st.rotation.set(0,a+1.57,((i*3)%5-2)*.07);if(i%4===0)at(new THREE.Mesh(new B(.14,1.5,.14),wood),x+1.2,z,.65).rotation.z=.1}
     // bare trees, bones and a few skulls
     [[-9,-5],[-8,7.5],[9.5,5]].forEach(([dx,dz],i)=>{const x=cx+dx,z=cz+dz;at(new THREE.Mesh(new C(.12,.34,4.4,6),wood),x,z,2.1).rotation.z=(i-1)*.05;for(let b=0;b<4;b++){const a=b*1.6+i,br=at(new THREE.Mesh(new C(.04,.09,1.7,5),wood),x+Math.cos(a)*.5,z+Math.sin(a)*.5,3.5+b*.3);br.rotation.set(Math.sin(a)*.9,0,-Math.cos(a)*.9)}});
     for(let i=0;i<9;i++){const a=i*2.4+.3,r=2.5+(i%4)*2.6;at(new THREE.Mesh(new C(.05,.06,.5,5),bone),cx+Math.cos(a)*r,cz+Math.sin(a)*r*.8,.15).rotation.set(1.2,i,0)}
