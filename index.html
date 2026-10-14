@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta http-equiv="Cache-Control" content="no-cache"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><script>try{if(localStorage.getItem('tambayan.theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Tambayan</title>
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700;800&display=swap">
@@ -2576,9 +2577,9 @@ const touch=matchMedia('(pointer: coarse)').matches;
   msg.onclick=()=>{msg.style.display='none'};
   // app-style hints for Home Screen installs (set at run time so they work wherever the page is hosted)
   try{const mk=(n,c)=>{const m=document.createElement('meta');m.name=n;m.content=c;document.head.appendChild(m)};
-    mk('apple-mobile-web-app-capable','yes');mk('mobile-web-app-capable','yes');mk('apple-mobile-web-app-status-bar-style','black-translucent');mk('apple-mobile-web-app-title',APP.name);mk('theme-color','#a9d8f0');
-    const man={name:APP.name,short_name:APP.short,start_url:location.href.split('#')[0],display:'fullscreen',display_override:['fullscreen','standalone'],orientation:'landscape',background_color:'#a9d8f0',theme_color:'#a9d8f0'};
-    const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));document.head.appendChild(l)}catch(e){}
+    mk('apple-mobile-web-app-capable','yes');mk('mobile-web-app-capable','yes');mk('apple-mobile-web-app-status-bar-style','black-translucent');mk('apple-mobile-web-app-title',APP.name);mk('theme-color','#25406f');
+    }catch(e){}
+  try{if('serviceWorker'in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}catch(e){}   // (the manifest and icons are real files now, so Android offers to install the app)
   const lockLand=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{})}catch(e){}};
   const sync=()=>{const on=!!fsEl();btn.innerHTML=on?IC.fsx:IC.fs;btn.title=on?'Exit full screen':'Full screen (landscape on phones)';setTimeout(resize,150);setTimeout(resize,600)};
   document.addEventListener('fullscreenchange',()=>{sync();if(!fsEl()){try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}}});
