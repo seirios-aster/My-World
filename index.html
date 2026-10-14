@@ -231,8 +231,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .dmg.xp{color:#ffd24a;font-size:16px}.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
 #herobar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:8px;z-index:3}
 #herobar.on{display:flex}#bhero{width:38px;height:38px;font:700 12px var(--display);padding:0;flex:none}
-#hpb{position:relative;width:min(140px,22vw);height:16px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:none;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
-#hpb.show{display:block}#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
+#hpb{position:relative;width:min(280px,44vw);height:18px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:block;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
+@media (max-height:600px){#herobar{bottom:calc(66px + env(safe-area-inset-bottom,0px))}}   /* a phone on its side: the bar floats above the row of action buttons instead of running into them */#hpb s{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffd24a;transform-origin:left center;text-decoration:none}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
 #hpb b{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
 #fight{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(68px + env(safe-area-inset-bottom,0px));display:none;align-items:flex-end;gap:10px;z-index:3}
 #fight.show{display:flex}#fight .round{position:relative;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}#fight #batk{width:62px;height:62px;font-size:30px}
@@ -2778,6 +2778,7 @@ function makeCloudAdapter(cfg,prepare,fallback){
       wch.on('broadcast',{event:'tz'},()=>wfire('tz'));
       wch.on('broadcast',{event:'e'},m=>wfire('e',m&&m.payload));
       wch.on('broadcast',{event:'v'},m=>wfire('v',m&&m.payload));   // (voice chat set-up: an offer or an answer addressed to one person; see VC)   // (an emote: who + which one; see EMO)
+      ['m','h','d','fx'].forEach(ev=>wch.on('broadcast',{event:ev},m=>wfire(ev,m&&m.payload)));   // (monsters: where they are (m), a hit on one (h), a bite on someone (d), a swing to show (fx); see MOB. A message nobody subscribed to is never delivered, which is why a second player saw no monsters)
       wch.on('broadcast',{event:'gm'},m=>wfire('gm',m&&m.payload));   // (a nudge only: "someone was just removed, check yourself". Forging one does nothing, the truth is the world_bans row)
       wch.on('presence',{event:'sync'},()=>wfire('sync',wch?wch.presenceState():{}));
       wch.on('presence',{event:'join'},e=>{if(e&&e.key!==wkey)wfire('join',e.key)});
