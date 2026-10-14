@@ -3133,7 +3133,10 @@ Object.keys(EMOSVG).forEach(k=>{const b=document.createElement('button');b.type=
     chatIn.value=n;const c=Math.min(a+EMOCH[k].length,n.length);chatIn.focus();try{chatIn.setSelectionRange(c,c)}catch(_){}emoShow(false)};emoPick.appendChild(b)});
 emoBtn.onclick=()=>{emoShow(!emoPick.classList.contains('on'));chatIn.focus()};
 addEventListener('pointerdown',e=>{if(emoPick.classList.contains('on')&&!emoPick.contains(e.target)&&e.target!==emoBtn)emoShow(false)},true);
-function sendChat(){const t=clean(chatIn.value).slice(0,80);if(!t||!room)return;
+function sendChat(){const t=clean(chatIn.value).slice(0,80);
+  const cm=/^\/level(?:\s+(\d{1,3}))?\s*$/i.exec(t);   // a command for the GM alone: "/level 99" sets your own level (to try things out, like the level 99 aura). Nothing is sent to anyone.
+  if(cm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cm[1])toast('','Type /level and a number from 1 to 99, like /level 99',true);else if(rpgHook)rpgHook.setLevel(+cm[1]);return}
+  if(!t||!room)return;
   if(performance.now()-lastSend<1200)return;
   if(!room.connected()){toast('','Not connected yet - try again in a moment',true);return}
   lastSend=performance.now();chatIn.value='';
