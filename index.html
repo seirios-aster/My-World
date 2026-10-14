@@ -262,7 +262,13 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #rpg .rps{margin-top:4px;font:600 14px var(--display);display:flex;justify-content:space-between;align-items:baseline}#rpg .rps small{font:700 12px var(--body);color:var(--ink-soft)}
 #rpg .rpr{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--paper-2)}#rpg .rpn{flex:1;min-width:0}#rpg .rpn small{display:block;font:600 11.5px/1.3 var(--body);color:var(--ink-soft)}#rpg .rpv{min-width:34px;text-align:center;font:700 15px var(--display)}
 #rpeqs,#rpbag,#rpit{flex:none}#rpeqs,#rpbag{display:grid;gap:5px}#rpeqs{grid-template-columns:repeat(4,1fr)}#rpbag{grid-template-columns:repeat(6,1fr)}
-#rpg .rpt{position:relative;aspect-ratio:1;border:2px solid var(--paper-2);border-radius:10px;background:var(--paper-2);color:var(--ink);font:400 20px/1 var(--body);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}#rpg .rpt.empty{opacity:.45}#rpg .rpt.sel{outline:2px solid var(--ink);outline-offset:1px}#rpg .rpt small{position:absolute;left:0;right:0;bottom:1px;font:700 8px var(--body);text-align:center;color:var(--ink-soft)}
+#rpg .rpt,#shop .rpt{position:relative;aspect-ratio:1;border:2px solid var(--paper-2);border-radius:10px;background:var(--paper-2);color:var(--ink);font:400 20px/1 var(--body);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}#rpg .rpt.empty,#shop .rpt.empty{opacity:.45}#rpg .rpt.sel,#shop .rpt.sel{outline:2px solid var(--ink);outline-offset:1px}#rpg .rpt small,#shop .rpt small{position:absolute;left:0;right:0;bottom:1px;font:700 8px var(--body);text-align:center;color:var(--ink-soft)}
+#rpcoin{font:700 12px var(--body);color:var(--ink-soft);flex:none}
+#shop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(390px,94vw);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;display:none;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:color-mix(in srgb,var(--paper) 95%,transparent);color:var(--ink);box-shadow:var(--shadow);z-index:4;font:700 13px var(--body)}#shop.on{display:flex}
+#shh{display:flex;align-items:center;gap:8px;font:600 16px var(--display)}#shh b{flex:1}#shh span{font:700 12px var(--body);color:var(--ink-soft)}#sht{display:flex;gap:6px;flex:none}#sht button{flex:1;border:0;border-radius:999px;padding:6px 4px;background:var(--paper-2);color:var(--ink);font:700 12px var(--body);cursor:pointer}#sht button.on{background:var(--ink);color:var(--paper)}
+#shb{display:flex;flex-direction:column;gap:6px;flex:none}#shb .shr{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--paper-2)}#shb .shi{font-size:22px;width:28px;text-align:center}#shb .shn{flex:1;min-width:0}#shb .shn small{display:block;font:600 11.5px/1.3 var(--body);color:var(--ink-soft)}
+#shb button.shbt,#shb .rpa button{border:0;border-radius:999px;padding:5px 12px;background:var(--ink);color:var(--paper);font:700 12px var(--body);cursor:pointer;white-space:nowrap}#shb button:disabled{opacity:.3;cursor:default}#shb .rpa{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}#shb .rpa button.alt{background:var(--paper-2);color:var(--ink)}#shb .shg{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}#shb .shd{font:600 12px/1.4 var(--body)}#shb .shs{font:700 12px var(--body);color:var(--ink-soft)}
+#fight #bpot{right:calc(215px + var(--sr));bottom:calc(30px + var(--sb));width:42px;height:42px;font-size:22px}#fight .pn{position:absolute;right:-2px;bottom:-2px;z-index:1;font:700 11px/1.4 var(--body);background:var(--ink);color:var(--paper);border-radius:8px;padding:0 5px}
 #rpit{font:600 12px/1.4 var(--body);min-height:0}#rpit b{font:700 13px var(--body)}#rpit .rpa{display:flex;gap:6px;margin-top:4px}#rpit button{border:0;border-radius:999px;padding:5px 12px;background:var(--ink);color:var(--paper);font:700 12px var(--body);cursor:pointer}#rpit button.alt{background:var(--paper-2);color:var(--ink)}
 #rpg .rpb{border:0;border-radius:50%;width:28px;height:28px;background:var(--ink);color:var(--paper);font:700 16px var(--body);cursor:pointer;flex:none}#rpg .rpb:disabled{opacity:.25;cursor:default}
 #rpreset{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:6px 12px;font:700 12px var(--body);cursor:pointer;align-self:flex-start;margin-top:4px}
@@ -395,8 +401,8 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="mon"></div><div id="bossbar"><b>👑 Slime King</b><div><i></i></div></div><div id="herobar"><button type="button" class="round" id="bhero" title="Hero: level, stats and skills" aria-label="Hero" aria-expanded="false">Lv1</button><div id="hpb"><i></i><b></b><s></s></div></div>
-<div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="hpw"><canvas id="hpcv" role="img" aria-label="Your character. Drag to turn it."></canvas><span id="hph">drag to turn</span></div><div id="rpcls" role="group" aria-label="Class"><button type="button" data-c="0">⚔️ Knight</button><button type="button" data-c="1">🔮 Mage</button><button type="button" data-c="2">🏹 Archer</button></div><div id="rpxp"><i></i><small></small></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><div class="rps">Equipment <small id="rpeq"></small></div><div id="rpeqs"></div><div class="rps">Bag <small id="rpbg"></small></div><div id="rpbag"></div><div id="rpit"></div><button type="button" id="rpreset">Reset points</button></div>
-<div id="fight"><button type="button" class="round" id="bdash" title="Dash · Q" aria-label="Dash">💨</button><button type="button" class="round" id="bslam" title="Slam · G" aria-label="Slam">💥</button><button type="button" class="round" id="bburst" title="Burst · R" aria-label="Burst">🌪️</button><button type="button" class="round" id="batk" title="Attack · F" aria-label="Attack">⚔️</button></div>
+<div id="shop" role="dialog" aria-label="Shop"><div id="shh"><b>🧑‍🌾 Mira's Shop</b><span id="shw"></span><button type="button" class="round" id="shx" aria-label="Close">✕</button></div><div id="sht"><button type="button" data-t="b">Buy</button><button type="button" data-t="s">Sell</button><button type="button" data-t="r">Refine</button></div><div id="shb"></div></div><div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="hpw"><canvas id="hpcv" role="img" aria-label="Your character. Drag to turn it."></canvas><span id="hph">drag to turn</span></div><div id="rpcls" role="group" aria-label="Class"><button type="button" data-c="0">⚔️ Knight</button><button type="button" data-c="1">🔮 Mage</button><button type="button" data-c="2">🏹 Archer</button></div><div id="rpxp"><i></i><small></small></div><div id="rpcoin"></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><div class="rps">Equipment <small id="rpeq"></small></div><div id="rpeqs"></div><div class="rps">Bag <small id="rpbg"></small></div><div id="rpbag"></div><div id="rpit"></div><button type="button" id="rpreset">Reset points</button></div>
+<div id="fight"><button type="button" class="round" id="bpot" title="Healing potion · H" aria-label="Healing potion">🧪</button><button type="button" class="round" id="bdash" title="Dash · Q" aria-label="Dash">💨</button><button type="button" class="round" id="bslam" title="Slam · G" aria-label="Slam">💥</button><button type="button" class="round" id="bburst" title="Burst · R" aria-label="Burst">🌪️</button><button type="button" class="round" id="batk" title="Attack · F" aria-label="Attack">⚔️</button></div>
 <div id="pick" role="dialog" aria-modal="true" aria-labelledby="pktitle" hidden><div id="pkbox"><h2 id="pktitle">Choose your character</h2><p>You can change it any time in the character menu.</p><div id="pkrow"><button type="button" class="pkc" data-g="0"><b>♂</b><small>Male</small></button><button type="button" class="pkc" data-g="1"><b>♀</b><small>Female</small></button></div></div></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
 <svg class="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
@@ -2577,7 +2583,7 @@ const tpos=new Map();let pz=null;   // pinch to zoom: where each finger is, and 
 // keys are tracked by physical key (e.code) so modifiers can't desync press/release; anything that can swallow a keyup clears input
 function clearInput(){for(const k in keys)keys[k]=false;sv={x:0,z:0};sid=null;st=null;lid=null;lp=null;pz=null;tpos.clear()}
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.metaKey){clearInput();return}keys[e.code]=true;const k=(e.key||'').toLowerCase();
-  if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(e.code==='Space'&&!open){e.preventDefault();if(!e.repeat)doJump()}if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
+  if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(MOB.shopNear())MOB.shopOpen();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(e.code==='Space'&&!open){e.preventDefault();if(!e.repeat)doJump()}if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
   if(e.key==='+'||e.key==='=')zm(.8);if(e.key==='-')zm(1.25)});
 addEventListener('keyup',e=>{if(e.target&&e.target.tagName==='INPUT')return;keys[e.code]=false;if(e.key==='Meta')clearInput()});
 addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput()});
@@ -2697,7 +2703,7 @@ $('pv').onclick=()=>cur&&pick(ci-1);$('nx').onclick=()=>cur&&pick(ci+1);$('mx').
   vw.addEventListener('pointerup',e=>{if(e.pointerId!==sid)return;sid=null;const dx=e.clientX-sx,dy=e.clientY-sy;
     if(cur&&cur.items.length>1&&Math.abs(dx)>=45&&Math.abs(dx)>Math.abs(dy)*1.5&&performance.now()-st<900)pick(ci+(dx<0?-1:1))});
   vw.addEventListener('pointercancel',()=>{sid=null})}
-$('x').onclick=hide;pr.onclick=()=>{if(near)show(near);else if(sitting||(!riding&&!atRack()&&nearSeat()))sitToggle();else if(!riding&&!atRack()&&dogNear())petDog();else toggleBike()};
+$('x').onclick=hide;pr.onclick=()=>{if(near)show(near);else if(sitting||(!riding&&!atRack()&&nearSeat()))sitToggle();else if(!riding&&!atRack()&&MOB.shopNear())MOB.shopOpen();else if(!riding&&!atRack()&&dogNear())petDog();else toggleBike()};
 $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')hide()});
 /* ---------------- waypoint photos & videos: a storage adapter. The gallery only calls put / url / thumbUrl / list / remove, so the backend can change later ----------------
    This one keeps everything in the browser's own database (IndexedDB) on this device. */
@@ -3016,7 +3022,7 @@ let cloud=false,dirty=false,saveT=0,posDone=false,lastPos=null,myCustom='',PST='
 const POSK=u=>'myworld.pos.'+(u&&u.id?u.id:'guest');
 const posNow=()=>({x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2)});
 function stateOut(){
-  return{v:1,name:myCustom,look:packLook(PPL[0]),friend:{name:PPL[1].name,look:packLook(PPL[1])},dog:dogName,ctl,pos:posNow(),rpg:rpgHook?rpgHook.out():undefined}}
+  return{v:1,name:myCustom,look:packLook(PPL[0]),friend:{name:PPL[1].name,look:packLook(PPL[1])},dog:dogName,ctl,pos:posNow(),rpg:rpgHook?rpgHook.out():undefined,eco:rpgHook?rpgHook.eout():undefined}}
 function touchState(now){if(!cloud)return;dirty=true;if(now)flushState();else if(!saveT)saveT=setTimeout(flushState,3000)}
 function flushState(){clearTimeout(saveT);saveT=0;const S=storage.session;
   if(cloud&&dirty&&S&&!S.active()){PST='waiting: this tab has not been confirmed as your active session yet ('+S.state()+')';return}
@@ -3040,7 +3046,7 @@ function stateIn(s,u){const put=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}
   if(Array.isArray(f.look)){Object.assign(PPL[1],unpackLook(f.look));put('myworld.look.friend',JSON.stringify(packLook(PPL[1])))}
   if(fn){PPL[1].name=fn;put('myworld.friend',fn)}
   const dn=clean(s.dog).slice(0,16);if(dn){dogName=dn;put('myworld.dog',dn);tagD.textContent=dn;dname.value=dn}
-  if(Array.isArray(s.rpg)&&rpgHook)rpgHook.in(s.rpg,u);
+  if(Array.isArray(s.rpg)&&rpgHook)rpgHook.in(s.rpg,u);if(Array.isArray(s.eco)&&rpgHook)rpgHook.ein(s.eco,u);
   applyMyName();applyMyLook();pairUp();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople();restorePos(s)}
 async function syncState(){applyMyName();applyMyLook();   // (what this device remembers, straight away)
   const A=storage.auth,u=A&&A.user(),had=hasLook(u);cloud=false;if(rpgHook)rpgHook.load(u);if(u&&typeof checkBan==='function')checkBan();
@@ -3147,6 +3153,8 @@ function sendChat(){const t=clean(chatIn.value).slice(0,80);
   if(sm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.addStat(['vit','str','agi'].indexOf(sm[1].toLowerCase()),Math.max(1,+sm[2]||1));return}
   const gm=/^\/give(?:\s+(weapon|upper|lower|boots)(?:\s+(common|rare|epic|legendary))?(?:\s+(knight|mage|archer))?)?\s*$/i.exec(t);   // GM only: "/give weapon legendary mage" puts a test item in your bag (slot, rarity and, for a weapon, class are all optional)
   if(gm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!gm[1])toast('','Type /give, then weapon, upper, lower or boots, then common, rare, epic or legendary (and a class for weapons)',true);else if(rpgHook)rpgHook.give(['weapon','upper','lower','boots'].indexOf(gm[1].toLowerCase()),['common','rare','epic','legendary'].indexOf((gm[2]||'common').toLowerCase()),Math.max(0,['knight','mage','archer'].indexOf((gm[3]||'').toLowerCase())<0?(rpgHook.cls?rpgHook.cls():0):['knight','mage','archer'].indexOf(gm[3].toLowerCase())));return}
+  const cn=/^\/coins?(?:\s+(\d{1,9}))?\s*$/i.exec(t);   // GM only: "/coin 5000" gives you that many copper (for trying the shop)
+  if(cn){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cn[1])toast('','Type /coin and an amount of copper, like /coin 5000',true);else if(rpgHook)rpgHook.coin(+cn[1]);return}
   if(!t||!room)return;
   if(performance.now()-lastSend<1200)return;
   if(!room.connected()){toast('','Not connected yet - try again in a moment',true);return}
@@ -4289,13 +4297,22 @@ const MOB=(()=>{
     gMax=(sl,r)=>Math.ceil(GBASE[sl][r]*1.15),
     DROPS=[{ch:.06,w:[94,6,0,0]},{ch:.12,w:[80,19,1,0]},{ch:1,w:[0,80,20,0]}],   // (per monster type: the chance it drops anything, then the weights of Common / Rare / Epic / Legendary. Legendary does not drop from today's monsters; stronger ones will)
     INV={eq:[null,null,null,null],bag:[]},
-    gName=it=>it[0]===0?WNM[it[2]][it[1]]:ANM[it[0]-1][it[1]],gIcon=it=>it[0]===0?WPI[it[2]]:SLI[it[0]],gStat=it=>it[0]===0?'+'+it[3]+'% damage':'+'+it[3]+' defence',
-    atkB=()=>{const w=INV.eq[0];return w&&w[2]===RPG.c?w[3]:0},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?INV.eq[i][3]:0),0),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
+    ic=it=>it[2]%3,rf=it=>Math.floor(it[2]/3),ev=it=>Math.round(it[3]*(1+.12*rf(it))),   // (the class field also carries the refine level: class + 3 × refine, from +0 to +5)
+    gName=it=>(rf(it)?'+'+rf(it)+' ':'')+(it[0]===0?WNM[ic(it)][it[1]]:ANM[it[0]-1][it[1]]),gIcon=it=>it[0]===0?WPI[ic(it)]:SLI[it[0]],gStat=it=>it[0]===0?'+'+ev(it)+'% damage':'+'+ev(it)+' defence',
+    atkB=()=>{const w=INV.eq[0];return w&&ic(w)===RPG.c?ev(w):0},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?ev(INV.eq[i]):0),0),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
     gMake=(sl,r,c)=>{const v=Math.max(1,Math.round(GBASE[sl][r]*(.85+.3*Math.random())));return[sl,r,sl===0?c:0,v]},
-    gOk=(a,sl)=>{if(!Array.isArray(a)||a.length!==4)return null;const[s,r,c,v]=a.map(x=>Math.floor(+x));if(!(s>=0&&s<4&&r>=0&&r<4&&c>=0&&c<3&&v>=1))return null;if(sl!=null&&s!==sl)return null;if(s>0&&c!==0)return null;return[s,r,c,Math.min(v,gMax(s,r))]},
+    gOk=(a,sl)=>{if(!Array.isArray(a)||a.length!==4)return null;const[s,r,c,v]=a.map(x=>Math.floor(+x));if(!(s>=0&&s<4&&r>=0&&r<4&&c>=0&&c<18&&v>=1))return null;if(sl!=null&&s!==sl)return null;if(s>0&&c%3!==0)return null;return[s,r,c,Math.min(v,gMax(s,r))]},
     gFlat=()=>{const o=[];for(let i=0;i<4;i++){const e=INV.eq[i];o.push(...(e||[-1,0,0,0]))}INV.bag.forEach(b=>o.push(...b));return o},
     gLoad=a=>{const eq=[null,null,null,null],bag=[];for(let i=0;i<4;i++){const q=a.slice(9+4*i,13+4*i);if(+q[0]>=0)eq[i]=gOk(q,i)}
       for(let j=25;j+3<a.length&&bag.length<BAGMAX;j+=4){const b=gOk(a.slice(j,j+4));if(b)bag.push(b)}INV.eq=eq;INV.bag=bag};
+  /* ---- coins (copper, silver = 100 copper, gold = 100 silver; kept as one number of copper) and healing potions. Earned from slimes and by selling gear; spent at Mira's shop and on point resets. ---- */
+  let COIN=0,POT=0,POTCD=0;
+  const COINMAX=1e9,POTMAX=20,POTP=25,POTCDMS=8000,coinStr=n=>{const g=Math.floor(n/1e4),sv=Math.floor(n/100)%100,c=n%100;return(g?'🥇'+g+' ':'')+(sv||g?'🥈'+sv+' ':'')+'🥉'+c},
+    RP=[8,40,200,1000],SM=[1.5,1.2,1,.8],RC=[20,80,300,1200],RCH=[1,1,.8,.6,.4],COINDROP=[[2,5],[10,22],[300,500]],   // (RP: what a typical item of each rarity sells for; SM: slot multipliers; RC: refine cost per rarity, times the next level; RCH: chance to refine from +0..+4)
+    sellP=it=>Math.max(1,Math.round(RP[it[1]]*SM[it[0]]*(it[3]/GBASE[it[0]][it[1]])*(1+.5*rf(it)))),buyP=(sl,r)=>Math.round(RP[r]*5*SM[sl]),resetCost=()=>IS_GM===true?0:25*(RPG.l-1),
+    ecoIn=a=>{if(!Array.isArray(a))return;const n=x=>Math.max(0,Math.floor(+x)||0);COIN=Math.min(COINMAX,n(a[0]));POT=Math.min(POTMAX,n(a[1]))};
+  function addCoin(n){COIN=Math.min(COINMAX,COIN+n);rpgSave();rpgDraw();shopDraw()}
+  function spend(n){if(COIN<n){toast('','You need '+coinStr(n)+' for that',true);return false}COIN-=n;rpgSave();rpgDraw();shopDraw();return true}
   let SEL=null;   // (the item picked in the Hero window: {k:'e' (worn) or 'b' (bag), i})
   const rpgKey=u=>'myworld.rpg.'+(u&&u.id?u.id:'guest');let rpgUser=null;
   const rpgOut=()=>[RPG.l,RPG.xp,...RPG.s,...RPG.k,RPG.c,...gFlat()];
@@ -4303,7 +4320,7 @@ const MOB=(()=>{
     const l=Math.min(MAXL,Math.max(1,n(a[0]))),s=[n(a[2]),n(a[3]),n(a[4])],k=[1,2,3].map(i=>Math.min(5,Math.max(1,n(a[4+i])||1)));
     if(sum(s)>3*(l-1)||sum(k)-3>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
     RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;RPG.c=+a[8]===1||+a[8]===2?+a[8]:0;gLoad(a);return true}
-  function rpgSave(){try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
+  function rpgSave(){try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
   function rpgApply(){LVL=RPG.l;const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);
     const c=RPG.c,kd=KDEF();if(typeof devGate==='function')devGate();btn.b.textContent=BRSI[c];btn.b.title=BRST[c][1]+' · R';btn.a.textContent=ATKI[c];btn.z.textContent=SLMI[c];btn.d.textContent=DSHI[c];btn.a.title=kd[0][1]+' · F';btn.z.title=kd[1][1]+' · G';btn.d.title=kd[2][1]+' · Q';rpgDraw()}
   function rpgDraw(){bHero.textContent='Lv'+RPG.l;if(!rpgEl.classList.contains('on'))return;
@@ -4311,18 +4328,18 @@ const MOB=(()=>{
     $('rplv').textContent='Lv '+RPG.l+(RPG.l>=AURAL?' ✨':'');const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
     const sp=spLeft(),kp=kpLeft();$('rpsp').textContent=sp+' point'+(sp===1?'':'s')+' to spend';$('rpkp').textContent=kp+' point'+(kp===1?'':'s')+' to spend';
     $('rpst').innerHTML=SDEF.map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+'<small>'+d[1]+'</small></div><span class="rpv">'+RPG.s[i]+'</span><button type="button" class="rpb" data-s="'+i+'" aria-label="Add a point to '+d[0]+'"'+(sp>0?'':' disabled')+'>+</button></div>').join('');
-    $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst<small>'+BRST[RPG.c][2]+'. It charges as you fight, then press 🌟R.</small></div></div>';gearDraw()}
+    $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst<small>'+BRST[RPG.c][2]+'. It charges as you fight, then press 🌟R.</small></div></div>';$('rpcoin').textContent=coinStr(COIN)+'   ·   🧪 '+POT+' potion'+(POT===1?'':'s');$('rpreset').textContent='Reset points'+(resetCost()?' · '+coinStr(resetCost()):'');gearDraw()}
   function gearDraw(){const tile=(it,k,i,sl)=>'<button type="button" class="rpt'+(it?'':' empty')+(SEL&&SEL.k===k&&SEL.i===i?' sel':'')+'" data-'+k+'="'+i+'" style="'+(it?'border-color:'+RAR[it[1]].c:'')+'" aria-label="'+(it?RAR[it[1]].n+' '+gName(it):SLN[i]+' (empty)')+'">'+(it?gIcon(it):SLI[sl])+(it&&k==='e'?'<small>'+SLN[i]+'</small>':'')+'</button>';
     $('rpeqs').innerHTML=INV.eq.map((it,i)=>tile(it,'e',i,i)).join('');$('rpbag').innerHTML=INV.bag.map((it,i)=>tile(it,'b',i,it[0])).join('');
     const d=defT();$('rpeq').textContent='+'+atkB()+'% damage · '+d+' def ('+Math.round(defRed()*100)+'% less damage taken)';$('rpbg').textContent=INV.bag.length+' / '+BAGMAX;
     const it=SEL&&(SEL.k==='e'?INV.eq[SEL.i]:INV.bag[SEL.i]);if(!it){SEL=null;$('rpit').innerHTML='';return}
-    const bad=it[0]===0&&it[2]!==RPG.c;$('rpit').innerHTML='<b style="color:'+RAR[it[1]].c+'">'+gIcon(it)+' '+gName(it)+'</b> · '+RAR[it[1]].n+' '+SLN[it[0]].toLowerCase()+'<br>'+gStat(it)+(it[0]===0?' · for '+CLS[it[2]].n+'s'+(bad?' (not your class: it does nothing for you)':''):'')+'<div class="rpa"><button type="button" data-a="'+(SEL.k==='e'?'un':'eq')+'">'+(SEL.k==='e'?'Take off':'Equip')+'</button>'+(SEL.k==='b'?'<button type="button" class="alt" data-a="drop">Discard</button>':'')+'</div>'}
+    const bad=it[0]===0&&ic(it)!==RPG.c;$('rpit').innerHTML='<b style="color:'+RAR[it[1]].c+'">'+gIcon(it)+' '+gName(it)+'</b> · '+RAR[it[1]].n+' '+SLN[it[0]].toLowerCase()+'<br>'+gStat(it)+(it[0]===0?' · for '+CLS[ic(it)].n+'s'+(bad?' (not your class: it does nothing for you)':''):'')+'<div class="rpa"><button type="button" data-a="'+(SEL.k==='e'?'un':'eq')+'">'+(SEL.k==='e'?'Take off':'Equip')+'</button>'+(SEL.k==='b'?'<button type="button" class="alt" data-a="drop">Discard</button>':'')+'</div>'}
   function gearAdd(it){const nm=RAR[it[1]].n+' '+gName(it);if(INV.bag.length>=BAGMAX){toast('','You found '+nm+' but your bag is full',true);return false}INV.bag.push(it);toast('','Found: '+gIcon(it)+' '+nm+' ('+gStat(it)+')',true);ringFx(P.position.x,P.position.z,3,RAR[it[1]].c,600);rpgSave();rpgDraw();return true}
   function gearDrop(ty){const D=DROPS[ty];if(!D||Math.random()>=D.ch)return;let x=Math.random()*(D.w[0]+D.w[1]+D.w[2]+D.w[3]),r=0;while(r<3&&x>=D.w[r]){x-=D.w[r];r++}
     const q=Math.random(),sl=q<.3?0:q<.55?1:q<.8?2:3;gearAdd(gMake(sl,r,Math.floor(Math.random()*3)))}
   rpgEl.addEventListener('click',async e=>{const t=e.target.closest('button[data-e],button[data-b],button[data-a]');if(!t)return;
     if(t.dataset.a){const sel=SEL;if(!sel)return;const a=t.dataset.a;
-      if(a==='eq'){const it=INV.bag[sel.i];if(!it)return;if(it[0]===0&&it[2]!==RPG.c){toast('','That is a '+CLS[it[2]].n+' weapon: switch to '+CLS[it[2]].n+' to use it',true);return}
+      if(a==='eq'){const it=INV.bag[sel.i];if(!it)return;if(it[0]===0&&ic(it)!==RPG.c){toast('','That is a '+CLS[ic(it)].n+' weapon: switch to '+CLS[ic(it)].n+' to use it',true);return}
         const old=INV.eq[it[0]];INV.eq[it[0]]=it;INV.bag.splice(sel.i,1);if(old)INV.bag.push(old);SEL={k:'e',i:it[0]}}
       else if(a==='un'){const it=INV.eq[sel.i];if(!it)return;if(INV.bag.length>=BAGMAX){toast('','Your bag is full',true);return}INV.eq[sel.i]=null;INV.bag.push(it);SEL={k:'b',i:INV.bag.length-1}}
       else if(a==='drop'){const it=INV.bag[sel.i];if(!it)return;if(it[1]>=1&&!await ask({title:'Discard '+gName(it)+'?',text:'This '+RAR[it[1]].n.toLowerCase()+' item will be gone for good.',ok:'Discard',cancel:'Keep'}))return;if(INV.bag[sel.i]===it)INV.bag.splice(sel.i,1);SEL=null}
@@ -4333,13 +4350,13 @@ const MOB=(()=>{
   rpgEl.addEventListener('click',e=>{const cb=e.target.closest('button[data-c]');if(cb){RPG.c=+cb.dataset.c;rpgApply();rpgSave();return}   // (the class can be changed any time, for free)
     const b=e.target.closest('button[data-s],button[data-k]');if(!b||b.disabled)return;
     if(b.dataset.s!=null&&spLeft()>0)RPG.s[+b.dataset.s]++;else if(b.dataset.k!=null&&kpLeft()>0&&RPG.k[+b.dataset.k]<5)RPG.k[+b.dataset.k]++;else return;rpgApply();rpgSave()});
-  $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3<=0)return;if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.',ok:'Reset',cancel:'Keep'})){RPG.s=[0,0,0];RPG.k=[1,1,1];rpgApply();rpgSave()}};
+  $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3<=0)return;const rc=resetCost();if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.'+(rc?' It costs '+coinStr(rc)+'.':''),ok:'Reset',cancel:'Keep'})){if(rc&&!spend(rc))return;RPG.s=[0,0,0];RPG.k=[1,1,1];rpgApply();rpgSave()}};
   function gainXp(n){n=Math.max(1,Math.round(n*Math.max(.3,1-.05*(RPG.l-1))));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP','xp');let up=0;
     while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
     if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
   rpgHook={addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
-      if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],give:(sl,r,c)=>gearGive(sl,r,c),cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+      if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],give:(sl,r,c)=>gearGive(sl,r,c),coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN,POT],ein(a,u){rpgUser=u||rpgUser;ecoIn(a);try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}rpgDraw();shopDraw()},cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;try{ecoIn(JSON.parse(localStorage.getItem('myworld.eco.'+(u&&u.id?u.id:'guest'))||'null'))}catch(_){}let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false')};
@@ -4549,6 +4566,8 @@ const MOB=(()=>{
   addEventListener('keydown',e=>{if(e.repeat||(e.target&&e.target.tagName==='INPUT')||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyF')attack();else if(e.code==='KeyG')slam();else if(e.code==='KeyQ')dash();else if(e.code==='KeyR')ultimate()});
   // ---- every frame ----
   function tick(dt,t){if(gateOn)return;const now=performance.now();host=NET.isHost();
+    {const nd=Math.hypot(P.position.x-SHOP.x,P.position.z-SHOP.z);NPC.arms[1].rotation.z=nd<7?2.4+Math.sin(t*9)*.3:.12;NPC.arms[1].rotation.x=0;if(nd<7)NPC.root.rotation.y=Math.atan2(P.position.x-SHOP.x,P.position.z-SHOP.z);blinkTick(NPC,dt)}   // (Mira waves when you come near, and turns to look at you)
+
     for(const k in CD)CD[k]=Math.max(0,CD[k]-dt);HP.inv=Math.max(0,HP.inv-dt);
     if(HP.v<HP.max&&now-HP.hurt>6000)HP.v=Math.min(HP.max,HP.v+2*dt);
     if(DASH.t>0){DASH.t-=dt;const st=DASH.sp*dt,nx=P.position.x+DASH.x*st,nz=P.position.z+DASH.z*st;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}}
@@ -4561,7 +4580,7 @@ const MOB=(()=>{
       m.g.position.set(m.x,m.y+hop,m.z);m.g.rotation.y=m.ry;m.g.children[0].scale.set(1+(.8-sq)*.6,sq,1+(.8-sq)*.6);m.g.visible=d<(T.boss?130:90);m.g.children[0].castShadow=d<(T.boss?70:40);   // (a slime shows up when you are within 90 m of it, and casts a shadow within 40 m: far ones cost next to nothing)
       if(m.flash>0)m.flash=Math.max(0,m.flash-dt*4);
       if(m.st===2||m.st===4)m.mat.emissive.setRGB(.55+.3*Math.sin(t*30),0,0);else m.mat.emissive.setScalar(m.flash*.8);
-      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.hp<=0){if(m.mine){gainXp(T.xp);gearDrop(m.ty);if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+10)}if(T.boss){burst(m.x+1,m.y+1,m.z,'#ffd24a');burst(m.x-1,m.y+2,m.z,'#ff7acb');ringFx(m.x,m.z,9,'#ffd24a',900);toast('','The Slime King has fallen! 👑'+(m.mine?'  +'+T.xp+' XP':''),true)}}}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
+      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.hp<=0){if(m.mine){gainXp(T.xp);gearDrop(m.ty);coinDrop(m.ty);if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+10)}if(T.boss){burst(m.x+1,m.y+1,m.z,'#ffd24a');burst(m.x-1,m.y+2,m.z,'#ff7acb');ringFx(m.x,m.z,9,'#ffd24a',900);toast('','The Slime King has fallen! 👑'+(m.mine?'  +'+T.xp+' XP':''),true)}}}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
       if(m.tel){const on=m.st===2||m.st===4;m.tel.visible=on;if(on){const R=m.st===2?5.5:6,cx=m.st===2?m.x:m.jx,cz=m.st===2?m.z:m.jz;m.tel.position.set(cx,groundY(cx,cz)+.12,cz);m.tel.scale.setScalar(R);m.tel.material.opacity=.22+.14*Math.sin(t*14)}}   // (the red circle: where the blow will land)
       if(T.boss&&m.st!==3&&d<50)bossM=m;
       const sc=m.st!==3&&!T.boss&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
@@ -4575,6 +4594,7 @@ const MOB=(()=>{
     if(near<45)fightUntil=now+8000;
     const feat=FXS.mo!=='off';hud.classList.toggle('on',feat);fight.classList.toggle('show',feat);if(!feat&&rpgEl.classList.contains('on'))rpgEl.classList.remove('on');
     hpb.classList.toggle('show',HP.v<HP.max||now-HP.hurt<6000||now<fightUntil);hpb.lastChild.style.transform='scaleX('+(RPG.l>=MAXL?0:RPG.xp/need(RPG.l))+')';hpf.style.transform='scaleX('+Math.max(0,HP.v/HP.max)+')';hpt.textContent='HP '+Math.ceil(HP.v)+'/'+HP.max;
+    bpot.style.setProperty('--cd',Math.max(0,(POTCD-now)/POTCDMS).toFixed(2));if(shopEl.classList.contains('on')&&!shopNear()&&Math.hypot(P.position.x-SHOP.x,P.position.z-SHOP.z)>7)shopClose();
     for(const k in btn){if(k==='b')continue;btn[k].style.setProperty('--cd',(CD[k]/cdOf(k)).toFixed(2))}
     btn.b.style.setProperty('--cd',(1-EN.v/100).toFixed(2));btn.b.classList.toggle('ready',EN.v>=100)}
   /* ---- the Slime Throne: a flat ring of standing stones in the west meadows, with glowing crystals, a rock throne at the back and a round dais where the king waits ---- */
@@ -4589,9 +4609,62 @@ const MOB=(()=>{
     [-1,1].forEach(sd=>{const arm=new THREE.Mesh(new THREE.BoxGeometry(1.4,2.6,2.6),stone);at(arm,bx+sd*3.9,bz+1.3,1.0);arm.castShadow=true;g.add(arm);const c=new THREE.Mesh(new THREE.ConeGeometry(.7,3.6,5),cry);at(c,bx+sd*2.7,bz-.2,6.6);c.rotation.z=-sd*.25;g.add(c)});
     const top=new THREE.Mesh(new THREE.ConeGeometry(1.1,4.6,5),cry);at(top,bx,bz,8.4);g.add(top);W.add(g)}
   buildLair();
+  function coinDrop(ty){const r=COINDROP[ty],n=r[0]+Math.floor(Math.random()*(r[1]-r[0]+1));addCoin(n);numAt(P.position.x,P.position.y+3.3,P.position.z,'+'+coinStr(n),'xp')}
+  /* ---- healing potion: half your HP back, every 8 seconds at most (key H) ---- */
+  const bpot=$('bpot');
+  function potDraw(){bpot.innerHTML='🧪<span class="pn">'+POT+'</span>'}
+  function usePot(){const now=performance.now();if(HP.v<=0||gateOn||now<POTCD)return;if(POT<=0){toast('','No potions: Mira sells them in town',true);return}
+    if(HP.v>=HP.max){toast('','You are already at full health',true);return}
+    const h=Math.min(HP.max-HP.v,Math.ceil(HP.max*.5));POT--;HP.v+=h;POTCD=now+POTCDMS;numAt(P.position.x,P.position.y+2.4,P.position.z,'+'+h,'xp');ringFx(P.position.x,P.position.z,2.6,'#6fe08a',600);sfx('lvl');rpgSave();rpgDraw();shopDraw()}
+  bpot.onclick=usePot;
+  addEventListener('keydown',e=>{if(e.repeat||(e.target&&e.target.tagName==='INPUT')||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyH')usePot();else if(e.code==='Escape')shopClose()});
+  /* ---- Mira's shop: a stall by the spawn. Buy, sell and refine. ---- */
+  const SHOP={x:HUB[0]-5.4,z:HUB[1]+4.6},shopEl=$('shop'),NPC=makePerson(W);
+  dress(NPC,{name:'Mira',skin:0,hair:3,hcol:CB?HAIRC.length-1:4,face:1,outfit:2,eye:1,gender:CB&&CB.genders>1?1:0});
+  {const fy=Math.atan2(HUB[0]-SHOP.x,HUB[1]-SHOP.z),gy=groundY(SHOP.x,SHOP.z);NPC.root.position.set(SHOP.x,gy,SHOP.z);NPC.root.rotation.y=fy;
+    const st=new THREE.Group(),wood=new THREE.MeshStandardMaterial({color:'#8a5a34',roughness:.9}),cl=[0xd9483b,0xfff4e0],fx=Math.sin(fy),fz=Math.cos(fy),mk=(g,m,x,y,z,r)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);if(r)o.rotation.y=r;o.castShadow=o.receiveShadow=true;st.add(o);return o};
+    mk(new THREE.BoxGeometry(2.8,1,.9),wood,fx*1.15,.5,fz*1.15,fy);   // the counter, between her and you
+    for(let i=0;i<7;i++)mk(new THREE.BoxGeometry(.5,.1,2.4),new THREE.MeshStandardMaterial({color:cl[i%2],roughness:.8}),-fx*.2+Math.cos(fy)*(i-3)*.46,3.05,fz*-.2-Math.sin(fy)*(i-3)*.46,fy+Math.PI/2*0).rotation.x=0;
+    [-1,1].forEach(sd=>mk(new THREE.CylinderGeometry(.07,.07,3,6),wood,-fx*.2+Math.cos(fy)*sd*1.5,1.5,-fz*.2-Math.sin(fy)*sd*1.5));
+    mk(new THREE.BoxGeometry(1.2,.5,.08),new THREE.MeshStandardMaterial({color:'#f3d9a4'}),fx*1.3,1.3,fz*1.3,fy);
+    st.position.set(SHOP.x,gy,SHOP.z);W.add(st)}
+  const shopNear=()=>!riding&&!sitting&&Math.hypot(P.position.x-SHOP.x,P.position.z-SHOP.z)<3.8;
+  let ST={t:'b',sel:null};
+  function shopOpen(){ST.sel=null;shopEl.classList.add('on');shopDraw()}
+  function shopClose(){shopEl.classList.remove('on')}
+  const tileS=(it,k,i,sl)=>'<button type="button" class="rpt'+(it?'':' empty')+(ST.sel&&ST.sel.k===k&&ST.sel.i===i?' sel':'')+'" data-sl="'+k+i+'" style="'+(it?'border-color:'+RAR[it[1]].c:'')+'" aria-label="'+(it?RAR[it[1]].n+' '+gName(it):'empty')+'">'+(it?gIcon(it):SLI[sl])+'</button>';
+  const selIt=()=>ST.sel&&(ST.sel.k==='e'?INV.eq[ST.sel.i]:INV.bag[ST.sel.i]);
+  function shopDraw(){if(!shopEl.classList.contains('on'))return;$('shw').textContent=coinStr(COIN)+' · 🧪'+POT;
+    document.querySelectorAll('#sht button').forEach(b=>b.classList.toggle('on',b.dataset.t===ST.t));let h='';
+    if(ST.t==='b'){h+='<div class="shr"><span class="shi">🧪</span><div class="shn"><b>Healing Potion</b><small>Restores half your HP (key H) · you have '+POT+' / '+POTMAX+'</small></div><button type="button" class="shbt" data-buy="p"'+(POT>=POTMAX?' disabled':'')+'>'+coinStr(POTP)+'</button></div>';
+      for(let r=0;r<2;r++)for(let sl=0;sl<4;sl++){const it=[sl,r,sl===0?RPG.c:0,Math.round(GBASE[sl][r])];h+='<div class="shr"><span class="shi">'+gIcon(it)+'</span><div class="shn"><b style="color:'+RAR[r].c+'">'+gName(it)+'</b><small>'+RAR[r].n+' '+SLN[sl].toLowerCase()+' · '+gStat(it)+'</small></div><button type="button" class="shbt" data-buy="'+sl+'-'+r+'">'+coinStr(buyP(sl,r))+'</button></div>'}
+      h+='<div class="shs">Stronger gear drops from monsters. Weapons here are for your class ('+CLS[RPG.c].n+').</div>'}
+    else{const it=selIt();
+      h+=(ST.t==='r'?'<div class="shs">Worn</div><div class="shg" style="grid-template-columns:repeat(4,1fr)">'+INV.eq.map((q,i)=>tileS(q,'e',i,i)).join('')+'</div>':'')+'<div class="shs">Bag '+INV.bag.length+' / '+BAGMAX+'</div><div class="shg">'+INV.bag.map((q,i)=>tileS(q,'b',i,q[0])).join('')+'</div>';
+      if(it){h+='<div class="shd"><b style="color:'+RAR[it[1]].c+'">'+gIcon(it)+' '+gName(it)+'</b> · '+RAR[it[1]].n+' '+SLN[it[0]].toLowerCase()+'<br>'+gStat(it)+'<br>';
+        if(ST.t==='s')h+='Sells for '+coinStr(sellP(it))+'</div><div class="rpa"><button type="button" data-do="sell"'+(ST.sel.k==='e'?' disabled':'')+'>Sell</button></div>'+(ST.sel.k==='e'?'<div class="shs">Take it off in the Hero window first.</div>':'');
+        else{const r=rf(it);h+=r>=5?'Fully refined (+5)</div>':'Refine to +'+(r+1)+': '+gStat([it[0],it[1],it[2]+3,it[3]])+' · '+Math.round(RCH[r]*100)+'% chance · costs '+coinStr(RC[it[1]]*(r+1))+'<br><span class="shs">If it fails you lose the coins, never the item.</span></div><div class="rpa"><button type="button" data-do="ref">Refine</button></div>'}}
+      else h+='<div class="shs">'+(ST.t==='s'?'Tap an item to sell it.':'Tap an item to refine it.')+'</div>';
+      if(ST.t==='s'){const cm=INV.bag.filter(q=>q[1]===0&&!rf(q));h+='<div class="rpa"><button type="button" class="alt" data-do="sellc"'+(cm.length?'':' disabled')+'>Sell all plain Common ('+cm.length+')</button></div>'}}
+    $('shb').innerHTML=h}
+  shopEl.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t||t.disabled)return;
+    if(t.id==='shx'){shopClose();return}
+    if(t.dataset.t){ST.t=t.dataset.t;ST.sel=null;shopDraw();return}
+    if(t.dataset.sl){ST.sel={k:t.dataset.sl[0],i:+t.dataset.sl.slice(1)};shopDraw();return}
+    if(t.dataset.buy){const b=t.dataset.buy;if(b==='p'){if(POT>=POTMAX)return;if(spend(POTP)){POT++;potDraw();rpgSave();rpgDraw();shopDraw();toast('','Bought a healing potion 🧪',true)}return}
+      const[sl,r]=b.split('-').map(Number),it=[sl,r,sl===0?RPG.c:0,Math.round(GBASE[sl][r])];if(INV.bag.length>=BAGMAX){toast('','Your bag is full',true);return}
+      if(spend(buyP(sl,r))){INV.bag.push(it);toast('','Bought: '+gIcon(it)+' '+gName(it),true);rpgSave();rpgDraw();shopDraw()}return}
+    const a=t.dataset.do,it=selIt();
+    if(a==='sell'){if(!it||ST.sel.k!=='b')return;if(it[1]>=2&&!await ask({title:'Sell '+gName(it)+'?',text:'You get '+coinStr(sellP(it))+' for this '+RAR[it[1]].n.toLowerCase()+' item.',ok:'Sell',cancel:'Keep'}))return;const i=INV.bag.indexOf(it);if(i<0)return;INV.bag.splice(i,1);ST.sel=null;addCoin(sellP(it));toast('','Sold '+gName(it)+' for '+coinStr(sellP(it)),true);rpgDraw()}
+    else if(a==='sellc'){const cm=INV.bag.filter(q=>q[1]===0&&!rf(q)),tot=cm.reduce((n,q)=>n+sellP(q),0);if(!cm.length)return;if(!await ask({title:'Sell '+cm.length+' Common item'+(cm.length>1?'s':'')+'?',text:'You get '+coinStr(tot)+' in all.',ok:'Sell',cancel:'Keep'}))return;INV.bag=INV.bag.filter(q=>!(q[1]===0&&!rf(q)));ST.sel=null;addCoin(tot);toast('','Sold '+cm.length+' for '+coinStr(tot),true);rpgDraw()}
+    else if(a==='ref'){if(!it)return;const r=rf(it);if(r>=5)return;if(!spend(RC[it[1]]*(r+1)))return;
+      if(Math.random()<RCH[r]){it[2]+=3;toast('','Refined! '+gName(it)+' ✨',true);ringFx(P.position.x,P.position.z,3,'#ffd24a',700);sfx('lvl')}else{toast('','The refining failed. Your item is safe',true);sfx('hurt')}
+      rpgApply();rpgSave();shopDraw()}});
+  shopEl.addEventListener('pointerdown',e=>e.stopPropagation());
+  potDraw();
   {const b=$('gmlvb');if(b)b.onclick=()=>{if(rpgHook)rpgHook.setLevel($('gmlv').value)}}   // (the GM's own "set my level", for trying things out, such as the level 99 aura)
   rpgApply();
-  return{tick,list,HP,CD,RPG,EN,attack,slam,dash,monsOn,gainXp}})();
+  return{tick,list,HP,CD,RPG,EN,attack,slam,dash,monsOn,gainXp,shopNear,shopOpen,shopClose}})();
 
 const clockT=new THREE.Clock();let t=0,walkPh=0,walkAmt=0,frames=0,lift=0,lastStep=0;
 function frame(){
@@ -4628,7 +4701,7 @@ function frame(){
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
-  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'':nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
+  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'':nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):MOB.shopNear()?'🧑‍🌾 Talk to Mira'+(touch?'':'  ·  E'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
   pr.style.display=ptx&&!open?'block':'none';if(ptx&&pr.textContent!==ptx)pr.textContent=ptx;
   ringMat.opacity=.55+.3*Math.sin(t*2.4);
   // sky life
