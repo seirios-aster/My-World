@@ -3112,7 +3112,9 @@ const DEFHAIR=()=>[0,HAIRC.length-1];
 let IS_GM=null;   // null until we know; the Dev outfit is the GM's alone
 function devGate(){if(IS_GM===false&&PPL[0].outfit===1){PPL[0].outfit=0;dress(me,PPL[ctl]);saveLook(0);refreshPeople()}}   // (anyone else wearing it goes back to their own first outfit: the knight or the princess)
 function pairUp(){if(!CB||CB.genders<2)return;const g=1-(PPL[0].gender|0),f=PPL[1],o=g?0:2;if((f.gender|0)===g&&f.outfit===o)return;if(f.gender!==g&&f.hcol===DEFHAIR()[1-g])f.hcol=DEFHAIR()[g];f.gender=g;f.outfit=o;saveLook(1)}   // the friend is always the other gender from you (you pick yours; theirs follows), and always in that gender's own look: the princess if she is a girl, the Sunny outfit if he is a boy (the Dev is the GM's)
-function askCharacter(){if(!CB||CB.genders<2)return;const el=$('pick');if(!el.hidden)return;el.hidden=false;
+function askCharacter(){if(!CB||CB.genders<2)return;const el=$('pick');if(!el.hidden)return;
+  if(gateOn){clearTimeout(askCharacter.t);askCharacter.t=setTimeout(askCharacter,400);return}   // (not over the login screen: wait until it is gone, whether they sign in or carry on without)
+  el.hidden=false;
   el.onclick=e=>{const b=e.target.closest('.pkc');if(!b)return;const g=+b.dataset.g;Object.assign(PPL[0],{gender:g,outfit:0,hcol:DEFHAIR()[g],eye:g?1:0});pairUp();el.hidden=true;dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);saveLook(0);refreshPeople()}}
 function applyMyLook(){const u=storage.auth&&storage.auth.user();let j=null;try{j=JSON.parse(localStorage.getItem(LKEY(u))||'null')}catch(_){}
   if(Array.isArray(j)){Object.assign(PPL[0],unpackLook(j));pairUp();devGate();dress(me,PPL[ctl]);dress(fr,PPL[1-ctl]);refreshPeople()}}   // (an account with no saved look keeps the one you have; a first-timer is asked who they want to be, and that is saved)
