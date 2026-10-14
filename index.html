@@ -377,7 +377,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
   <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
-  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -3002,6 +3002,7 @@ const of=$('outfits'),ofl=$('oflist'),fname=$('fname'),myname=$('myname'),tagP=$
 /* ---- your state follows your account: look, names, the friend, who you play and where you stand. This device keeps a copy (so a guest, or no network, still gets it back);
    a signed-in account also keeps it in the cloud, so a new device or a cleared browser starts where you left off. Nothing is written to the cloud until what is saved there
    has been read, so a slow or failed read can never wipe it. ---- */
+let LVL=1;   // my level, told to the others with my position (a level 99 hero has an aura everyone can see)
 let rpgHook=null;   // (the monster block's level and skills: how they are saved to, and read back from, the account)
 let cloud=false,dirty=false,saveT=0,posDone=false,lastPos=null,myCustom='',PST='not started';   // PST: what the saved-state sync is doing, shown by ?debug
    // myCustom: the name you chose for yourself ('' = follow your Google name)   // cloud: the saved state was read (or there is none yet), so changes may be written
@@ -4134,7 +4135,7 @@ function pushState(force){const now=performance.now();if(!on)return;
   lastTrack=now;trackDue=false;dueMin=500;const p=PPL[ctl];
   WS.track({n:clean(p.name).slice(0,16)||'Someone',a:packLook(p),u:MYST,x:+P.position.x.toFixed(1),z:+P.position.z.toFixed(1),r:+wrapA(P.rotation.y).toFixed(2),b:my.b,bt:my.bt,s:my.s,st:my.st,pk:my.pk})}
 function sendPos(force,mv){const now=performance.now();lastSend=now;sent.m=mv;sent.r=P.rotation.y;
-  WS.send('p',{k:myKey,x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2),m:mv,v:VC.on?1:0})}
+  WS.send('p',{k:myKey,x:+P.position.x.toFixed(2),z:+P.position.z.toFixed(2),r:+wrapA(P.rotation.y).toFixed(2),m:mv,v:VC.on?1:0,l:LVL})}
 // a position can arrive a moment BEFORE that person's presence entry (they are two separate messages): keep the latest one per person and use it as soon as they appear,
 // otherwise a standing-still stranger would stay invisible until they moved
 const early=new Map();
@@ -4143,7 +4144,8 @@ function applyPos(R,d){const x=num(d.x,-2000,2000),z=num(d.z,-2000,2000),r0=num(
   const r=wrapA(r0),now=performance.now(),mv=d.m?1:0;
   if(!R.has){R.has=true;R.x=R.tx=x;R.z=R.tz=z;R.r=r;R.vx=R.vz=0;R.rig.root.visible=true}
   else{const dt=(now-R.lastP)/1000;if(mv&&dt>.05&&dt<1.5){R.vx=(x-R.tx)/dt;R.vz=(z-R.tz)/dt}else R.vx=R.vz=0}
-  R.tx=x;R.tz=z;R.tr=r;R.m=mv;R.lastP=now;if(d.v===1||d.v===0){R.vc=d.v===1;R.vcp=true}}   // (d.v: whether they have voice on)
+  R.tx=x;R.tz=z;R.tr=r;R.m=mv;R.lastP=now;if(d.v===1||d.v===0){R.vc=d.v===1;R.vcp=true}
+  const lv=num(d.l,1,99);if(lv!=null)R.lv=lv|0}   // (d.v: whether they have voice on)
 WS.on('p',d=>{if(!d||typeof d.k!=='string'||d.k===myKey)return;const R=remotes.get(d.k);
   if(R){applyPos(R,d);return}
   early.delete(d.k);early.set(d.k,d);if(early.size>64)early.delete(early.keys().next().value)});
@@ -4252,7 +4254,7 @@ const MOB=(()=>{
     v3=new THREE.Vector3(),fxs=[],nums=[];
   let simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0],bossDead=-1e9,toldLair=false,fightUntil=0,host=true;
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
-  const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=30,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
+  const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3),
     maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1)),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
     cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])),RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
@@ -4269,11 +4271,11 @@ const MOB=(()=>{
     if(sum(s)>3*(l-1)||sum(k)-3>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
     RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;RPG.c=+a[8]===1||+a[8]===2?+a[8]:0;return true}
   function rpgSave(){try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
-  function rpgApply(){const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);
+  function rpgApply(){LVL=RPG.l;const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);
     const c=RPG.c,kd=KDEF();if(typeof devGate==='function')devGate();btn.b.textContent=BRSI[c];btn.b.title=BRST[c][1]+' · R';btn.a.textContent=ATKI[c];btn.z.textContent=SLMI[c];btn.d.textContent=DSHI[c];btn.a.title=kd[0][1]+' · F';btn.z.title=kd[1][1]+' · G';btn.d.title=kd[2][1]+' · Q';rpgDraw()}
   function rpgDraw(){bHero.textContent='Lv'+RPG.l;if(!rpgEl.classList.contains('on'))return;
     document.querySelectorAll('#rpcls button').forEach(b=>{const on=+b.dataset.c===RPG.c;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
-    $('rplv').textContent='Lv '+RPG.l;const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
+    $('rplv').textContent='Lv '+RPG.l+(RPG.l>=AURAL?' ✨':'');const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
     const sp=spLeft(),kp=kpLeft();$('rpsp').textContent=sp+' point'+(sp===1?'':'s')+' to spend';$('rpkp').textContent=kp+' point'+(kp===1?'':'s')+' to spend';
     $('rpst').innerHTML=SDEF.map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+'<small>'+d[1]+'</small></div><span class="rpv">'+RPG.s[i]+'</span><button type="button" class="rpb" data-s="'+i+'" aria-label="Add a point to '+d[0]+'"'+(sp>0?'':' disabled')+'>+</button></div>').join('');
     $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst<small>'+BRST[RPG.c][2]+'. It charges as you fight, then press 🌟R.</small></div></div>'}
@@ -4283,9 +4285,9 @@ const MOB=(()=>{
   $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3<=0)return;if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.',ok:'Reset',cancel:'Keep'})){RPG.s=[0,0,0];RPG.k=[1,1,1];rpgApply();rpgSave()}};
   function gainXp(n){n=Math.max(1,Math.round(n*Math.max(.3,1-.05*(RPG.l-1))));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP','xp');let up=0;
     while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
-    if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('','Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
+    if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
-  rpgHook={outfit:()=>[0,3,4][RPG.c],out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+  rpgHook={setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false')};
@@ -4314,6 +4316,22 @@ const MOB=(()=>{
     g.position.set(x0,y0,z0);W.add(g);if(kind!=='o')g.lookAt(x1,y1,z1);
     const mats=[mat];if(mat.userData&&mat.userData.x)mats.push(mat.userData.x);
     fxs.push({o:g,k:'p',p:[x0,y0,z0,x1,y1,z1],t0:performance.now(),dur:Math.max(90,Math.hypot(x1-x0,y1-y0,z1-z0)/spd*1000),mats,done})}
+  /* ---- the aura of a level 99 hero: a golden glow standing round them, a ring on the ground, and sparks rising ---- */
+  const AURAL=99,auraTex=(()=>{const cv=document.createElement('canvas');cv.width=4;cv.height=64;const x=cv.getContext('2d'),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,'rgba(255,214,90,0)');g.addColorStop(.5,'rgba(255,214,90,.5)');g.addColorStop(1,'rgba(255,240,170,.95)');x.fillStyle=g;x.fillRect(0,0,4,64);return new THREE.CanvasTexture(cv)})(),
+    auraCylG=new THREE.CylinderGeometry(1.05,1.3,3.6,28,1,true).translate(0,1.8,0),auraRingG=new THREE.RingGeometry(.95,1.6,40).rotateX(-Math.PI/2),
+    auraCylM=new THREE.MeshBasicMaterial({map:auraTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),auraRingM=new THREE.MeshBasicMaterial({color:'#ffd45a',transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),
+    auraPtsM=new THREE.PointsMaterial({color:'#ffe27a',size:.14,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),auras=new Map();
+  function auraOn(root){let a=auras.get(root);if(a)return a;const g=new THREE.Group(),cyl=new THREE.Mesh(auraCylG,auraCylM),ring=new THREE.Mesh(auraRingG,auraRingM),N=26,pos=new Float32Array(N*3),pg=new THREE.BufferGeometry();
+    ring.position.y=.06;pg.setAttribute('position',new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(pg,auraPtsM);pts.frustumCulled=false;g.add(cyl,ring,pts);root.add(g);a={g,cyl,ring,pg,pos,N,live:true};auras.set(root,a);return a}
+  function auraOff(root){const a=auras.get(root);if(!a)return;root.remove(a.g);a.pg.dispose();auras.delete(root)}
+  function auraTick(t,now){const want=new Set();
+    if(RPG.l>=AURAL)want.add(P);
+    NET.peers().forEach(R=>{if((R.lv|0)>=AURAL)want.add(R.rig.root)});
+    want.forEach(r=>auraOn(r));[...auras.keys()].forEach(r=>{if(!want.has(r))auraOff(r)});   // (a figure is handed on to the next arrival when someone leaves: its aura goes with them)
+    auraCylM.opacity=.8+.2*Math.sin(t*2.4);auraRingM.opacity=.45+.2*Math.sin(t*3.1);
+    auras.forEach(a=>{a.cyl.rotation.y=t*.4;a.ring.rotation.y=-t*.6;a.ring.scale.setScalar(1+.08*Math.sin(t*3.1));
+      for(let i=0;i<a.N;i++){const f=((t*.55+i/a.N)%1),ang=i*2.399+t*1.3,r=.75+.25*Math.sin(t*2+i);a.pos[i*3]=Math.cos(ang)*r;a.pos[i*3+1]=f*3.3;a.pos[i*3+2]=Math.sin(ang)*r}
+      a.pg.attributes.position.needsUpdate=true})}
   function burst(x,y,z,col){const g=new THREE.Group(),mat=fxMat(col,.9),vs=[];g.position.set(x,y+.5,z);
     for(let i=0;i<9;i++){const p=new THREE.Mesh(pG,mat),a=i*.7+Math.random();p.userData.v=[Math.cos(a)*(2+Math.random()*2),2+Math.random()*3,Math.sin(a)*(2+Math.random()*2)];g.add(p)}
     W.add(g);fxs.push({o:g,k:'b',t0:performance.now(),dur:650,mats:[mat]})}
@@ -4491,7 +4509,7 @@ const MOB=(()=>{
       if(T.boss&&m.st!==3&&d<50)bossM=m;
       const sc=m.st!==3&&!T.boss&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
       if(sc){m.el.style.display='block';m.el.style.transform='translate('+(sc[0]-23)+'px,'+sc[1]+'px)';m.el.firstChild.style.transform='scaleX('+Math.max(0,m.hp/m.hpm)+')'}else m.el.style.display='none'});
-    fxTick(dt,now);
+    fxTick(dt,now);auraTick(t,now);
     if(ANIM.k){const sec=(now-ANIM.t0)/1000;if(sec<DUR[ANIM.k])poseAt(me,ANIM.k,sec,ANIM.c);else{endPose(me);ANIM.k=''}}
     NET.peers().forEach(R=>{const a=R.fxa;if(!a)return;const sec=(now-a.t0)/1000;if(sec<DUR[a.k])poseAt(R.rig,a.k,sec,a.c);else{endPose(R.rig);R.fxa=null}});
     for(let i=nums.length-1;i>=0;i--){const n=nums[i],a=(now-n.t)/900;if(a>=1){n.el.remove();nums.splice(i,1);continue}const p=onScr(n.x,n.y+a*1.2,n.z);if(p){n.el.style.display='block';n.el.style.transform='translate('+p[0]+'px,'+p[1]+'px) translate(-50%,-50%)';n.el.style.opacity=1-a*a}else n.el.style.display='none'}
@@ -4514,6 +4532,7 @@ const MOB=(()=>{
     [-1,1].forEach(sd=>{const arm=new THREE.Mesh(new THREE.BoxGeometry(1.4,2.6,2.6),stone);at(arm,bx+sd*3.9,bz+1.3,1.0);arm.castShadow=true;g.add(arm);const c=new THREE.Mesh(new THREE.ConeGeometry(.7,3.6,5),cry);at(c,bx+sd*2.7,bz-.2,6.6);c.rotation.z=-sd*.25;g.add(c)});
     const top=new THREE.Mesh(new THREE.ConeGeometry(1.1,4.6,5),cry);at(top,bx,bz,8.4);g.add(top);W.add(g)}
   buildLair();
+  {const b=$('gmlvb');if(b)b.onclick=()=>{if(rpgHook)rpgHook.setLevel($('gmlv').value)}}   // (the GM's own "set my level", for trying things out, such as the level 99 aura)
   rpgApply();
   return{tick,list,HP,CD,RPG,EN,attack,slam,dash,monsOn,gainXp}})();
 
