@@ -492,7 +492,7 @@ const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTF
 const GOB={n:'Goblin Lair',x:-28,z:258,fr:17},GLAIR={x:GOB.x,z:GOB.z+5,r:GOB.fr+3};   // the goblin lord's lair: a crater at the far end of the south, open to the north
 const wildsW=(x,z)=>sstep(168,192,z)*(1-sstep(266,290,z))*sstep(-92,-72,x)*(1-sstep(28,48,x));   // the Goblin Wilds: 1 over the rough, barren hills in front of the lair   // the goblins' camp: a crater in the far south, open to the north, with a flat floor 16 m across
 const BEAM={x:-68,z:98},SKI={x:-68,z:98,y:118,r:34},inBeam=(x,z,m)=>Math.hypot(x-BEAM.x,z-BEAM.z)<6+m;   // the Sky Garden: a floating island over the middle of the map, and the beam of light on the ground that lifts level 99 players up to it
-let ONSKY=false;const ASC={m:0,t:0,y0:0,y1:0,armed:true,told:0,welcomed:false};   // (ONSKY: I am up on the island. ASC: a ride on the beam, 1 up, 2 down)
+let ONSKY=false;const ASC={m:0,t:0,y0:0,y1:0,armed:true,armedG:false,charge:0,told:0,welcomed:false};   // (ONSKY: I am up on the island. ASC: a ride on the beam, 1 up, 2 down)
 const RUIN={n:'Old Graveyard',x:14,z:135,hx:22,hz:20},inRuin=(x,z,m)=>Math.abs(x-RUIN.x)<RUIN.hx+m&&Math.abs(z-RUIN.z)<RUIN.hz+m;   // the old graveyard where the zombies walk: flat ground, rows of graves, an iron fence and four gates, in the south-east meadows
 const LAIR={n:'the Slime Throne',x:-25,z:75,r:18};   // the boss slime's lair: a flat ring of standing stones in the quiet southern valley, off every trail and well away from the sports complex (built in MOB; no trees grow here)
 const SPOTS=[
@@ -5018,7 +5018,7 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
 const islR=a=>SKI.r*(1+.08*Math.sin(3*a+.7)+.05*Math.sin(5*a+2.1)+.03*Math.sin(9*a)),PND={x:10,z:-7,r:6};
 function islH(dx,dz){const d=Math.hypot(dx,dz),pd=Math.hypot(dx-PND.x,dz-PND.z);return(Math.sin(dx*.11+1)*Math.cos(dz*.09)+.6*Math.sin((dx+dz)*.07))*sstep(4,9,d)-1.1*Math.exp(-((pd/4.4)**2))}   // (gentle hills, a flat middle, and a dip for the pond)
 const islTop=(x,z)=>SKI.y+islH(x-SKI.x,z-SKI.z),islOK=(x,z)=>{const dx=x-SKI.x,dz=z-SKI.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx))-1.6};
-const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0},GARG=new THREE.Group();W.add(GARG);
+const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0},GARG=new THREE.Group();W.add(GARG);
 (function buildGarden(){const M=(c,r=.9)=>new THREE.MeshStandardMaterial({color:c,roughness:r,flatShading:true}),stone=M('#8d8f98'),dark=M('#4b4d57'),wood=M('#7a5230'),blue=new THREE.MeshBasicMaterial({color:'#9fe7ff'}),
     B=THREE.BoxGeometry,Cy=THREE.CylinderGeometry,at=(m,x,y,z)=>{m.position.set(x,y,z);GARG.add(m);return m},rg=(()=>{let q=77123;return()=>(q=(q*16807)%2147483647)/2147483647})();
   // the island: a grassy top, a band of soil and a long rocky underside tapering to a point
@@ -5053,7 +5053,7 @@ const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0},GARG=new 
   const runes=canvasTex(256,256,(g,w,h)=>{g.fillStyle='#3d4048';g.fillRect(0,0,w,h);g.strokeStyle='#9fe7ff';g.lineWidth=3;[110,92,60].forEach(r=>{g.beginPath();g.arc(128,128,r,0,6.2832);g.stroke()});
       for(let i=0;i<24;i++){const a=i/24*6.2832,r0=96,r1=i%2?106:114;g.beginPath();g.moveTo(128+Math.cos(a)*r0,128+Math.sin(a)*r0);g.lineTo(128+Math.cos(a)*r1,128+Math.sin(a)*r1);g.stroke()}
       g.lineWidth=2;g.beginPath();for(let i=0;i<=5;i++){const a=i*2.5133-1.5708,x=128+Math.cos(a)*56,y=128+Math.sin(a)*56;i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()}),
-    plz=()=>{const top=new THREE.MeshStandardMaterial({color:'#ffffff',map:runes,emissive:'#6fc8e8',emissiveMap:runes,emissiveIntensity:.55,roughness:.8});return new THREE.Mesh(new Cy(4.6,4.9,.35,32),[stone,top,stone])};
+    plz=()=>{const top=new THREE.MeshStandardMaterial({color:'#ffffff',map:runes,emissive:'#6fc8e8',emissiveMap:runes,emissiveIntensity:.25,roughness:.8});GARFX.plm.push(top);return new THREE.Mesh(new Cy(4.6,4.9,.35,32),[stone,top,stone])};
   at(plz(),SKI.x,SKI.y-.1,SKI.z);
   for(let i=0;i<6;i++){const a=i/6*6.283+.5,dx=Math.cos(a)*10,dz=Math.sin(a)*10,y=gnd(dx,dz),l=at(new THREE.Mesh(new Cy(.07,.1,2.4,6),dark),X(dx),y+1.1,Z(dz));
     const f=at(new THREE.Mesh(new THREE.ConeGeometry(.2,.55,6),blue),X(dx),y+2.55,Z(dz));GARFX.flames.push(f);const gl=glowSprite('rgba(140,225,255,.75)',3);gl.position.set(X(dx),y+2.6,Z(dz));GARG.add(gl);GARFX.flames.push(gl)}
@@ -5067,7 +5067,7 @@ const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0},GARG=new 
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({color:'#ffc2d8',size:.4,transparent:true,opacity:.85,depthWrite:false}));pts.position.set(SKI.x,SKI.y,SKI.z);pts.frustumCulled=false;GARG.add(pts);GARFX.petals=pa;GARFX.pts=pts}
   // ---- the beam on the ground ----
   let gy=-1e9;for(const[ox,oz]of[[0,0],[4,0],[-4,0],[0,4],[0,-4]])gy=Math.max(gy,groundY(BEAM.x+ox,BEAM.z+oz));gy+=.08;GARFX.gy=gy;
-  const bg=at(new THREE.Mesh(new Cy(4.6,4.9,.35,32),[stone,new THREE.MeshStandardMaterial({color:'#ffffff',map:runes,emissive:'#ffe9a0',emissiveMap:runes,emissiveIntensity:.5,roughness:.8}),stone]),BEAM.x,gy-.1,BEAM.z);
+  const gtop=new THREE.MeshStandardMaterial({color:'#ffffff',map:runes,emissive:'#ffe9a0',emissiveMap:runes,emissiveIntensity:.25,roughness:.8});GARFX.plm.push(gtop);const bg=at(new THREE.Mesh(new Cy(4.6,4.9,.35,32),[stone,gtop,stone]),BEAM.x,gy-.1,BEAM.z);
   for(let i=0;i<4;i++){const a=i/4*6.283+.78,x=BEAM.x+Math.cos(a)*6.3,z=BEAM.z+Math.sin(a)*6.3;at(new THREE.Mesh(new B(.7,3.2,.7),dark),x,gy+1.5,z);const f=at(new THREE.Mesh(new THREE.ConeGeometry(.22,.6,6),blue),x,gy+3.5,z);GARFX.flames.push(f);const gl=glowSprite('rgba(140,225,255,.8)',3.4);gl.position.set(x,gy+3.6,z);GARG.add(gl);GARFX.flames.push(gl)}
   {const tb=canvasTex(512,256,(g,w,h)=>{g.fillStyle='#3a3d45';g.fillRect(0,0,w,h);g.strokeStyle='#ffe9a0';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);g.fillStyle='#fff6d8';g.textAlign='center';g.font='bold 58px Georgia,serif';g.fillText('THE ASCENT',w/2,102);g.font='28px Georgia,serif';g.fillText('Only those who reach level 99',w/2,160);g.fillText('may rise on the light.',w/2,200)}),
       m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]),fy=Math.atan2(HUB[0]-BEAM.x,HUB[1]-BEAM.z);
@@ -5080,19 +5080,27 @@ const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0},GARG=new 
   const base=glowSprite('rgba(255,235,170,.8)',9);base.position.set(BEAM.x,gy+.8,BEAM.z);GARG.add(base);GARFX.base=base})();
 function ascStep(dt){ASC.t+=dt;const u=Math.min(1,ASC.t/(ASC.m===1?6:5)),e=u*u*(3-2*u),k=1-Math.exp(-dt*5),tx=ASC.m===1?BEAM.x:SKI.x,tz=ASC.m===1?BEAM.z:SKI.z;MOB.HP.inv=Math.max(MOB.HP.inv||0,.5);   // (safe on the way)
   P.position.x+=(tx-P.position.x)*k;P.position.z+=(tz-P.position.z)*k;P.position.y=ASC.y0+(ASC.y1-ASC.y0)*e;P.rotation.y+=dt*(1.2+2.5*Math.sin(Math.PI*u));JUMP.y=JUMP.v=0;
-  if(u>=1){if(ASC.m===1){ONSKY=true;ASC.armed=false;if(!ASC.welcomed){ASC.welcomed=true;toast('','Welcome to the Sky Garden 🌸 Few ever see this place.',true)}}else ONSKY=false;ASC.m=0}}
+  if(u>=1){ASC.charge=0;if(ASC.m!==1)ASC.armedG=false;if(ASC.m===1){ONSKY=true;ASC.armed=false;if(!ASC.welcomed){ASC.welcomed=true;toast('','Welcome to the Sky Garden 🌸 Few ever see this place.',true)}}else ONSKY=false;ASC.m=0}}
 function startAsc(m){if(riding)toggleBike();if(sitting)standUp();ASC.m=m;ASC.t=0;ASC.y0=P.position.y;ASC.y1=m===1?islTop(SKI.x,SKI.z):groundY(BEAM.x,BEAM.z);JUMP.y=JUMP.v=0;toast('',m===1?'The beam lifts you into the sky ✨':'The light carries you back down…',true)}
 function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(px-BEAM.x,pz-BEAM.z);
   if(ONSKY&&!ASC.m&&Math.hypot(px-SKI.x,pz-SKI.z)>SKI.r*1.3)ONSKY=false;   // (teleported away from up there)
-  const lv=MOB.RPG.l>=99,alive=MOB.HP.v>0,now=performance.now();
-  if(!ASC.m&&alive&&!open){if(!ONSKY){if(near<2.4&&lv)startAsc(1);else if(near<6.5&&!lv&&now>ASC.told){ASC.told=now+9000;toast('','The beam hums softly and does not move. Only level 99 can rise 🔒',true)}}
-    else{const d=Math.hypot(px-SKI.x,pz-SKI.z);if(d>4)ASC.armed=true;if(d<2.4&&ASC.armed)startAsc(2)}}
-  if(near>500&&!ONSKY&&!ASC.m)return;   // (far away: nothing to animate)
+  const lv=MOB.RPG.l>=99,alive=MOB.HP.v>0,now=performance.now(),PR=4.6;   // (PR: the radius of the stone circle)
+  if(!ASC.m&&alive&&!open){
+    if(!ONSKY){if(near>PR+.8)ASC.armedG=true;   // (after a ride down you have to step off the circle before it will take you up again)
+      if(near<PR&&ASC.armedG&&lv){ASC.charge+=dt;if(ASC.charge>=.9){ASC.charge=0;startAsc(1)}}else ASC.charge=0;
+      if(near<PR+2&&!lv&&now>ASC.told){ASC.told=now+9000;toast('','The stones are cold and the circle stays dark. Only level 99 can rise 🔒',true)}}
+    else{const d=Math.hypot(px-SKI.x,pz-SKI.z);if(d>PR+.8)ASC.armed=true;
+      if(d<PR&&ASC.armed){ASC.charge+=dt;if(ASC.charge>=.9){ASC.charge=0;startAsc(2)}}else ASC.charge=0}}
+  else ASC.charge=0;
+  // the light only shows while a level 99 player is using it: me stepping on a circle or riding, or somebody else riding
+  let want=ASC.m||ASC.charge>0?1:0;if(!want)for(const R of MP.net.peers())if(R.lv>=99&&R.ty!=null&&R.ty>12&&R.ty<SKI.y-1){want=1;break}
+  GARFX.amt+=(want-GARFX.amt)*Math.min(1,dt*(want?4:2));const am=GARFX.amt<.01?0:GARFX.amt;
+  if(near>500&&!ONSKY&&!ASC.m&&!am)return;   // (far away and dark: nothing to animate)
   GARFX.flames.forEach((f,i)=>{if(f.isSprite){f.material.opacity=.65+.25*Math.sin(t*8+i)*Math.sin(t*3.1);}else f.scale.set(1+.1*Math.sin(t*12+i),1+.25*Math.sin(t*9+i*2),1+.1*Math.sin(t*10+i))});
-  const gold=new THREE.Color(lv?'#fff0b0':'#8fb8ff'),pulse=.85+.15*Math.sin(t*3);
-  GARFX.beams.forEach(b=>{b.mt.color.copy(gold);b.mt.opacity=b.op*(lv?1:.55)*pulse;b.mt.map.offset.y=-t*.2});
-  GARFX.rings.forEach(r=>{const u=(t*.16+r.o)%1;r.m.position.set(BEAM.x,r.gy+u*r.bh,BEAM.z);r.mt.color.copy(gold);r.mt.opacity=(lv?.7:.3)*Math.sin(Math.PI*u)});
-  GARFX.base.material.opacity=lv?.9:.45;
+  const gold=new THREE.Color('#fff0b0'),pulse=.85+.15*Math.sin(t*3);
+  GARFX.beams.forEach(b=>{b.m.visible=am>0;b.mt.color.copy(gold);b.mt.opacity=b.op*am*pulse;b.mt.map.offset.y=-t*.2});
+  GARFX.rings.forEach(r=>{r.m.visible=am>0;const u=(t*.16+r.o)%1;r.m.position.set(BEAM.x,r.gy+u*r.bh,BEAM.z);r.mt.color.copy(gold);r.mt.opacity=.7*am*Math.sin(Math.PI*u)});
+  GARFX.base.material.opacity=.9*am;GARFX.base.visible=am>0;GARFX.plm.forEach(m=>m.emissiveIntensity=.25+.5*am);
   GARFX.floaters.forEach(f=>{f.m.position.y=f.y+Math.sin(t*.5+f.p)*1.2;f.m.rotation.y=t*.15+f.p;f.m.rotation.x=Math.sin(t*.3+f.p)*.2});
   if(ONSKY||ASC.m){const pa=GARFX.petals;for(let i=0;i<pa.length;i+=3){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=16;pa[i]=(Math.random()-.5)*2*SKI.r;pa[i+2]=(Math.random()-.5)*2*SKI.r}}GARFX.pts.geometry.attributes.position.needsUpdate=true}}
 
