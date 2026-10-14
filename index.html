@@ -73,8 +73,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #who{font:600 14px var(--display);white-space:nowrap}
 #obody,#octl{display:flex;flex-direction:column;gap:8px}
 #pvw{position:relative;height:176px;flex:none;border-radius:12px;overflow:hidden;touch-action:none;background:var(--pvw)}
-#pvcv{width:100%;height:100%;display:block;cursor:grab}
-#pvh{position:absolute;left:0;right:0;bottom:5px;text-align:center;font:700 10px var(--body);letter-spacing:.04em;color:var(--ink-soft);opacity:.75;pointer-events:none}
+#pvcv,#hpcv{width:100%;height:100%;display:block;cursor:grab}
+#pvh,#hph{position:absolute;left:0;right:0;bottom:5px;text-align:center;font:700 10px var(--body);letter-spacing:.04em;color:var(--ink-soft);opacity:.75;pointer-events:none}
 #otabs{display:flex;gap:3px;background:var(--paper-2);padding:3px;border-radius:999px}
 #otabs button{flex:1;border:0;border-radius:999px;background:none;padding:6px 4px;font:700 13px var(--body);color:var(--ink-soft);cursor:pointer;white-space:nowrap}
 #otabs button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.2)}
@@ -237,8 +237,10 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #fight{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(68px + env(safe-area-inset-bottom,0px));display:none;align-items:flex-end;gap:10px;z-index:3}
 #fight.show{display:flex}#fight .round{position:relative;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}#fight #batk{width:62px;height:62px;font-size:30px}
 #fight .round::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(10,10,20,.55) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
-#rpg{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));top:calc(90px + env(safe-area-inset-top,0px));width:min(320px,calc(100vw - 90px));max-height:calc(100vh - 110px);overflow:auto;box-sizing:border-box;display:none;flex-direction:column;gap:6px;padding:10px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:3;font:700 13px var(--body)}
+#rpg{position:fixed;right:calc(84px + env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);width:min(320px,max(42vw,250px));max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;display:none;flex-direction:column;gap:6px;padding:10px;border-radius:14px;color:var(--ink);box-shadow:var(--shadow);z-index:3;font:700 13px var(--body)}
 #rpg.on{display:flex}#rph{display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font:600 16px var(--display)}#rph.drag{cursor:grabbing}#rph .gmgrip{opacity:.45;font-weight:400;margin-left:6px}#rpg .round{width:30px;height:30px;font-size:14px}
+#hpw{position:relative;height:170px;flex:none;border-radius:12px;overflow:hidden;touch-action:none;background:var(--pvw)}
+@media (max-height:600px){#hpw{height:120px}}
 #rpxp{position:relative;height:16px;border-radius:8px;background:var(--paper-2);overflow:hidden}#rpxp i{position:absolute;inset:0;background:linear-gradient(90deg,#f2b441,#ffd96a);transform-origin:left center}#rpxp small{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:var(--ink)}
 #rpg .rps{margin-top:4px;font:600 14px var(--display);display:flex;justify-content:space-between;align-items:baseline}#rpg .rps small{font:700 12px var(--body);color:var(--ink-soft)}
 #rpg .rpr{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--paper-2)}#rpg .rpn{flex:1;min-width:0}#rpg .rpn small{display:block;font:600 11.5px/1.3 var(--body);color:var(--ink-soft)}#rpg .rpv{min-width:34px;text-align:center;font:700 15px var(--display)}
@@ -373,7 +375,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="mon"></div><div id="herobar"><button type="button" class="round" id="bhero" title="Hero: level, stats and skills" aria-label="Hero" aria-expanded="false">Lv1</button><div id="hpb"><i></i><b></b><s></s></div></div>
-<div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="rpxp"><i></i><small></small></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><button type="button" id="rpreset">Reset points</button></div>
+<div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="hpw"><canvas id="hpcv" role="img" aria-label="Your character. Drag to turn it."></canvas><span id="hph">drag to turn</span></div><div id="rpxp"><i></i><small></small></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><button type="button" id="rpreset">Reset points</button></div>
 <div id="fight"><button type="button" class="round" id="bdash" title="Dash · Q" aria-label="Dash">💨</button><button type="button" class="round" id="bslam" title="Slam · G" aria-label="Slam">💥</button><button type="button" class="round" id="batk" title="Attack · F" aria-label="Attack">⚔️</button></div>
 <div id="pick" role="dialog" aria-modal="true" aria-labelledby="pktitle" hidden><div id="pkbox"><h2 id="pktitle">Choose your character</h2><p>You can change it any time in the character menu.</p><div id="pkrow"><button type="button" class="pkc" data-g="0"><b>♂</b><small>Male</small></button><button type="button" class="pkc" data-g="1"><b>♀</b><small>Female</small></button></div></div></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
@@ -3013,7 +3015,7 @@ async function syncState(){applyMyName();applyMyLook();   // (what this device r
 const LKEY=u=>'myworld.look.'+(u&&u.id?u.id:'guest');   // how you look is remembered per account on this device (the friend's, for the browser)
 function saveLook(i){try{localStorage.setItem(i===0?LKEY(storage.auth&&storage.auth.user()):'myworld.look.friend',JSON.stringify(packLook(PPL[i])))}catch(_){}touchState()}
 // the preview: its own little renderer (made the first time the menu opens), so you can see your face and turn around to see your back
-const PV=(()=>{const cv=$('pvcv'),wrap=$('pvw');let R,sc,cam,rig,run=0,last=0,yaw=.5,auto=true,drag=null,cur=CB?{y:1.75,d:9}:{y:1.95,d:9.8},to=CB?{y:1.75,d:9}:{y:1.95,d:9.8},tt=0,fail=false,pend=null,hatOn=true;
+const mkPV=(cv,wrap,active)=>{let R,sc,cam,rig,run=0,last=0,yaw=.5,auto=true,drag=null,cur=CB?{y:1.75,d:9}:{y:1.95,d:9.8},to=CB?{y:1.75,d:9}:{y:1.95,d:9.8},tt=0,fail=false,pend=null,hatOn=true;
   function init(){if(R||fail)return !fail;
     try{R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){fail=true;wrap.style.display='none';return false}
     R.setClearColor(0,0);R.toneMapping=THREE.NeutralToneMapping;sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x8a9a7a,1.5));
@@ -3025,13 +3027,14 @@ const PV=(()=>{const cv=$('pvcv'),wrap=$('pvw');let R,sc,cam,rig,run=0,last=0,ya
     ['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>{drag=null}));return true}
   function size(){const w=cv.clientWidth,h=cv.clientHeight,pr=Math.min(devicePixelRatio||1,2);if(!w||!h)return;
     if(cv.width!==Math.round(w*pr)||cv.height!==Math.round(h*pr)){R.setPixelRatio(pr);R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}}
-  function loop(now){if(of.style.display!=='flex'){run=0;return}run=requestAnimationFrame(loop);const dt=Math.min((now-last)/1000||0,.05);last=now;tt+=dt;size();
+  function loop(now){if(!active()){run=0;return}run=requestAnimationFrame(loop);const dt=Math.min((now-last)/1000||0,.05);last=now;tt+=dt;size();
     if(auto)yaw=.5+Math.sin(tt*.9)*.45;   // sways a little until you turn it yourself
     const k=Math.min(1,dt*7);cur.y+=(to.y-cur.y)*k;cur.d+=(to.d-cur.d)*k;
     cam.position.set(0,cur.y+.3,cur.d);cam.lookAt(0,cur.y,0);rig.root.rotation.y=yaw;blinkTick(rig,dt);rig.torso.scale.y=1+Math.sin(tt*2.2)*.012;R.render(sc,cam)}
   return{start(){if(!init())return;if(pend){dress(rig,pend);showHat(rig,hatOn)}if(!run){last=performance.now();run=requestAnimationFrame(loop)}},
     show(c){pend=c;if(R){dress(rig,c);showHat(rig,hatOn)}},
-    focus(n){hatOn=n!=='hair';if(R)showHat(rig,hatOn);to=CB?(n==='out'?{y:1.75,d:9}:n==='hair'?{y:2.4,d:6.2}:{y:2.35,d:6.6}):(n==='out'?{y:1.95,d:9.8}:n==='hair'?{y:2.85,d:8.4}:{y:2.85,d:6.6})}}})();   // (the hat comes off while you pick a hair style, so you can see it)
+    focus(n){hatOn=n!=='hair';if(R)showHat(rig,hatOn);to=CB?(n==='out'?{y:1.75,d:9}:n==='hair'?{y:2.4,d:6.2}:{y:2.35,d:6.6}):(n==='out'?{y:1.95,d:9.8}:n==='hair'?{y:2.85,d:8.4}:{y:2.85,d:6.6})}}};   // (the hat comes off while you pick a hair style, so you can see it)
+const PV=mkPV($('pvcv'),$('pvw'),()=>of.style.display==='flex'),HPV=mkPV($('hpcv'),$('hpw'),()=>$('rpg').classList.contains('on'));   // (HPV: the same turning figure, in the Hero window)
 /* status: how you are right now, shown beside your name for everyone (not remembered between visits: you are active whenever you arrive) */
 const STATUS=[['Active','🟢'],['AFK','🕒'],['Asleep','💤'],['Working','💻']];let MYST=0;
 function setTag(el,name,st){el.textContent='';el.appendChild(document.createTextNode(name));const b=document.createElement('span');b.className=st?'sb':'sb dot';if(st)b.textContent=STATUS[st][1]+' '+STATUS[st][0];else b.title='Active';el.appendChild(b)}
@@ -3055,7 +3058,7 @@ function refreshPeople(){const c=PPL[ctl];
   if(CB)GRP.outfit.forEach((b,i)=>{const o=CB.outfits[Math.min(c.gender|0,CB.genders-1)][i];b.children[0].textContent=o.ic;b.children[1].textContent=o.n;b.children[2].style.background='linear-gradient('+hex6(o.top.c)+' 50%,'+hex6(o.bot.c)+' 50%)';b.hidden=i===1&&IS_GM!==true});   // (the Dev is only shown to the GM)   // (the first outfit is the knight's armour or the princess's gown)
   Object.keys(GRP).forEach(k=>GRP[k].forEach((b,i)=>{const on=i===c[k];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}));
   stBtns.forEach((b,i)=>{b.classList.toggle('on',i===MYST);b.setAttribute('aria-pressed',i===MYST)});
-  $('who').textContent=c.name;PV.show(c);
+  $('who').textContent=c.name;PV.show(c);HPV.show(c);
   if(document.activeElement!==dname)dname.value=dogName;if(document.activeElement!==fname)fname.value=PPL[1].name;if(document.activeElement!==myname)myname.value=PPL[0].name;setTag(tagP,c.name,MYST);tagN.textContent=PPL[1-ctl].name;$('bo').title='Character: look, outfit, swap, names'}
 $('bo').onclick=()=>{of.style.display=of.style.display==='flex'?'none':'flex';if(of.style.display==='flex')PV.start()};
 // the menu closes with its x, by tapping anywhere outside it, or with Escape
@@ -4244,11 +4247,11 @@ const MOB=(()=>{
     rpgApply();rpgSave()}
   rpgHook={out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
-  bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw()}};
+  bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false')};
   let rpgFit=()=>{};
   {const h=$('rph'),KEY='myworld.rpgpos';let pos=null,dr=null;try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&isFinite(v.x)&&isFinite(v.y))pos=v}catch(_){}
-    rpgFit=()=>{if(!pos||!rpgEl.classList.contains('on'))return;const w=rpgEl.offsetWidth,hh=rpgEl.offsetHeight;pos.x=clamp(pos.x,0,Math.max(0,innerWidth-w));pos.y=clamp(pos.y,0,Math.max(0,innerHeight-Math.min(hh,60)));rpgEl.style.left=pos.x+'px';rpgEl.style.top=pos.y+'px';rpgEl.style.right='auto'};
+    rpgFit=()=>{if(!pos||!rpgEl.classList.contains('on'))return;const w=rpgEl.offsetWidth,hh=rpgEl.offsetHeight;pos.x=clamp(pos.x,0,Math.max(0,innerWidth-w));pos.y=clamp(pos.y,0,Math.max(0,innerHeight-Math.min(hh,60)));rpgEl.style.left=pos.x+'px';rpgEl.style.top=pos.y+'px';rpgEl.style.right='auto';rpgEl.style.transform='none'};
     h.addEventListener('pointerdown',e=>{if(e.target.closest('button')||(e.button!=null&&e.button>0))return;const r=rpgEl.getBoundingClientRect();dr={id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};pos={x:r.left,y:r.top};h.classList.add('drag');try{h.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
     h.addEventListener('pointermove',e=>{if(!dr||e.pointerId!==dr.id)return;pos.x=e.clientX-dr.dx;pos.y=e.clientY-dr.dy;rpgFit()});
     const end=e=>{if(!dr||e.pointerId!==dr.id)return;dr=null;h.classList.remove('drag');try{localStorage.setItem(KEY,JSON.stringify({x:Math.round(pos.x),y:Math.round(pos.y)}))}catch(_){}};
