@@ -4326,7 +4326,7 @@ const MOB=(()=>{
     auraCylM=new THREE.MeshBasicMaterial({map:auraTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),
     auraPtsM=new THREE.PointsMaterial({color:'#ffe27a',size:.14,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),auras=new Map();
   function auraOn(root){let a=auras.get(root);if(a)return a;const g=new THREE.Group(),cyl=new THREE.Mesh(auraCylG,auraCylM),N=26,pos=new Float32Array(N*3),pg=new THREE.BufferGeometry();
-    pg.setAttribute('position',new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(pg,auraPtsM);pts.frustumCulled=false;g.add(cyl,pts);root.add(g);a={g,cyl,ring,pg,pos,N,live:true};auras.set(root,a);return a}
+    pg.setAttribute('position',new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(pg,auraPtsM);pts.frustumCulled=false;g.add(cyl,pts);root.add(g);a={g,cyl,pg,pos,N,live:true};auras.set(root,a);return a}
   function auraWave(t){const P=auraCylG.attributes.position.array;   // (the glow flares out in a curve, with a wave rolling round its edge and a ragged, flickering top)
     for(let i=0;i<P.length;i+=3){const x=auraBase[i],y=auraBase[i+1],z=auraBase[i+2],h=y/1.9,a=Math.atan2(z,x),R=.95+.85*h*h*(1.25-.25*h)+.13*h*Math.sin(a*6+t*3.2-h*6)+.06*Math.sin(a*3-t*2);
       P[i]=Math.cos(a)*R;P[i+1]=y+.14*h*Math.sin(a*5-t*2.4);P[i+2]=Math.sin(a)*R}
