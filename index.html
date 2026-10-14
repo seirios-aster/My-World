@@ -2520,11 +2520,12 @@ addEventListener('keyup',e=>{if(e.target&&e.target.tagName==='INPUT')return;keys
 addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput()});
 document.addEventListener('contextmenu',e=>{e.preventDefault();clearInput()});addEventListener('dragstart',e=>e.preventDefault());
 cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}
-  if(e.pointerType==='touch'){tpos.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY);if(id!==e.pointerId&&(d<200||(q.x<innerWidth/2)===(e.clientX<innerWidth/2))){   // a second finger on the same half of the screen as the first (or just across the middle from it) is a pinch, not a new stick or a new look: those two thumbs sit on opposite halves
-      pz={a:id,b:e.pointerId,d0:Math.max(d,30),z0:zoom};if(sid===id){sid=null;st=null;sv={x:0,z:0}}if(lid===id){lid=null;lp=null}return}}}
+  if(e.pointerType==='touch'){const now=performance.now();
+    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY);if((d<Math.max(220,innerWidth*.4)||(q.x<innerWidth/2)===(e.clientX<innerWidth/2)||(now-q.t<700&&Math.hypot(q.x-q.x0,q.y-q.y0)<40))){   // a second finger is a pinch, not a new stick or a new look, if it lands: fairly near the first, or on the same half of the screen, or soon after the first without the first having gone anywhere (two fingers put down together)
+      tpos.set(e.pointerId,{x:e.clientX,y:e.clientY,t:now,x0:e.clientX,y0:e.clientY});pz={a:id,b:e.pointerId,d0:Math.max(d,30),z0:zoom};if(sid===id){sid=null;st=null;sv={x:0,z:0}}if(lid===id){lid=null;lp=null}return}}
+    tpos.set(e.pointerId,{x:e.clientX,y:e.clientY,t:now,x0:e.clientX,y0:e.clientY})}
   if(e.pointerType==='touch'&&e.clientX<innerWidth/2&&sid==null){sid=e.pointerId;st={x:e.clientX,y:e.clientY}}else if(lid==null){lid=e.pointerId;lp={x:e.clientX,y:e.clientY}}});
-addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&tpos.has(e.pointerId)){tpos.set(e.pointerId,{x:e.clientX,y:e.clientY});
+addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&tpos.has(e.pointerId)){{const q=tpos.get(e.pointerId);q.x=e.clientX;q.y=e.clientY}
     if(pz&&(e.pointerId===pz.a||e.pointerId===pz.b)){const A=tpos.get(pz.a),B=tpos.get(pz.b);if(A&&B)zoom=clamp(pz.z0*pz.d0/Math.max(Math.hypot(A.x-B.x,A.y-B.y),30),.4,2.4);return}}   // (fingers apart = closer)
   if(e.pointerId===sid&&st){let dx=(e.clientX-st.x)/50,dy=(e.clientY-st.y)/50,l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}sv={x:dx,z:dy}}
   else if(e.pointerId===lid&&lp){yaw-=(e.clientX-lp.x)*.007;pitch=clamp(pitch+(e.clientY-lp.y)*.005,-1.45,1.45);lp={x:e.clientX,y:e.clientY}}});
