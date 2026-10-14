@@ -2521,7 +2521,7 @@ addEventListener('blur',clearInput);document.addEventListener('visibilitychange'
 document.addEventListener('contextmenu',e=>{e.preventDefault();clearInput()});addEventListener('dragstart',e=>e.preventDefault());
 cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}
   if(e.pointerType==='touch'){tpos.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY);if(id!==e.pointerId&&d<260){   // a second finger close to the first one is a pinch, not a new stick or a new look
+    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY);if(id!==e.pointerId&&(d<200||(q.x<innerWidth/2)===(e.clientX<innerWidth/2))){   // a second finger on the same half of the screen as the first (or just across the middle from it) is a pinch, not a new stick or a new look: those two thumbs sit on opposite halves
       pz={a:id,b:e.pointerId,d0:Math.max(d,30),z0:zoom};if(sid===id){sid=null;st=null;sv={x:0,z:0}}if(lid===id){lid=null;lp=null}return}}}
   if(e.pointerType==='touch'&&e.clientX<innerWidth/2&&sid==null){sid=e.pointerId;st={x:e.clientX,y:e.clientY}}else if(lid==null){lid=e.pointerId;lp={x:e.clientX,y:e.clientY}}});
 addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&tpos.has(e.pointerId)){tpos.set(e.pointerId,{x:e.clientX,y:e.clientY});
