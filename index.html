@@ -2510,8 +2510,9 @@ function frTick(dt){const q=fr.root.position,pp=P.position,dP=Math.hypot(pp.x-q.
 /* =========================== INPUT =========================== */
 const keys={};let near=null,open=false,st=null,sv={x:0,z:0};
 let yaw=0,pitch=.72,sid=null,lid=null,lp=null;
+const tpos=new Map();let pz=null;   // pinch to zoom: where each finger is, and the two fingers of a pinch (a, b) with their starting distance and zoom
 // keys are tracked by physical key (e.code) so modifiers can't desync press/release; anything that can swallow a keyup clears input
-function clearInput(){for(const k in keys)keys[k]=false;sv={x:0,z:0};sid=null;st=null;lid=null;lp=null}
+function clearInput(){for(const k in keys)keys[k]=false;sv={x:0,z:0};sid=null;st=null;lid=null;lp=null;pz=null;tpos.clear()}
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.metaKey){clearInput();return}keys[e.code]=true;const k=(e.key||'').toLowerCase();
   if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(e.code==='Space'&&!open){e.preventDefault();if(!e.repeat)doJump()}if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
   if(e.key==='+'||e.key==='=')zm(.8);if(e.key==='-')zm(1.25)});
@@ -2519,10 +2520,15 @@ addEventListener('keyup',e=>{if(e.target&&e.target.tagName==='INPUT')return;keys
 addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput()});
 document.addEventListener('contextmenu',e=>{e.preventDefault();clearInput()});addEventListener('dragstart',e=>e.preventDefault());
 cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  if(e.pointerType==='touch'){tpos.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY);if(id!==e.pointerId&&d<260){   // a second finger close to the first one is a pinch, not a new stick or a new look
+      pz={a:id,b:e.pointerId,d0:Math.max(d,30),z0:zoom};if(sid===id){sid=null;st=null;sv={x:0,z:0}}if(lid===id){lid=null;lp=null}return}}}
   if(e.pointerType==='touch'&&e.clientX<innerWidth/2&&sid==null){sid=e.pointerId;st={x:e.clientX,y:e.clientY}}else if(lid==null){lid=e.pointerId;lp={x:e.clientX,y:e.clientY}}});
-addEventListener('pointermove',e=>{if(e.pointerId===sid&&st){let dx=(e.clientX-st.x)/50,dy=(e.clientY-st.y)/50,l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}sv={x:dx,z:dy}}
+addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&tpos.has(e.pointerId)){tpos.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pz&&(e.pointerId===pz.a||e.pointerId===pz.b)){const A=tpos.get(pz.a),B=tpos.get(pz.b);if(A&&B)zoom=clamp(pz.z0*pz.d0/Math.max(Math.hypot(A.x-B.x,A.y-B.y),30),.4,2.4);return}}   // (fingers apart = closer)
+  if(e.pointerId===sid&&st){let dx=(e.clientX-st.x)/50,dy=(e.clientY-st.y)/50,l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}sv={x:dx,z:dy}}
   else if(e.pointerId===lid&&lp){yaw-=(e.clientX-lp.x)*.007;pitch=clamp(pitch+(e.clientY-lp.y)*.005,-1.45,1.45);lp={x:e.clientX,y:e.clientY}}});
-const pup=e=>{if(e.pointerId===sid){sid=null;st=null;sv={x:0,z:0}}if(e.pointerId===lid){lid=null;lp=null}};
+const pup=e=>{tpos.delete(e.pointerId);if(pz&&(e.pointerId===pz.a||e.pointerId===pz.b))pz=null;if(e.pointerId===sid){sid=null;st=null;sv={x:0,z:0}}if(e.pointerId===lid){lid=null;lp=null}};
 addEventListener('pointerup',pup);addEventListener('pointercancel',pup);addEventListener('lostpointercapture',pup);
 /* ===== sculpting engine: signed-distance primitives + a narrow-band surface-nets mesher (no THREE needed) ===== */
 /* ---------------- coordinates: live position + tap-the-ground pin, so we can point at exact spots (x = east, z = south, y = height) ---------------- */
