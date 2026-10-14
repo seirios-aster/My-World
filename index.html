@@ -223,6 +223,19 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 @media (max-height:520px){#gcard{padding:14px 20px 12px;margin-top:0}#gpin{display:none}#gcard h1{font-size:28px;margin-bottom:4px}#gcard p{margin-bottom:12px;font-size:13.5px}#gbtn{min-height:46px}#gnote{display:none}}
 #map{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:140px;height:140px;border-radius:16px;border:3px solid var(--paper);box-shadow:var(--shadow);background:var(--paper-2)}
 #acts{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px}
+/* monsters: the fight buttons, my HP bar, slime health bars, floating damage numbers */
+#mon{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.mhp{position:absolute;left:0;top:0;width:46px;height:6px;border-radius:4px;background:rgba(20,18,30,.62);overflow:hidden;display:none;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.mhp i{display:block;height:100%;width:100%;background:#e8564a;transform-origin:left center}
+.dmg{position:absolute;left:0;top:0;display:none;font:700 20px var(--display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.8);white-space:nowrap}
+.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
+#hpb{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(230px,42vw);height:16px;border-radius:9px;background:rgba(20,18,30,.55);overflow:hidden;display:none;z-index:3;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.4),var(--shadow)}
+#hpb.show{display:block}#hpb i{display:block;position:absolute;inset:0;background:linear-gradient(90deg,#d94b4b,#f08a5d);transform-origin:left center}
+#hpb b{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+#fight{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(68px + env(safe-area-inset-bottom,0px));display:none;align-items:flex-end;gap:10px;z-index:3}
+#fight.show{display:flex}#fight .round{position:relative;width:46px;height:46px;font-size:22px;touch-action:none;user-select:none;-webkit-user-select:none}#fight #batk{width:62px;height:62px;font-size:30px}
+#fight .round::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(10,10,20,.55) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
+body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 90px 22px rgba(220,40,40,.55)}
 #acts .round{width:44px;height:44px}#bem,#bvc,#bptt{font-size:22px}#bvc[hidden]{display:none}#bvc.on{background:#3fa66b;color:#fff}#bptt{display:none;touch-action:none;user-select:none;-webkit-user-select:none}#bptt.show{display:grid}#bptt.talk{background:#d9503f;color:#fff;box-shadow:0 0 0 5px rgba(217,80,63,.3)}#bptt.latch{outline:3px solid #d9503f;outline-offset:2px}
 .tag.spk{background:rgba(52,150,96,.88);box-shadow:0 0 0 3px rgba(52,150,96,.35)}.tag.spk::before{content:'🔊 '}
 #ask{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:rgba(20,18,30,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
@@ -336,7 +349,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
   <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
-  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -350,6 +363,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   <div id="obuild"></div></div>
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
+<div id="mon"></div><div id="hpb"><i></i><b></b></div>
+<div id="fight"><button type="button" class="round" id="bdash" title="Dash · Q" aria-label="Dash">💨</button><button type="button" class="round" id="bslam" title="Slam · G" aria-label="Slam">💥</button><button type="button" class="round" id="batk" title="Attack · F" aria-label="Attack">⚔️</button></div>
 <div id="pick" role="dialog" aria-modal="true" aria-labelledby="pktitle" hidden><div id="pkbox"><h2 id="pktitle">Choose your character</h2><p>You can change it any time in the character menu.</p><div id="pkrow"><button type="button" class="pkc" data-g="0"><b>♂</b><small>Male</small></button><button type="button" class="pkc" data-g="1"><b>♀</b><small>Female</small></button></div></div></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
 <svg class="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
@@ -3170,11 +3185,11 @@ const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1'],['mo','gmmo']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
 async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);FXS.loaded=true;syncFx()}   // (undefined: can't be read, keep what we have)
 {const note=t=>{$('gmfx').textContent=t};
-  const gmSel='#gmw,#gmf,#gmm1,#gms1';
-  ['gmw','gmf','gmm1','gms1'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
+  const gmSel='#gmw,#gmf,#gmm1,#gms1,#gmmo';
+  ['gmw','gmf','gmm1','gms1','gmmo'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value,mo:$('gmmo').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
     try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
     catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
     finally{[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=false)}}})}
@@ -3355,8 +3370,8 @@ function skyTick(dt){
    Every one is Auto or set by the GM (stored in world_settings.fx, see supabase-world-weather.sql, and read the same way as the game clock).
    Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
    fireflies come out at dusk and stay till dawn. The GM's choice only overrides what Auto would do. */
-const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always']};
-const FXS={w:'auto',f:'auto',m:'auto',s:'auto',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
+const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always'],mo:['auto','always','off']};
+const FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
 setTimeout(()=>{FXS.loaded=true},6000);   // (if it can't be read at all, Auto takes over after 6 s)
 function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}return ch}
 const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
@@ -3874,7 +3889,7 @@ function dogAnim(dt){const D=DOG,d=dog,gal=sstep(6,9.5,D.v);
    once every few seconds while you stand still) and who is on which bike / seat. The friend and Awaw are never sent: they stay yours alone.
    Two Realtime messages kinds: broadcast 'p' = position, and presence = look (skin, hair, face, outfit), name, bike, seat, parked bikes. Nothing is stored anywhere. */
 const MP=(()=>{
-const WS=storage.world,none={key:()=>'',say(){},tick(){},tags(){},each(){},bike(){},dbg:()=>null};
+const WS=storage.world,none={key:()=>'',say(){},tick(){},tags(){},each(){},bike(){},dbg:()=>null,net:{key:()=>'',send(){},on(){},peers:()=>[],isHost:()=>true}};   // (net: what the monsters use; alone or offline you are your own host)
 if(!WS||!storage.auth)return none;
 const MAXR=24,remotes=new Map(),pool=[],tagBox=tagN.parentNode,before=(a,ka,b,kb)=>a<b||(a===b&&ka<kb);
 const my={b:-1,bt:0,s:null,st:0,pk:{}};const drops={bad:0,last:''},rc={n:0,t:0,last:''};   // drops: position messages we could not use; rc: times we had to bring the world channel back
@@ -4161,7 +4176,7 @@ function tags(){remotes.forEach(R=>{const q=R.rig.root.position;
   if(R.has&&!open&&R.sayUntil>performance.now())tagAt(R.say,q.x,q.y+4.4,q.z,-8,70,true);else if(R.say.style.display!=='none')R.say.style.display='none'})}
 function dbg(){const o=Object.entries(WS.state()).filter(([k])=>k!==myKey),now=performance.now();
   return{vc:vLine(),hist:WS.hist?WS.hist():[],conn:WS.connected(),pres:WS.presence?WS.presence():null,rc:{...rc},listed:o.length,shown:remotes.size,withPos:[...remotes.values()].filter(R=>R.has).length,drops:{...drops},peers:[...remotes.values()].map(R=>(R.nm||'?')+(R.has?' '+((now-R.lastP)/1000).toFixed(1)+'s ago':' (no position yet)'))}}
-return{dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe,voiceStats:async()=>{const out=[];for(const[k,p]of VC.peers){const st=await p.pc.getStats();const o={k:k.slice(-5)};st.forEach(r=>{if(r.type==='inbound-rtp')o.in={bytes:r.bytesReceived,packets:r.packetsReceived,level:r.audioLevel};if(r.type==='outbound-rtp')o.out={bytes:r.bytesSent,packets:r.packetsSent}});o.recv=p.pc.getReceivers().map(x=>({muted:x.track&&x.track.muted,state:x.track&&x.track.readyState}));o.send=p.send&&p.send.track?{en:p.send.track.enabled,state:p.send.track.readyState,muted:p.send.track.muted}:null;out.push(o)}return out},voice:()=>({on:VC.on,talk:VC.talk,mic:!!VC.track,retry:Object.keys(VC.retry).length,peers:[...VC.peers].map(([k,p])=>({k:k.slice(-5),init:p.init,conn:p.pc.connectionState,ice:p.pc.iceConnectionState,sig:p.pc.signalingState,ok:p.ok,hear:!!p.el,gain:p.gain?+p.gain.gain.value.toFixed(2):null,lvl:+(p.lvl||0).toFixed(4),ac:AC?AC.state:'none'})),remotes:[...remotes.values()].map(R=>({vc:R.vc,has:R.has,d:+Math.hypot(R.tx-P.position.x,R.tz-P.position.z).toFixed(1)}))})}})();
+return{net:{key:()=>myKey,send:(t,d)=>WS.send(t,d),on:(t,f)=>WS.on(t,f),peers:()=>[...remotes.values()].filter(R=>R.has&&R.rig.root.visible),isHost:()=>{for(const R of remotes.values())if(R.has&&before(R.st||1e15,R.key,my.st||1e15,myKey))return false;return true}},dbg,count:()=>remotes.size,key:()=>myKey,say(k,text){const R=remotes.get(k);if(R){rich(R.say,text);R.sayUntil=performance.now()+4500}},tick,tags,each:f=>remotes.forEach(R=>{if(R.has)f(R)}),bike:bikeChanged,emoMe,voiceStats:async()=>{const out=[];for(const[k,p]of VC.peers){const st=await p.pc.getStats();const o={k:k.slice(-5)};st.forEach(r=>{if(r.type==='inbound-rtp')o.in={bytes:r.bytesReceived,packets:r.packetsReceived,level:r.audioLevel};if(r.type==='outbound-rtp')o.out={bytes:r.bytesSent,packets:r.packetsSent}});o.recv=p.pc.getReceivers().map(x=>({muted:x.track&&x.track.muted,state:x.track&&x.track.readyState}));o.send=p.send&&p.send.track?{en:p.send.track.enabled,state:p.send.track.readyState,muted:p.send.track.muted}:null;out.push(o)}return out},voice:()=>({on:VC.on,talk:VC.talk,mic:!!VC.track,retry:Object.keys(VC.retry).length,peers:[...VC.peers].map(([k,p])=>({k:k.slice(-5),init:p.init,conn:p.pc.connectionState,ice:p.pc.iceConnectionState,sig:p.pc.signalingState,ok:p.ok,hear:!!p.el,gain:p.gain?+p.gain.gain.value.toFixed(2):null,lvl:+(p.lvl||0).toFixed(4),ac:AC?AC.state:'none'})),remotes:[...remotes.values()].map(R=>({vc:R.vc,has:R.has,d:+Math.hypot(R.tx-P.position.x,R.tz-P.position.z).toFixed(1)}))})}})();
 /*MP-END*/
 // add ?debug to the address to see what the connection is doing (handy when "I can't see anyone" needs a real reason)
 if(storage.session)storage.session.onChange(st=>console.info('[session]',st));
@@ -4170,6 +4185,134 @@ if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.
     d.textContent=['signed in: '+(A?'yes':'no (guest)'),'session: '+(S?S.state():'n/a'),'world: '+(g?(g.conn?'connected':'NOT connected'):'n/a'),'game clock: '+(WTZ==='device'?'each device\'s own ('+TZ+')':WTZ)+(SET?'':' (not available)'),
       g&&g.pres?'presence updates in the last 30 s: '+g.pres.used+' of '+g.pres.max+' allowed'+(g.pres.waiting?', '+g.pres.waiting+' waiting':'')+'; times brought back: '+g.rc.n+(g.rc.last?' (last: '+g.rc.last+')':''):'',g&&g.vc&&g.vc!=='off'?'voice: '+g.vc:'',g&&g.hist&&g.hist.length?'connection events (newest last): '+g.hist.map(h=>h.s+(h.e?' ['+h.e+']':'')+' '+Math.round((Date.now()-h.t)/1000)+'s ago').join(' | ')+'  - '+g.hist.filter(h=>Date.now()-h.t<120000&&h.s!=='SUBSCRIBED').length+' problem(s) in the last 2 min':'',g?'server lists '+g.listed+' other(s); showing '+g.shown+' ('+g.withPos+' with a position)':'',...(g?g.peers.map(x=>'   '+x):[]),
       g&&g.drops.bad?'unusable position messages: '+g.drops.bad+' e.g. '+g.drops.last:'','my heading: '+P.rotation.y.toFixed(2)+' rad','saved state: '+PST].filter(Boolean).join('\n')},1000)}
+
+/* =========================== MONSTERS: slimes in two danger zones, at night (the GM can turn them off, or have them all day) ===========================
+   Nothing runs on a server: the player who has been here longest (the "host") runs the monsters and tells everyone where they are and how healthy (message 'm',
+   four times a second). Everyone else just draws them, and sends a hit ('h') to the host when they swing at one. Each player keeps their own HP: the host says
+   "this slime hit you" ('d') and your own game takes the damage. If the host leaves, the next player takes over from the monsters they were already seeing.
+   Trade-off: the host's game is the referee, so it is not cheat-proof, which is fine for a friends' hangout. */
+const MOB=(()=>{
+  const NET=MP.net,ZONES=[{n:'the misty woods',x:-132,z:78,r:34},{n:'the summit slopes',x:-20,z:-74,r:30}],
+    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a'},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0'}],
+    list=new Map(),box=$('mon'),hpb=$('hpb'),hpf=hpb.firstElementChild,hpt=hpb.lastElementChild,fight=$('fight'),btn={a:$('batk'),z:$('bslam'),d:$('bdash')},
+    HP={v:100,max:100,hurt:-1e9,inv:0},CD={a:0,z:0,d:0},CDM={a:.5,z:7,d:3.5},DASH={t:0,x:0,z:0},
+    bodyG=new THREE.SphereGeometry(.72,16,12),eyeG=new THREE.SphereGeometry(.13,8,6),pupG=new THREE.SphereGeometry(.07,6,5),
+    slashG=new THREE.RingGeometry(.8,1.9,20,1,-Math.PI*.42,Math.PI*.84).rotateX(-Math.PI/2),ringG=new THREE.RingGeometry(.9,1.1,36).rotateX(-Math.PI/2),pG=new THREE.SphereGeometry(.12,6,5),
+    eyeM=new THREE.MeshBasicMaterial({color:'#ffffff'}),pupM=new THREE.MeshBasicMaterial({color:'#1b1b2b'}),
+    v3=new THREE.Vector3(),fxs=[],nums=[];
+  let simT=0,sendT=0,sentAny=false,spawnAt=[0,0],fightUntil=0,host=true;
+  const night=()=>{const h=clockH();return h>=19||h<5},monsOn=()=>FXS.mo==='always'||(FXS.mo!=='off'&&night()),rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  const players=()=>{const a=[];if(HP.v>0)a.push({key:'',x:P.position.x,z:P.position.z,me:true});NET.peers().forEach(R=>a.push({key:R.key,x:R.x,z:R.z}));return a};
+  function sfx(k){if(!AC||mute||AC.state!=='running'||!master)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+    const S={hit:['triangle',420,170,.1,.09],slash:['sawtooth',760,260,.09,.05],hurt:['sine',240,100,.2,.12],slam:['square',140,45,.28,.12],die:['sine',420,880,.16,.08],dash:['sine',300,700,.12,.05]}[k];if(!S)return;
+    o.type=S[0];o.frequency.setValueAtTime(S[1],t);o.frequency.exponentialRampToValueAtTime(S[2],t+S[3]);g.gain.setValueAtTime(S[4],t);g.gain.exponentialRampToValueAtTime(.0005,t+S[3]+.04);o.connect(g);g.connect(master);o.start(t);o.stop(t+S[3]+.06)}
+  // ---- the little pictures: a slash, a ring, a puff when a slime pops, floating numbers ----
+  const fxMat=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  function slashFx(x,z,r){const m=new THREE.Mesh(slashG,fxMat('#fffaf0',.85));m.position.set(x,groundY(x,z)+.9,z);m.rotation.y=r-Math.PI/2;W.add(m);fxs.push({o:m,k:'s',t0:performance.now(),dur:200,mats:[m.material]})}
+  function ringFx(x,z,R,col,dur){const m=new THREE.Mesh(ringG,fxMat(col,.7));m.position.set(x,groundY(x,z)+.15,z);W.add(m);fxs.push({o:m,k:'r',R,t0:performance.now(),dur:dur||350,mats:[m.material]})}
+  function burst(x,y,z,col){const g=new THREE.Group(),mat=fxMat(col,.9),vs=[];g.position.set(x,y+.5,z);
+    for(let i=0;i<9;i++){const p=new THREE.Mesh(pG,mat),a=i*.7+Math.random();p.userData.v=[Math.cos(a)*(2+Math.random()*2),2+Math.random()*3,Math.sin(a)*(2+Math.random()*2)];g.add(p)}
+    W.add(g);fxs.push({o:g,k:'b',t0:performance.now(),dur:650,mats:[mat]})}
+  function fxTick(dt,now){for(let i=fxs.length-1;i>=0;i--){const f=fxs[i],a=(now-f.t0)/f.dur;
+      if(a>=1){W.remove(f.o);f.mats.forEach(m=>m.dispose());fxs.splice(i,1);continue}
+      if(f.k==='s'){f.mats[0].opacity=.85*(1-a);f.o.scale.setScalar(1+a*.3)}
+      else if(f.k==='r'){f.o.scale.setScalar(Math.max(.1,f.R*a));f.mats[0].opacity=.7*(1-a)}
+      else{f.mats[0].opacity=.9*(1-a);f.o.children.forEach(p=>{const v=p.userData.v;v[1]-=9*dt;p.position.x+=v[0]*dt;p.position.y+=v[1]*dt;p.position.z+=v[2]*dt})}}}
+  function numAt(x,y,z,txt,cls){if(nums.length>24)return;const el=document.createElement('div');el.className='dmg '+(cls||'');el.textContent=txt;box.appendChild(el);nums.push({el,x,y,z,t:performance.now()})}
+  const onScr=(x,y,z)=>{v3.set(x,y,z).project(cam);return v3.z<1?[(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight]:null};
+  // ---- a slime ----
+  function addMon(id,ty,x,z,hp,zone){const T=TY[ty],g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color:T.col,transparent:true,opacity:.9,roughness:.25,emissive:'#000000'}),body=new THREE.Mesh(bodyG,mat);
+    body.scale.set(1,.8,1);body.position.y=.58;body.castShadow=true;g.add(body);
+    [-1,1].forEach(s=>{const e=new THREE.Mesh(eyeG,eyeM);e.position.set(s*.26,.78,.55);e.scale.set(1,1.2,.6);g.add(e);const p=new THREE.Mesh(pupG,pupM);p.position.set(s*.26,.78,.63);g.add(p)});
+    g.scale.setScalar(T.sc);W.add(g);const el=document.createElement('div');el.className='mhp';el.appendChild(document.createElement('i'));box.appendChild(el);
+    const m={id,ty,x,z,tx:x,tz:z,y:groundY(x,z),hp,hpm:T.hp,st:0,ry:0,tr:0,ph:Math.random()*6,g,mat,el,flash:0,wind:0,cd:1,deadAt:0,dead:false,t0:0,wt:0,wx:x,wz:z,pt:-1e9,zone,tp:''};list.set(id,m);return m}
+  function dropMon(m){W.remove(m.g);m.mat.dispose();m.el.remove();list.delete(m.id)}
+  function kill(m){m.st=3;m.hp=0;m.deadAt=performance.now()}
+  // ---- hits on a slime (anyone's): the host decides; everyone else shows it at once and tells the host ----
+  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;const ny=m.y+1.3*TY[m.ty].sc;numAt(m.x,ny,m.z,(crit?'💥 ':'')+d,crit?'crit':'');m.flash=1;sfx('hit');
+    if(host){m.hp-=d;m.x+=dx*.8;m.z+=dz*.8;m.tp='';if(m.hp<=0)kill(m)}
+    else{m.hp-=d;m.pt=performance.now();NET.send('h',{id:m.id,d,x:P.position.x,z:P.position.z})}}
+  NET.on('h',d=>{if(!host||!d||typeof d.id!=='string')return;const m=list.get(d.id),dm=Math.min(40,Math.max(1,Math.round(+d.d)||0));if(!m||m.st===3||!dm)return;
+    const dx=m.x-(+d.x||0),dz=m.z-(+d.z||0),l=Math.hypot(dx,dz)||1,ny=m.y+1.3*TY[m.ty].sc;m.hp-=dm;m.x+=dx/l*.8;m.z+=dz/l*.8;m.flash=1;numAt(m.x,ny,m.z,String(dm));if(m.hp<=0)kill(m)});
+  // ---- the host's side: spawning, chasing, striking ----
+  function spawn(zi,ps){const Z=ZONES[zi];for(let k=0;k<14;k++){const a=Math.random()*6.283,r=Z.r*Math.sqrt(Math.random()),x=Z.x+Math.cos(a)*r,z=Z.z+Math.sin(a)*r;
+      if(!walkable(x,z)||H(x,z)<.8||SPOTS.some(s=>Math.hypot(s.x-x,s.z-z)<12)||ps.some(p=>Math.hypot(p.x-x,p.z-z)<14))continue;
+      const el=[...list.values()].filter(m=>m.zone===zi&&m.ty===1&&m.st!==3).length<1&&Math.random()<.2,ty=el?1:0;let id;do{id=Math.random().toString(36).slice(2,6)}while(list.has(id));
+      addMon(id,ty,x,z,TY[ty].hp,zi);return}}
+  function manage(ps,on,now){
+    ZONES.forEach((Z,zi)=>{const near=ps.some(p=>Math.hypot(p.x-Z.x,p.z-Z.z)<Z.r+70),mine=[...list.values()].filter(m=>m.zone===zi&&m.st!==3);
+      if(!on||!near){mine.forEach(kill);return}
+      if(mine.length<4&&now-spawnAt[zi]>6000){spawnAt[zi]=now;spawn(zi,ps)}});
+    [...list.values()].forEach(m=>{if(m.st===3&&now-m.deadAt>1600)dropMon(m)})}
+  function mv(m,dx,dz,st){const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;const nx=m.x+dx*st,nz=m.z+dz*st,ok=(x,z)=>walkable(x,z)&&H(x,z)>.6&&!crossWall(m.x,m.z,x,z);
+    if(ok(nx,nz)){m.x=nx;m.z=nz}else if(ok(nx,m.z))m.x=nx;else if(ok(m.x,nz))m.z=nz;m.ry=Math.atan2(dx,dz)}
+  function strike(m,ps){const T=TY[m.ty],p=ps.find(q=>q.key===m.tp);if(!p||Math.hypot(p.x-m.x,p.z-m.z)>1.7+.5*T.sc+1)return;const d=T.dmg+rnd(0,3);
+    if(p.me)hurtMe(d,m.x,m.z);else NET.send('d',{to:p.key,d,x:+m.x.toFixed(1),z:+m.z.toFixed(1)})}
+  function step(m,dt,ps){if(m.st===3)return;const T=TY[m.ty],Z=ZONES[m.zone];m.cd-=dt;
+    if(m.st===2){m.wind-=dt;if(m.wind<=0){strike(m,ps);m.st=0;m.cd=1.3}return}
+    let best=null,bd=1e9;for(const p of ps){const d=Math.hypot(p.x-m.x,p.z-m.z);if(d<bd){bd=d;best=p}}
+    const zd=Math.hypot(m.x-Z.x,m.z-Z.z),rng=1.2+.5*T.sc;
+    if(best&&bd<T.ag&&zd<Z.r+20){m.st=1;if(bd>rng*.8)mv(m,best.x-m.x,best.z-m.z,T.sp*dt);else{m.ry=Math.atan2(best.x-m.x,best.z-m.z);if(m.cd<=0){m.st=2;m.wind=.55;m.tp=best.key}}}
+    else{m.st=0;if(zd>Z.r+20){m.wx=Z.x;m.wz=Z.z;m.wt=3}else if(m.wt<=0){const a=Math.random()*6.283,r=Z.r*.8*Math.sqrt(Math.random());m.wx=Z.x+Math.cos(a)*r;m.wz=Z.z+Math.sin(a)*r;m.wt=3+Math.random()*5}else m.wt-=dt;
+      if(Math.hypot(m.wx-m.x,m.wz-m.z)>1)mv(m,m.wx-m.x,m.wz-m.z,T.sp*(zd>Z.r+20?1:.45)*dt)}}
+  function hostTick(dt,now){const ps=players();simT+=dt;if(simT>1){simT=0;manage(ps,monsOn(),now)}
+    list.forEach(m=>step(m,dt,ps));sendT+=dt;
+    if(sendT>=.25&&(list.size||sentAny)){sendT=0;sentAny=list.size>0;const n=[];list.forEach(m=>n.push([m.id,m.ty,+m.x.toFixed(1),+m.z.toFixed(1),Math.max(0,Math.round(m.hp)),+m.ry.toFixed(2),m.st,m.zone]));NET.send('m',{n:n.slice(0,24)})}}
+  // ---- everyone else: what the host says ----
+  NET.on('m',d=>{if(host||!d||!Array.isArray(d.n)||d.n.length>24)return;const seen=new Set(),now=performance.now();
+    for(const e of d.n){if(!Array.isArray(e)||e.length<8)continue;const id=e[0],ty=e[1],x=+e[2],z=+e[3],hp=+e[4],ry=+e[5],st=e[6],zi=e[7];
+      if(typeof id!=='string'||id.length>8||!(ty===0||ty===1)||!(Math.abs(x)<500&&Math.abs(z)<500)||!(hp>=0&&hp<=300)||!(st>=0&&st<=3)||!(zi===0||zi===1))continue;
+      seen.add(id);let m=list.get(id);if(!m)m=addMon(id,ty,x,z,hp,zi);
+      m.tx=x;m.tz=z;m.tr=ry;if(m.st!==3&&st===3){m.st=3;m.deadAt=now}else if(m.st!==3)m.st=st;
+      if(hp<m.hp){numAt(m.x,m.y+1.3*TY[m.ty].sc,m.z,String(Math.round(m.hp-hp)));m.flash=1;m.hp=hp}else if(now-m.pt>700)m.hp=hp}
+    list.forEach(m=>{if(!seen.has(m.id)){if(!m.dead)burst(m.x,m.y,m.z,TY[m.ty].col);dropMon(m)}})});
+  // ---- me: hit points, the three moves ----
+  function hurtMe(d,fx,fz){if(HP.inv>0||HP.v<=0)return;d=Math.min(40,Math.max(1,Math.round(d)));HP.v-=d;HP.hurt=performance.now();sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
+    document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),220);
+    const dx=P.position.x-fx,dz=P.position.z-fz,l=Math.hypot(dx,dz)||1,nx=P.position.x+dx/l*1.1,nz=P.position.z+dz/l*1.1;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}
+    HP.inv=.5;if(HP.v<=0)faint()}
+  function faint(){toast('','You fainted… you wake up back at the hub 😵',true);if(sitting)standUp();if(riding)toggleBike();JUMP.y=JUMP.v=0;
+    const hx=HUB[0],hz=HUB[1]+4;P.position.set(hx,groundY(hx,hz),hz);DOG.reset=1;HP.v=HP.max;HP.inv=3}
+  NET.on('d',d=>{if(d&&d.to===NET.key()&&NET.key())hurtMe(+d.d||1,+d.x||P.position.x,+d.z||P.position.z)});
+  NET.on('fx',d=>{if(!d||typeof d.k!=='string')return;const R=NET.peers().find(r=>r.key===d.k);if(!R)return;
+    if(d.t==='a')slashFx(R.x,R.z,R.r);else if(d.t==='z')ringFx(R.x,R.z,5.5,'#ffd27a',380);else if(d.t==='d')ringFx(R.x,R.z,2.2,'#9fe8ff',250)});
+  const canAct=()=>!(sitting||riding||open||HP.v<=0||gateOn);
+  function attack(){if(CD.a>0||!canAct())return;CD.a=CDM.a;const r=P.rotation.y,fx=Math.sin(r),fz=Math.cos(r);let n=0;
+    list.forEach(m=>{if(n>=3||m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz),rad=.7*TY[m.ty].sc;
+      if(d<3.3+rad&&(dx*fx+dz*fz)/Math.max(d,.01)>.15){const crit=Math.random()<.12,dm=(10+rnd(0,4))*(crit?2:1);hitMon(m,dm,dx/Math.max(d,.01),dz/Math.max(d,.01),crit);n++}});
+    slashFx(P.position.x,P.position.z,r);sfx('slash');NET.send('fx',{k:NET.key(),t:'a'})}
+  function slam(){if(CD.z>0||!canAct())return;CD.z=CDM.z;let n=0;
+    list.forEach(m=>{if(m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz);if(d<5.5+.7*TY[m.ty].sc){hitMon(m,16+rnd(0,5),dx/Math.max(d,.01)*2.2,dz/Math.max(d,.01)*2.2,false);n++}});
+    ringFx(P.position.x,P.position.z,5.5,'#ffd27a',380);sfx('slam');NET.send('fx',{k:NET.key(),t:'z'})}
+  function dash(){if(CD.d>0||!canAct())return;CD.d=CDM.d;DASH.t=.2;DASH.x=Math.sin(P.rotation.y);DASH.z=Math.cos(P.rotation.y);HP.inv=Math.max(HP.inv,.35);
+    ringFx(P.position.x,P.position.z,2.2,'#9fe8ff',250);sfx('dash');NET.send('fx',{k:NET.key(),t:'d'})}
+  const ACT={a:attack,z:slam,d:dash};
+  Object.keys(btn).forEach(k=>{btn[k].addEventListener('pointerdown',e=>{e.preventDefault();ACT[k]()});btn[k].addEventListener('contextmenu',e=>e.preventDefault())});
+  addEventListener('keydown',e=>{if(e.repeat||(e.target&&e.target.tagName==='INPUT')||e.metaKey||e.ctrlKey||e.altKey)return;if(e.code==='KeyF')attack();else if(e.code==='KeyG')slam();else if(e.code==='KeyQ')dash()});
+  // ---- every frame ----
+  function tick(dt,t){if(gateOn)return;const now=performance.now();host=NET.isHost();
+    for(const k in CD)CD[k]=Math.max(0,CD[k]-dt);HP.inv=Math.max(0,HP.inv-dt);
+    if(HP.v<HP.max&&now-HP.hurt>6000)HP.v=Math.min(HP.max,HP.v+2*dt);
+    if(DASH.t>0){DASH.t-=dt;const st=35*dt,nx=P.position.x+DASH.x*st,nz=P.position.z+DASH.z*st;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}}
+    if(host)hostTick(dt,now);
+    let near=1e9;
+    list.forEach(m=>{const T=TY[m.ty];
+      if(!host){const k=1-Math.exp(-dt*9);m.x+=(m.tx-m.x)*k;m.z+=(m.tz-m.z)*k;let dr=m.tr-m.ry;dr=Math.atan2(Math.sin(dr),Math.cos(dr));m.ry+=dr*k}
+      m.y=groundY(m.x,m.z);const d=Math.hypot(m.x-P.position.x,m.z-P.position.z);if(m.st!==3&&d<near)near=d;
+      const hop=m.st===1?Math.abs(Math.sin(t*7+m.ph))*.4:0,sq=.8+.05*Math.sin(t*3+m.ph)+(m.st===2?.12*Math.sin(t*40):0);
+      m.g.position.set(m.x,m.y+hop,m.z);m.g.rotation.y=m.ry;m.g.children[0].scale.set(1+(.8-sq)*.6,sq,1+(.8-sq)*.6);m.g.visible=d<170;
+      if(m.flash>0)m.flash=Math.max(0,m.flash-dt*4);
+      if(m.st===2)m.mat.emissive.setRGB(.55+.3*Math.sin(t*30),0,0);else m.mat.emissive.setScalar(m.flash*.8);
+      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die')}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
+      const sc=m.st!==3&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
+      if(sc){m.el.style.display='block';m.el.style.transform='translate('+(sc[0]-23)+'px,'+sc[1]+'px)';m.el.firstChild.style.transform='scaleX('+Math.max(0,m.hp/m.hpm)+')'}else m.el.style.display='none'});
+    fxTick(dt,now);
+    for(let i=nums.length-1;i>=0;i--){const n=nums[i],a=(now-n.t)/900;if(a>=1){n.el.remove();nums.splice(i,1);continue}const p=onScr(n.x,n.y+a*1.2,n.z);if(p){n.el.style.display='block';n.el.style.transform='translate('+p[0]+'px,'+p[1]+'px) translate(-50%,-50%)';n.el.style.opacity=1-a*a}else n.el.style.display='none'}
+    if(near<45)fightUntil=now+8000;
+    fight.classList.toggle('show',now<fightUntil||HP.v<HP.max);
+    hpb.classList.toggle('show',HP.v<HP.max||now-HP.hurt<6000||now<fightUntil);hpf.style.transform='scaleX('+Math.max(0,HP.v/HP.max)+')';hpt.textContent='HP '+Math.ceil(HP.v)+'/'+HP.max;
+    for(const k in btn)btn[k].style.setProperty('--cd',(CD[k]/CDM[k]).toFixed(2))}
+  return{tick,list,HP,CD,attack,slam,dash,monsOn}})();
 
 const clockT=new THREE.Clock();let t=0,walkPh=0,walkAmt=0,frames=0,lift=0,lastStep=0;
 function frame(){
@@ -4202,7 +4345,7 @@ function frame(){
   P.position.y=groundY(P.position.x,P.position.z)+(riding?0:Math.abs(Math.sin(walkPh))*.1*walkAmt)+JUMP.y;
   if(sitting&&sitting.sw){const S=sitting.sw;P.position.x=S.x;P.position.z=S.z;P.position.y=groundY(S.x,S.z);P.rotation.y=sitting.face}   // riding the swing
   if(sitting)sitPose(me,sitting);
-  {const alone=MP.count()===0;if(alone!==frOn)frShow(alone)}if(frOn)frTick(dt);dogTick(dt);blinkTick(me,dt);blinkTick(fr,dt);MP.tick(dt,t);
+  {const alone=MP.count()===0;if(alone!==frOn)frShow(alone)}if(frOn)frTick(dt);dogTick(dt);blinkTick(me,dt);blinkTick(fr,dt);MP.tick(dt,t);MOB.tick(dt,t);
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
