@@ -261,6 +261,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #rpxp{position:relative;height:16px;border-radius:8px;background:var(--paper-2);overflow:hidden}#rpxp i{position:absolute;inset:0;background:linear-gradient(90deg,#f2b441,#ffd96a);transform-origin:left center}#rpxp small{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--body);color:var(--ink)}
 #rpg .rps{margin-top:4px;font:600 14px var(--display);display:flex;justify-content:space-between;align-items:baseline}#rpg .rps small{font:700 12px var(--body);color:var(--ink-soft)}
 #rpg .rpr{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--paper-2)}#rpg .rpn{flex:1;min-width:0}#rpg .rpn small{display:block;font:600 11.5px/1.3 var(--body);color:var(--ink-soft)}#rpg .rpv{min-width:34px;text-align:center;font:700 15px var(--display)}
+#rpeqs,#rpbag,#rpit{flex:none}#rpeqs,#rpbag{display:grid;gap:5px}#rpeqs{grid-template-columns:repeat(4,1fr)}#rpbag{grid-template-columns:repeat(6,1fr)}
+#rpg .rpt{position:relative;aspect-ratio:1;border:2px solid var(--paper-2);border-radius:10px;background:var(--paper-2);color:var(--ink);font:400 20px/1 var(--body);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}#rpg .rpt.empty{opacity:.45}#rpg .rpt.sel{outline:2px solid var(--ink);outline-offset:1px}#rpg .rpt small{position:absolute;left:0;right:0;bottom:1px;font:700 8px var(--body);text-align:center;color:var(--ink-soft)}
+#rpit{font:600 12px/1.4 var(--body);min-height:0}#rpit b{font:700 13px var(--body)}#rpit .rpa{display:flex;gap:6px;margin-top:4px}#rpit button{border:0;border-radius:999px;padding:5px 12px;background:var(--ink);color:var(--paper);font:700 12px var(--body);cursor:pointer}#rpit button.alt{background:var(--paper-2);color:var(--ink)}
 #rpg .rpb{border:0;border-radius:50%;width:28px;height:28px;background:var(--ink);color:var(--paper);font:700 16px var(--body);cursor:pointer;flex:none}#rpg .rpb:disabled{opacity:.25;cursor:default}
 #rpreset{border:0;border-radius:999px;background:var(--paper-2);color:var(--ink);padding:6px 12px;font:700 12px var(--body);cursor:pointer;align-self:flex-start;margin-top:4px}
 body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 90px 22px rgba(220,40,40,.55)}
@@ -392,7 +395,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="tagP" class="tag"></div><div id="tagN" class="tag tagn" title="Tap to rename"></div><div id="tagD" class="tag"></div><div id="say"></div><div id="mysay"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="mon"></div><div id="bossbar"><b>👑 Slime King</b><div><i></i></div></div><div id="herobar"><button type="button" class="round" id="bhero" title="Hero: level, stats and skills" aria-label="Hero" aria-expanded="false">Lv1</button><div id="hpb"><i></i><b></b><s></s></div></div>
-<div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="hpw"><canvas id="hpcv" role="img" aria-label="Your character. Drag to turn it."></canvas><span id="hph">drag to turn</span></div><div id="rpcls" role="group" aria-label="Class"><button type="button" data-c="0">⚔️ Knight</button><button type="button" data-c="1">🔮 Mage</button><button type="button" data-c="2">🏹 Archer</button></div><div id="rpxp"><i></i><small></small></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><button type="button" id="rpreset">Reset points</button></div>
+<div id="rpg" role="dialog" aria-label="Hero"><div id="rph" title="Drag to move"><b>Hero <span id="rplv"></span><span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="rpx" aria-label="Close">✕</button></div><div id="hpw"><canvas id="hpcv" role="img" aria-label="Your character. Drag to turn it."></canvas><span id="hph">drag to turn</span></div><div id="rpcls" role="group" aria-label="Class"><button type="button" data-c="0">⚔️ Knight</button><button type="button" data-c="1">🔮 Mage</button><button type="button" data-c="2">🏹 Archer</button></div><div id="rpxp"><i></i><small></small></div><div class="rps">Stats <small id="rpsp"></small></div><div id="rpst"></div><div class="rps">Skills <small id="rpkp"></small></div><div id="rpsk"></div><div class="rps">Equipment <small id="rpeq"></small></div><div id="rpeqs"></div><div class="rps">Bag <small id="rpbg"></small></div><div id="rpbag"></div><div id="rpit"></div><button type="button" id="rpreset">Reset points</button></div>
 <div id="fight"><button type="button" class="round" id="bdash" title="Dash · Q" aria-label="Dash">💨</button><button type="button" class="round" id="bslam" title="Slam · G" aria-label="Slam">💥</button><button type="button" class="round" id="bburst" title="Burst · R" aria-label="Burst">🌪️</button><button type="button" class="round" id="batk" title="Attack · F" aria-label="Attack">⚔️</button></div>
 <div id="pick" role="dialog" aria-modal="true" aria-labelledby="pktitle" hidden><div id="pkbox"><h2 id="pktitle">Choose your character</h2><p>You can change it any time in the character menu.</p><div id="pkrow"><button type="button" class="pkc" data-g="0"><b>♂</b><small>Male</small></button><button type="button" class="pkc" data-g="1"><b>♀</b><small>Female</small></button></div></div></div>
 <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gtitle">
@@ -3142,6 +3145,8 @@ function sendChat(){const t=clean(chatIn.value).slice(0,80);
   if(cm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cm[1])toast('','Type /level and a number from 1 to 99, like /level 99',true);else if(rpgHook)rpgHook.setLevel(+cm[1]);return}
   const sm=/^\/(vit|str|agi)(?:\s+(\d{1,4}))?\s*$/i.exec(t);   // GM only too: "/str 999" puts all the stat points you have (up to 999) into strength; /agi and /vit likewise (no number = one point)
   if(sm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.addStat(['vit','str','agi'].indexOf(sm[1].toLowerCase()),Math.max(1,+sm[2]||1));return}
+  const gm=/^\/give(?:\s+(weapon|upper|lower|boots)(?:\s+(common|rare|epic|legendary))?(?:\s+(knight|mage|archer))?)?\s*$/i.exec(t);   // GM only: "/give weapon legendary mage" puts a test item in your bag (slot, rarity and, for a weapon, class are all optional)
+  if(gm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!gm[1])toast('','Type /give, then weapon, upper, lower or boots, then common, rare, epic or legendary (and a class for weapons)',true);else if(rpgHook)rpgHook.give(['weapon','upper','lower','boots'].indexOf(gm[1].toLowerCase()),['common','rare','epic','legendary'].indexOf((gm[2]||'common').toLowerCase()),Math.max(0,['knight','mage','archer'].indexOf((gm[3]||'').toLowerCase())<0?(rpgHook.cls?rpgHook.cls():0):['knight','mage','archer'].indexOf(gm[3].toLowerCase())));return}
   if(!t||!room)return;
   if(performance.now()-lastSend<1200)return;
   if(!room.connected()){toast('','Not connected yet - try again in a moment',true);return}
@@ -4268,7 +4273,7 @@ const MOB=(()=>{
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
   const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3),
-    maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1)),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
+    maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1))*(1+atkB()/100),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
     cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])),RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
     BRSI=['🌪️','🌠','🎯'],BRST=[['🌪️','Blade Storm','Four spinning hits all round you'],['🌠','Starfall','Nine meteors rain around the nearest enemy'],['🎯','Arrow Barrage','Fourteen arrows into the nearest enemies']],ATKI=['⚔️','🔮','🏹'],SLMI=['💥','☄️','🌧️'],DSHI=['💨','✨','🥾'],
     SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+1.5% crit chance, 2% faster cooldowns each']],
@@ -4276,12 +4281,28 @@ const MOB=(()=>{
     [['🔮','Arcane Bolt',r=>'Damage '+(100+12*(r-1))+'% · range '+(10+.5*(r-1)).toFixed(1)+' m'],['☄️','Meteor',r=>'Damage '+(100+15*(r-1))+'% · blast '+(4.2+.3*(r-1)).toFixed(1)+' m · falls on the nearest enemy'],['✨','Blink',r=>'Cooldown '+(5-.3*(r-1)).toFixed(1)+' s · distance '+(8+.6*(r-1)).toFixed(1)+' m']],
     [['🏹','Quick Shot',r=>'Damage '+(100+12*(r-1))+'% · range '+(13+.5*(r-1)).toFixed(1)+' m'],['🌧️','Arrow Volley',r=>'Three arrows, each '+(100+15*(r-1))+'% damage'],['🥾','Evade',r=>'Cooldown '+(4-.3*(r-1)).toFixed(1)+' s · rolls back '+(7+.6*(r-1)).toFixed(1)+' m']]],KDEF=()=>KDEFS[RPG.c];
   const rpgEl=$('rpg'),bHero=$('bhero'),hud=$('herobar');
+  /* ---- equipment: a weapon (made for one class), an upper, a lower and boots. Four rarities. A weapon adds % damage, armour adds defence. Items drop from slimes (rarely) and are kept in a bag of 30. An item is [slot, rarity, class, value]. ---- */
+  const RAR=[{n:'Common',c:'#9aa3a8'},{n:'Rare',c:'#4aa3ff'},{n:'Epic',c:'#b25cff'},{n:'Legendary',c:'#ffb42e'}],SLN=['Weapon','Upper','Lower','Boots'],SLI=['🗡️','🥋','👖','🥾'],WPI=['⚔️','🪄','🏹'],BAGMAX=30,
+    WNM=[['Iron Sword','Steel Blade','Knight Saber','Dawnbreaker'],['Oak Wand','Crystal Staff','Arcane Scepter','Starweaver'],['Short Bow','Hunter Bow','Windcaller','Skypiercer']],
+    ANM=[['Cloth Tunic','Leather Vest','Mythril Mail','Dragonscale Plate'],['Cloth Pants','Leather Leggings','Mythril Greaves','Dragonscale Cuisses'],['Worn Boots','Leather Boots','Mythril Sabatons','Dragonscale Boots']],
+    GBASE=[[4,9,16,26],[3,7,12,19],[2,5,9,14],[1.4,3.5,6.3,10]],   // (base value per slot and rarity: damage % for the weapon, defence for armour; each drop rolls 85%–115% of it)
+    gMax=(sl,r)=>Math.ceil(GBASE[sl][r]*1.15),
+    DROPS=[{ch:.06,w:[94,6,0,0]},{ch:.12,w:[80,19,1,0]},{ch:1,w:[0,80,20,0]}],   // (per monster type: the chance it drops anything, then the weights of Common / Rare / Epic / Legendary. Legendary does not drop from today's monsters; stronger ones will)
+    INV={eq:[null,null,null,null],bag:[]},
+    gName=it=>it[0]===0?WNM[it[2]][it[1]]:ANM[it[0]-1][it[1]],gIcon=it=>it[0]===0?WPI[it[2]]:SLI[it[0]],gStat=it=>it[0]===0?'+'+it[3]+'% damage':'+'+it[3]+' defence',
+    atkB=()=>{const w=INV.eq[0];return w&&w[2]===RPG.c?w[3]:0},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?INV.eq[i][3]:0),0),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
+    gMake=(sl,r,c)=>{const v=Math.max(1,Math.round(GBASE[sl][r]*(.85+.3*Math.random())));return[sl,r,sl===0?c:0,v]},
+    gOk=(a,sl)=>{if(!Array.isArray(a)||a.length!==4)return null;const[s,r,c,v]=a.map(x=>Math.floor(+x));if(!(s>=0&&s<4&&r>=0&&r<4&&c>=0&&c<3&&v>=1))return null;if(sl!=null&&s!==sl)return null;if(s>0&&c!==0)return null;return[s,r,c,Math.min(v,gMax(s,r))]},
+    gFlat=()=>{const o=[];for(let i=0;i<4;i++){const e=INV.eq[i];o.push(...(e||[-1,0,0,0]))}INV.bag.forEach(b=>o.push(...b));return o},
+    gLoad=a=>{const eq=[null,null,null,null],bag=[];for(let i=0;i<4;i++){const q=a.slice(9+4*i,13+4*i);if(+q[0]>=0)eq[i]=gOk(q,i)}
+      for(let j=25;j+3<a.length&&bag.length<BAGMAX;j+=4){const b=gOk(a.slice(j,j+4));if(b)bag.push(b)}INV.eq=eq;INV.bag=bag};
+  let SEL=null;   // (the item picked in the Hero window: {k:'e' (worn) or 'b' (bag), i})
   const rpgKey=u=>'myworld.rpg.'+(u&&u.id?u.id:'guest');let rpgUser=null;
-  const rpgOut=()=>[RPG.l,RPG.xp,...RPG.s,...RPG.k,RPG.c];
+  const rpgOut=()=>[RPG.l,RPG.xp,...RPG.s,...RPG.k,RPG.c,...gFlat()];
   function rpgSet(a){const n=x=>Math.max(0,Math.floor(+x)||0);if(!Array.isArray(a)||a.length<8)return false;
     const l=Math.min(MAXL,Math.max(1,n(a[0]))),s=[n(a[2]),n(a[3]),n(a[4])],k=[1,2,3].map(i=>Math.min(5,Math.max(1,n(a[4+i])||1)));
     if(sum(s)>3*(l-1)||sum(k)-3>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
-    RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;RPG.c=+a[8]===1||+a[8]===2?+a[8]:0;return true}
+    RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;RPG.c=+a[8]===1||+a[8]===2?+a[8]:0;gLoad(a);return true}
   function rpgSave(){try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
   function rpgApply(){LVL=RPG.l;const f=HP.max?HP.v/HP.max:1;HP.max=maxHp();HP.v=Math.min(HP.max,Math.max(1,HP.v||HP.max));if(f>=.999)HP.v=HP.max;DASH.sp=35+3*(RPG.k[2]-1);
     const c=RPG.c,kd=KDEF();if(typeof devGate==='function')devGate();btn.b.textContent=BRSI[c];btn.b.title=BRST[c][1]+' · R';btn.a.textContent=ATKI[c];btn.z.textContent=SLMI[c];btn.d.textContent=DSHI[c];btn.a.title=kd[0][1]+' · F';btn.z.title=kd[1][1]+' · G';btn.d.title=kd[2][1]+' · Q';rpgDraw()}
@@ -4290,7 +4311,25 @@ const MOB=(()=>{
     $('rplv').textContent='Lv '+RPG.l+(RPG.l>=AURAL?' ✨':'');const nx=need(RPG.l);$('rpxp').firstChild.style.transform='scaleX('+(RPG.l>=MAXL?1:RPG.xp/nx)+')';$('rpxp').lastChild.textContent=RPG.l>=MAXL?'Max level':RPG.xp+' / '+nx+' XP';
     const sp=spLeft(),kp=kpLeft();$('rpsp').textContent=sp+' point'+(sp===1?'':'s')+' to spend';$('rpkp').textContent=kp+' point'+(kp===1?'':'s')+' to spend';
     $('rpst').innerHTML=SDEF.map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+'<small>'+d[1]+'</small></div><span class="rpv">'+RPG.s[i]+'</span><button type="button" class="rpb" data-s="'+i+'" aria-label="Add a point to '+d[0]+'"'+(sp>0?'':' disabled')+'>+</button></div>').join('');
-    $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst<small>'+BRST[RPG.c][2]+'. It charges as you fight, then press 🌟R.</small></div></div>'}
+    $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst<small>'+BRST[RPG.c][2]+'. It charges as you fight, then press 🌟R.</small></div></div>';gearDraw()}
+  function gearDraw(){const tile=(it,k,i,sl)=>'<button type="button" class="rpt'+(it?'':' empty')+(SEL&&SEL.k===k&&SEL.i===i?' sel':'')+'" data-'+k+'="'+i+'" style="'+(it?'border-color:'+RAR[it[1]].c:'')+'" aria-label="'+(it?RAR[it[1]].n+' '+gName(it):SLN[i]+' (empty)')+'">'+(it?gIcon(it):SLI[sl])+(it&&k==='e'?'<small>'+SLN[i]+'</small>':'')+'</button>';
+    $('rpeqs').innerHTML=INV.eq.map((it,i)=>tile(it,'e',i,i)).join('');$('rpbag').innerHTML=INV.bag.map((it,i)=>tile(it,'b',i,it[0])).join('');
+    const d=defT();$('rpeq').textContent='+'+atkB()+'% damage · '+d+' def ('+Math.round(defRed()*100)+'% less damage taken)';$('rpbg').textContent=INV.bag.length+' / '+BAGMAX;
+    const it=SEL&&(SEL.k==='e'?INV.eq[SEL.i]:INV.bag[SEL.i]);if(!it){SEL=null;$('rpit').innerHTML='';return}
+    const bad=it[0]===0&&it[2]!==RPG.c;$('rpit').innerHTML='<b style="color:'+RAR[it[1]].c+'">'+gIcon(it)+' '+gName(it)+'</b> · '+RAR[it[1]].n+' '+SLN[it[0]].toLowerCase()+'<br>'+gStat(it)+(it[0]===0?' · for '+CLS[it[2]].n+'s'+(bad?' (not your class: it does nothing for you)':''):'')+'<div class="rpa"><button type="button" data-a="'+(SEL.k==='e'?'un':'eq')+'">'+(SEL.k==='e'?'Take off':'Equip')+'</button>'+(SEL.k==='b'?'<button type="button" class="alt" data-a="drop">Discard</button>':'')+'</div>'}
+  function gearAdd(it){const nm=RAR[it[1]].n+' '+gName(it);if(INV.bag.length>=BAGMAX){toast('','You found '+nm+' but your bag is full',true);return false}INV.bag.push(it);toast('','Found: '+gIcon(it)+' '+nm+' ('+gStat(it)+')',true);ringFx(P.position.x,P.position.z,3,RAR[it[1]].c,600);rpgSave();rpgDraw();return true}
+  function gearDrop(ty){const D=DROPS[ty];if(!D||Math.random()>=D.ch)return;let x=Math.random()*(D.w[0]+D.w[1]+D.w[2]+D.w[3]),r=0;while(r<3&&x>=D.w[r]){x-=D.w[r];r++}
+    const q=Math.random(),sl=q<.3?0:q<.55?1:q<.8?2:3;gearAdd(gMake(sl,r,Math.floor(Math.random()*3)))}
+  rpgEl.addEventListener('click',async e=>{const t=e.target.closest('button[data-e],button[data-b],button[data-a]');if(!t)return;
+    if(t.dataset.a){const sel=SEL;if(!sel)return;const a=t.dataset.a;
+      if(a==='eq'){const it=INV.bag[sel.i];if(!it)return;if(it[0]===0&&it[2]!==RPG.c){toast('','That is a '+CLS[it[2]].n+' weapon: switch to '+CLS[it[2]].n+' to use it',true);return}
+        const old=INV.eq[it[0]];INV.eq[it[0]]=it;INV.bag.splice(sel.i,1);if(old)INV.bag.push(old);SEL={k:'e',i:it[0]}}
+      else if(a==='un'){const it=INV.eq[sel.i];if(!it)return;if(INV.bag.length>=BAGMAX){toast('','Your bag is full',true);return}INV.eq[sel.i]=null;INV.bag.push(it);SEL={k:'b',i:INV.bag.length-1}}
+      else if(a==='drop'){const it=INV.bag[sel.i];if(!it)return;if(it[1]>=1&&!await ask({title:'Discard '+gName(it)+'?',text:'This '+RAR[it[1]].n.toLowerCase()+' item will be gone for good.',ok:'Discard',cancel:'Keep'}))return;if(INV.bag[sel.i]===it)INV.bag.splice(sel.i,1);SEL=null}
+      rpgApply();rpgSave();return}
+    SEL=t.dataset.e!=null?{k:'e',i:+t.dataset.e}:{k:'b',i:+t.dataset.b};gearDraw()});
+  const gearGive=(sl,r,c)=>gearAdd(gMake(sl,r,c));
+
   rpgEl.addEventListener('click',e=>{const cb=e.target.closest('button[data-c]');if(cb){RPG.c=+cb.dataset.c;rpgApply();rpgSave();return}   // (the class can be changed any time, for free)
     const b=e.target.closest('button[data-s],button[data-k]');if(!b||b.disabled)return;
     if(b.dataset.s!=null&&spLeft()>0)RPG.s[+b.dataset.s]++;else if(b.dataset.k!=null&&kpLeft()>0&&RPG.k[+b.dataset.k]<5)RPG.k[+b.dataset.k]++;else return;rpgApply();rpgSave()});
@@ -4300,7 +4339,7 @@ const MOB=(()=>{
     if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
   rpgHook={addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
-      if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+      if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],give:(sl,r,c)=>gearGive(sl,r,c),cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false')};
@@ -4426,7 +4465,7 @@ const MOB=(()=>{
       if(hp<m.hp){numAt(m.x,m.y+1.3*TY[m.ty].sc,m.z,String(Math.round(m.hp-hp)));m.flash=1;m.hp=hp}else if(now-m.pt>700)m.hp=hp}
     list.forEach(m=>{if(!seen.has(m.id)){if(!m.dead)burst(m.x,m.y,m.z,TY[m.ty].col);dropMon(m)}})});
   // ---- me: hit points, the three moves ----
-  function hurtMe(d,fx,fz){if(HP.inv>0||HP.v<=0)return;d=Math.min(40,Math.max(1,Math.round(d)));HP.v-=d;HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3);sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
+  function hurtMe(d,fx,fz){if(HP.inv>0||HP.v<=0)return;d=Math.min(40,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3);sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
     document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),220);
     const dx=P.position.x-fx,dz=P.position.z-fz,l=Math.hypot(dx,dz)||1,nx=P.position.x+dx/l*1.1,nz=P.position.z+dz/l*1.1;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}
     HP.inv=.5;if(HP.v<=0)faint()}
@@ -4522,7 +4561,7 @@ const MOB=(()=>{
       m.g.position.set(m.x,m.y+hop,m.z);m.g.rotation.y=m.ry;m.g.children[0].scale.set(1+(.8-sq)*.6,sq,1+(.8-sq)*.6);m.g.visible=d<(T.boss?130:90);m.g.children[0].castShadow=d<(T.boss?70:40);   // (a slime shows up when you are within 90 m of it, and casts a shadow within 40 m: far ones cost next to nothing)
       if(m.flash>0)m.flash=Math.max(0,m.flash-dt*4);
       if(m.st===2||m.st===4)m.mat.emissive.setRGB(.55+.3*Math.sin(t*30),0,0);else m.mat.emissive.setScalar(m.flash*.8);
-      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.hp<=0){if(m.mine){gainXp(T.xp);if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+10)}if(T.boss){burst(m.x+1,m.y+1,m.z,'#ffd24a');burst(m.x-1,m.y+2,m.z,'#ff7acb');ringFx(m.x,m.z,9,'#ffd24a',900);toast('','The Slime King has fallen! 👑'+(m.mine?'  +'+T.xp+' XP':''),true)}}}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
+      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.hp<=0){if(m.mine){gainXp(T.xp);gearDrop(m.ty);if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+10)}if(T.boss){burst(m.x+1,m.y+1,m.z,'#ffd24a');burst(m.x-1,m.y+2,m.z,'#ff7acb');ringFx(m.x,m.z,9,'#ffd24a',900);toast('','The Slime King has fallen! 👑'+(m.mine?'  +'+T.xp+' XP':''),true)}}}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
       if(m.tel){const on=m.st===2||m.st===4;m.tel.visible=on;if(on){const R=m.st===2?5.5:6,cx=m.st===2?m.x:m.jx,cz=m.st===2?m.z:m.jz;m.tel.position.set(cx,groundY(cx,cz)+.12,cz);m.tel.scale.setScalar(R);m.tel.material.opacity=.22+.14*Math.sin(t*14)}}   // (the red circle: where the blow will land)
       if(T.boss&&m.st!==3&&d<50)bossM=m;
       const sc=m.st!==3&&!T.boss&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
