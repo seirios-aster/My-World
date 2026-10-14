@@ -4326,7 +4326,7 @@ const MOB=(()=>{
     DROPS=[{ch:.06,w:[94,6,0,0]},{ch:.12,w:[80,19,1,0]},{ch:1,w:[0,80,20,0]}],   // (per monster type: the chance it drops anything, then the weights of Common / Rare / Epic / Legendary. Legendary does not drop from today's monsters; stronger ones will)
     INV={eq:[[0,0,0,3],null,null,null],bag:[]},   // (a brand-new hero starts with a plain Iron Sword; a saved hero's own gear replaces this when it loads)
     
-    ic=it=>it[2]%3,rf=it=>Math.floor(it[2]/3),REFB=[.08,.1,.13,.16],ev=it=>Math.round(it[3]*(1+REFB[it[1]]*rf(it))),   // (the class field also carries the refine level: class + 3 × refine, from +0 to +10. REFB: how much of the item's base value each refine level adds; the rarer the item, the more)
+    ic=it=>it[2]%3,rf=it=>Math.floor(it[2]/3),REFB=[.15,.2,.25,.3],ev=it=>Math.round(it[3]*(1+REFB[it[1]]*rf(it))),   // (the class field also carries the refine level: class + 3 × refine, from +0 to +10. REFB: how much of the item's base value each refine level adds; the rarer the item, the more)
     gName=it=>(rf(it)?'+'+rf(it)+' ':'')+(it[0]===0?WNM[ic(it)][it[1]]:ANM[it[0]-1][it[1]]),gIcon=it=>it[0]===0?WPI[ic(it)]:SLI[it[0]],gStat=it=>it[0]===0?'+'+ev(it)+'% damage':'+'+ev(it)+' defence',
     atkB=()=>{const w=INV.eq[0];return w&&ic(w)===RPG.c?ev(w):0},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?ev(INV.eq[i]):0),0),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
     gMake=(sl,r,c)=>{const v=Math.max(1,Math.round(GBASE[sl][r]*(.85+.3*Math.random())));return[sl,r,sl===0?c:0,v]},
