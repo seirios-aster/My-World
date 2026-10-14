@@ -2026,7 +2026,11 @@ const MOONTEX=canvasTex(256,256,(g,w,h)=>{
 moonG.add(new THREE.Mesh(new THREE.CircleGeometry(4.5,64),new THREE.MeshBasicMaterial({color:new THREE.Color(1.7,1.7,1.6),map:MOONTEX,fog:false,...DISCDEPTH})),glowSprite('rgba(170,190,255,.45)',30));
 sunG.renderOrder=moonG.renderOrder=-3;W.add(sunG,moonG);
 [sunG,moonG].forEach(g=>g.children.forEach(o=>{o.material.clippingPlanes=[HORIZON]}));
-const SUNDISC=sunG.children[0].material,SUNGLOW=sunG.children[1],MOONGLOW=moonG.children[1];
+const SUNDISC=sunG.children[0].material,SUNGLOW=sunG.children[1],MOONGLOW=moonG.children[1],MOONDISC=moonG.children[0].material,HZU={value:0};
+// near the horizon the moon fades softly into the haze instead of being sliced flat by the sea line (which made it look sunk in the water): its lowest part gets more and more see-through
+MOONDISC.transparent=true;MOONDISC.customProgramCacheKey=()=>'moonfade';
+MOONDISC.onBeforeCompile=sh=>{sh.uniforms.hzy=HZU;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying float vWy;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWy=(modelMatrix*vec4(position,1.0)).y;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vWy;uniform float hzy;').replace('#include <dithering_fragment>','#include <dithering_fragment>\ngl_FragColor.a*=smoothstep(hzy,hzy+3.4,vWy);')};
 
 // clouds: faceted puffs lit by the sun, shaded with sky colour, fading out at night
 const cloudU={uLit:{value:new THREE.Color()},uShade:{value:new THREE.Color()},uSun:{value:new THREE.Vector3(0,1,0)},uOp:{value:.95},fogColor:{value:W.fog.color},fogNear:{value:80},fogFar:{value:280}};
@@ -3321,7 +3325,7 @@ const SUNDIR=new THREE.Vector3(0,1,0),MOONDIR=new THREE.Vector3(0,-1,0);
 // (the sun's sunset swell, SUNSW, is set by skyTick and multiplied in here; the glow sprites share the group's scale)
 let SUNSW=1;const _fw=new THREE.Vector3();
 const faceCam=(g,d,k)=>{g.children[0].quaternion.copy(cam.quaternion);g.scale.setScalar(k*Math.max(_fw.dot(d),.25))};
-function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=clamp(cam.position.y/500,0,.4);HORIZON.constant=-(cam.position.y-160*dip)}   // (the horizon you see from up high is a little below eye level)
+function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=clamp(cam.position.y/500,0,.4);HORIZON.constant=-(cam.position.y-160*dip);HZU.value=-HORIZON.constant}   // (the horizon you see from up high is a little below eye level)
 /* ---- shooting stars + meteor showers: a small pool of glowing point-trails in the night sky ----
    Every device works out the SAME streaks from the real clock (nothing is sent over the network), so players together see the same ones at the same moments.
    normal nights: one somewhere in the sky every ~15 s.  About 1 night in 4 is a shower: bursts of streaks from a radiant (16 s on, 14 s off).
@@ -3416,7 +3420,8 @@ function skyTick(dt){
   // the sun reddens and swells as it sinks (a little more of everything near the horizon); both glows die away once they are below it
   {const t1=sstep(-.02,.06,ey),t2=sstep(.05,.2,ey),t3=sstep(.15,.45,ey),g=sstep(0,.35,ey);SUNDISC.color.copy(SD0).lerp(SD1,t1).lerp(SD2,t2).lerp(SD3,t3);
     SUNSW=1+.35*(1-sstep(0,.3,ey));SUNGLOW.material.color.setRGB(1,lerp(.42,1,g),lerp(.2,1,g));SUNGLOW.scale.setScalar(lerp(120,60,sstep(0,.3,ey)));
-    const dp=clamp(cam.position.y/500,0,.4);SUNGLOW.material.opacity=sstep(-.07,.01,ey+dp);MOONGLOW.material.opacity=sstep(-.07,.01,-ey+dp)}
+    const dp=clamp(cam.position.y/500,0,.4);SUNGLOW.material.opacity=sstep(-.07,.01,ey+dp);MOONGLOW.material.opacity=sstep(-.07,.01,-ey+dp);
+    {const mk=sstep(0,.28,-ey);MOONDISC.color.setRGB(1.1+.6*mk,.62+1.08*mk,.36+1.24*mk);MOONGLOW.material.color.setRGB(1,.7+.3*mk,.5+.5*mk)}}   // (a moon low in the sky is dimmer and orange, like the sun: it brightens to its usual cream-white as it climbs)
   fxTick(dt);
   $('clk').textContent=fmt(simH)+(dayI?' · '+MON[dayI-1]:'')}
 
