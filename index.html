@@ -233,8 +233,10 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #bptt{position:fixed;right:calc(136px + var(--sr));bottom:calc(8px + var(--sb));z-index:3}
 /* monsters: the fight buttons, my HP bar, slime health bars, floating damage numbers */
 #mon{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
-.mhp{position:absolute;left:0;top:0;width:46px;height:6px;border-radius:4px;background:rgba(20,18,30,.62);overflow:hidden;display:none;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
-.mhp i{display:block;height:100%;width:100%;background:#e8564a;transform-origin:left center}
+.mhp{position:absolute;left:0;top:0;width:46px;height:6px;border-radius:4px;background:rgba(20,18,30,.62);display:none;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.mhp i{display:block;height:100%;width:100%;background:#e8564a;transform-origin:left center;border-radius:4px}
+.mhp::after{content:attr(data-lv);position:absolute;left:50%;bottom:8px;transform:translateX(-50%);font:700 10px/1 system-ui,sans-serif;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;white-space:nowrap}
+.mhp[data-d="e"]::after{color:#aab}.mhp[data-d="h"]::after{color:#ff8a80}
 .dmg{position:absolute;left:0;top:0;display:none;font:700 20px var(--display);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.8);white-space:nowrap}
 .dmg.xp{color:#ffd24a;font-size:16px}.dmg.crit{font-size:26px;color:#ffd24a}.dmg.me{color:#ff7a6e;font-size:24px}
 #bossbar{position:fixed;left:50%;top:calc(58px + var(--st));transform:translateX(-50%);width:min(340px,52vw);display:none;z-index:3;pointer-events:none;text-align:center;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);font:600 14px var(--display)}
@@ -4321,11 +4323,11 @@ if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.
 const MOB=(()=>{
   const NET=MP.net,ZONES=[{n:'the misty woods',x:-132,z:78,r:34},{n:'the summit slopes',x:-20,z:-74,r:30},{n:'the middle fields',x:-45,z:12,r:22},{n:'the west meadow',x:-105,z:-40,r:22},{n:'the coast woods',x:-150,z:25,r:22},{n:'the north woods',x:-60,z:-70,r:20},{n:'the far woods',x:-140,z:120,r:22},{n:'Goblin Wilds',x:-25,z:218,r:36,gob:true},{n:'Old Graveyard',x:RUIN.x,z:RUIN.z,r:17,zomb:true}],
     CAP=16,   // (never more than this many slimes alive at once, wherever they are)
-    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a',xp:10},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0',xp:40},{hp:900,dmg:22,sp:2.4,ag:26,sc:3.4,col:'#e2b43c',xp:300,boss:true,name:'Slime King',ar:[5.5,6]},
-      {hp:120,dmg:18,sp:3.9,ag:15,sc:1,col:'#7bb661',xp:70,gob:1},{hp:420,dmg:30,sp:3,ag:15,sc:1.45,col:'#5d8c46',xp:260,gob:2},
-      {hp:1100,dmg:30,sp:3.2,ag:26,sc:2.3,col:'#4a7a38',xp:800,boss:true,gob:3,name:'Goblin Lord',ar:[4.4,5]},
-      {hp:90,dmg:14,sp:3.2,ag:20,sc:1,col:'#e6e0c8',xp:90,skel:1},
-      {hp:150,dmg:20,sp:1.9,ag:16,sc:1.05,col:'#7f9d72',xp:80,zomb:1}],   // (3: a goblin, 4: a goblin brute, 5: the Goblin Lord, 6: a skeleton archer (not placed yet), 7: a zombie)
+    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a',xp:7,lv:2},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0',xp:30,lv:6},{hp:900,dmg:22,sp:2.4,ag:26,sc:3.4,col:'#e2b43c',xp:199,lv:10,boss:true,name:'Slime King',ar:[5.5,6]},
+      {hp:120,dmg:18,sp:3.9,ag:15,sc:1,col:'#7bb661',xp:30,lv:16,gob:1},{hp:420,dmg:30,sp:3,ag:15,sc:1.45,col:'#5d8c46',xp:97,lv:18,gob:2},
+      {hp:1100,dmg:30,sp:3.2,ag:26,sc:2.3,col:'#4a7a38',xp:338,lv:20,boss:true,gob:3,name:'Goblin Lord',ar:[4.4,5]},
+      {hp:90,dmg:14,sp:3.2,ag:20,sc:1,col:'#e6e0c8',xp:39,lv:24,skel:1},
+      {hp:150,dmg:20,sp:1.9,ag:16,sc:1.05,col:'#7f9d72',xp:24,lv:12,zomb:1}],   // (3: a goblin, 4: a goblin brute, 5: the Goblin Lord, 6: a skeleton archer (not placed yet), 7: a zombie. lv is the monster's level and xp what a kill gives: set so that, at about 3 kills a minute, reaching level 99 takes around 1000 hours)
     list=new Map(),box=$('mon'),hpb=$('hpb'),hpf=hpb.firstElementChild,hpt=hpb.querySelector('b'),fight=$('fight'),btn={a:$('batk'),z:$('bslam'),d:$('bdash'),b:$('bburst')},
     HP={v:100,max:100,hurt:-1e9,inv:0},CD={a:0,z:0,d:0},CDB={a:.5,z:7,d:3.5},DASH={t:0,x:0,z:0,sp:35},ANIM={k:'',t0:0},DUR={a:.42,z:.7,d:.26,b:1.4},EN={v:0,lock:0},
     bodyG=new THREE.SphereGeometry(.72,16,12),eyeG=new THREE.SphereGeometry(.13,8,6),pupG=new THREE.SphereGeometry(.07,6,5),
@@ -4429,7 +4431,8 @@ const MOB=(()=>{
     const b=e.target.closest('button[data-s],button[data-k]');if(!b||b.disabled)return;
     if(b.dataset.s!=null&&spLeft()>0)RPG.s[+b.dataset.s]++;else if(b.dataset.k!=null&&kpLeft()>0&&RPG.k[+b.dataset.k]<5)RPG.k[+b.dataset.k]++;else return;rpgApply();rpgSave()});
   $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3<=0)return;const rc=resetCost();if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.'+(rc?' It costs '+coinStr(rc)+'.':''),ok:'Reset',cancel:'Keep'})){if(rc&&!spend(rc))return;RPG.s=[0,0,0];RPG.k=[1,1,1];rpgApply();rpgSave()}};
-  function gainXp(n){n=Math.max(1,Math.round(n*Math.max(.3,1-.05*(RPG.l-1))));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP','xp');let up=0;
+  const XPGAP=10,XPSTEP=.1,XPMIN=.1,xpMul=(pl,ml)=>pl-ml>XPGAP?Math.max(XPMIN,1-XPSTEP*(pl-ml-XPGAP)):1;   // (a monster more than 10 levels below you gives less: 10% less for each level beyond that, never under 10%)
+  function gainXp(n,ml){const f=ml>0?xpMul(RPG.l,ml):1;n=Math.max(1,Math.round(n*f));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP'+(f<1?' (low)':''),'xp');let up=0;
     while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
     if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
@@ -4536,7 +4539,7 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
     let parts=null;if(T.gob){mat.opacity=1;parts=buildGoblin(g,T,mat)}else if(T.zomb){mat.opacity=1;parts=buildZombie(g,T,mat)}else if(T.skel){mat.opacity=1;parts=buildSkeleton(g,T,mat)}else{body.scale.set(1,.8,1);body.position.y=.58;body.castShadow=true;g.add(body);
     [-1,1].forEach(s=>{const e=new THREE.Mesh(eyeG,eyeM);e.position.set(s*.26,.78,.55);e.scale.set(1,1.2,.6);g.add(e);const p=new THREE.Mesh(pupG,pupM);p.position.set(s*.26,.78,.63);g.add(p)})}
     if(T.boss&&!T.gob){const c=new THREE.Group();c.position.y=1.12;c.add(new THREE.Mesh(crownG[0],crownM));for(let i=0;i<5;i++){const a=i*1.2566,k=new THREE.Mesh(crownG[1],crownM),gm=new THREE.Mesh(crownG[2],gemM);k.position.set(Math.cos(a)*.48,.26,Math.sin(a)*.48);gm.position.set(Math.cos(a)*.48,.46,Math.sin(a)*.48);c.add(k,gm)}g.add(c)}   // (the Slime King's crown)
-    g.scale.setScalar(T.sc);W.add(g);const el=document.createElement('div');el.className='mhp';el.appendChild(document.createElement('i'));box.appendChild(el);
+    g.scale.setScalar(T.sc);W.add(g);const el=document.createElement('div');el.className='mhp';el.dataset.lv='Lv '+T.lv;el.appendChild(document.createElement('i'));box.appendChild(el);
     const m={parts,pst:0,t2:0,swing:0,id,ty,x,z,tx:x,tz:z,y:groundY(x,z),hp,hpm:T.hp,st:0,ry:0,tr:0,ph:Math.random()*6,g,mat,el,flash:0,wind:0,cd:1,deadAt:0,dead:false,t0:0,wt:0,wx:x,wz:z,pt:-1e9,zone,tp:'',jx:x,jz:z,pp:0,lc:6};if(T.boss){m.tel=new THREE.Mesh(telG,new THREE.MeshBasicMaterial({color:'#ff3b30',transparent:true,opacity:.3,depthWrite:false,fog:false}));m.tel.visible=false;W.add(m.tel)}list.set(id,m);return m}
   function dropMon(m){W.remove(m.g);m.mat.dispose();m.el.remove();if(m.tel){W.remove(m.tel);m.tel.material.dispose()}list.delete(m.id)}
   function kill(m){m.st=3;m.hp=0;m.deadAt=performance.now();if(TY[m.ty].boss)bossDead[m.ty]=m.deadAt}
@@ -4705,16 +4708,16 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
       m.g.position.set(m.x,m.y+hop,m.z);m.g.rotation.y=m.ry;m.g.visible=d<(T.boss?130:90);if(T.gob||T.skel||T.zomb){if(m.g.visible)(T.gob?goblinAnim:T.zomb?zombieAnim:skelAnim)(m,t,dt,now)}else{m.g.children[0].scale.set(1+(.8-sq)*.6,sq,1+(.8-sq)*.6);m.g.children[0].castShadow=d<(T.boss?70:40)}   // (a slime shows up when you are within 90 m of it, and casts a shadow within 40 m: far ones cost next to nothing)
       if(m.flash>0)m.flash=Math.max(0,m.flash-dt*4);
       if(m.st===2||m.st===4)m.mat.emissive.setRGB(.55+.3*Math.sin(t*30),0,0);else m.mat.emissive.setScalar(m.flash*.8);
-      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.hp<=0){if(m.mine){gainXp(T.xp);gearDrop(m.ty);coinDrop(m.ty);if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+10)}if(T.boss){burst(m.x+1,m.y+1,m.z,'#ffd24a');burst(m.x-1,m.y+2,m.z,'#ff7acb');ringFx(m.x,m.z,9,'#ffd24a',900);toast('','The '+T.name+' has fallen! '+(T.gob?'👺':'👑')+(m.mine?'  +'+T.xp+' XP':''),true)}}}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
+      if(m.st===3){if(!m.dead){m.dead=true;burst(m.x,m.y,m.z,T.col);sfx('die');if(m.hp<=0){if(m.mine){gainXp(T.xp,T.lv);gearDrop(m.ty);coinDrop(m.ty);if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+10)}if(T.boss){burst(m.x+1,m.y+1,m.z,'#ffd24a');burst(m.x-1,m.y+2,m.z,'#ff7acb');ringFx(m.x,m.z,9,'#ffd24a',900);toast('','The '+T.name+' has fallen! '+(T.gob?'👺':'👑')+(m.mine?'  +'+T.xp+' XP':''),true)}}}const s=Math.max(0,1-(now-m.deadAt)/450);m.g.scale.setScalar(T.sc*Math.max(s,.01));m.mat.opacity=.9*s}
       if(m.tel){const on=m.st===2||m.st===4;m.tel.visible=on;if(on){const R=m.st===2?TY[m.ty].ar[0]:TY[m.ty].ar[1],cx=m.st===2?m.x:m.jx,cz=m.st===2?m.z:m.jz;m.tel.position.set(cx,groundY(cx,cz)+.12,cz);m.tel.scale.setScalar(R);m.tel.material.opacity=.22+.14*Math.sin(t*14)}}   // (the red circle: where the blow will land)
       if(T.boss&&m.st!==3&&d<50)bossM=m;
       const sc=m.st!==3&&!T.boss&&d<45&&(m.hp<m.hpm||m.st===2)?onScr(m.x,m.y+2*T.sc,m.z):null;
-      if(sc){m.el.style.display='block';m.el.style.transform='translate('+(sc[0]-23)+'px,'+sc[1]+'px)';m.el.firstChild.style.transform='scaleX('+Math.max(0,m.hp/m.hpm)+')'}else m.el.style.display='none'});
+      if(sc){m.el.style.display='block';m.el.style.transform='translate('+(sc[0]-23)+'px,'+sc[1]+'px)';m.el.firstChild.style.transform='scaleX('+Math.max(0,m.hp/m.hpm)+')';m.el.dataset.d=RPG.l-T.lv>XPGAP?'e':T.lv-RPG.l>=5?'h':''}else m.el.style.display='none'});
     fxTick(dt,now);auraTick(t,now);
     if(ANIM.k){const sec=(now-ANIM.t0)/1000;if(sec<DUR[ANIM.k])poseAt(me,ANIM.k,sec,ANIM.c);else{endPose(me);ANIM.k=''}}
     NET.peers().forEach(R=>{const a=R.fxa;if(!a)return;const sec=(now-a.t0)/1000;if(sec<DUR[a.k])poseAt(R.rig,a.k,sec,a.c);else{endPose(R.rig);R.fxa=null}});
     for(let i=nums.length-1;i>=0;i--){const n=nums[i],a=(now-n.t)/900;if(a>=1){n.el.remove();nums.splice(i,1);continue}const p=onScr(n.x,n.y+a*1.2,n.z);if(p){n.el.style.display='block';n.el.style.transform='translate('+p[0]+'px,'+p[1]+'px) translate(-50%,-50%)';n.el.style.opacity=1-a*a}else n.el.style.display='none'}
-    bossBar.classList.toggle('on',!!bossM);if(bossM){const bn=(TY[bossM.ty].gob?'👺 ':'👑 ')+TY[bossM.ty].name;if(bossBar.firstElementChild.textContent!==bn)bossBar.firstElementChild.textContent=bn}if(bossM)bossFill.style.transform='scaleX('+Math.max(0,bossM.hp/bossM.hpm)+')';
+    bossBar.classList.toggle('on',!!bossM);if(bossM){const bn=(TY[bossM.ty].gob?'👺 ':'👑 ')+TY[bossM.ty].name+' · Lv '+TY[bossM.ty].lv;if(bossBar.firstElementChild.textContent!==bn)bossBar.firstElementChild.textContent=bn}if(bossM)bossFill.style.transform='scaleX('+Math.max(0,bossM.hp/bossM.hpm)+')';
     if(!toldWilds&&P.position.z>172&&P.position.z<280){toldWilds=true;toast('','Bare, rough country… you have entered the Goblin Wilds 👺',true)}
     if(!toldRuin&&Math.abs(P.position.x-RUIN.x)<RUIN.hx+28&&Math.abs(P.position.z-RUIN.z)<RUIN.hz+28){toldRuin=true;toast('','The air turns cold… you have found the Old Graveyard 🪦',true)}
     if(!toldGob&&Math.hypot(P.position.x-GOB.x,P.position.z-GOB.z)<GOB.fr+34){toldGob=true;toast('','The drums grow louder… you have found the Goblin Lord\'s lair 👺',true)}
