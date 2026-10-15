@@ -4993,12 +4993,12 @@ const islR=(a,I=SKI)=>I.r*(1+.08*Math.sin(3*a+(I.ph||.7))+.05*Math.sin(5*a+2.1)+
 function islH(dx,dz){const d=Math.hypot(dx,dz),pd=Math.hypot(dx-PND.x,dz-PND.z);return(Math.sin(dx*.11+1)*Math.cos(dz*.09)+.6*Math.sin((dx+dz)*.07))*sstep(4,9,d)-1.1*Math.exp(-((pd/4.4)**2))}   // (gentle hills, a flat middle, and a dip for the pond)
 SKIS[1].hf=(dx,dz)=>{const d=Math.hypot(dx,dz);return(Math.sin(dx*.16+2)*Math.cos(dz*.12)+.5*Math.sin((dx-dz)*.09))*1.4*sstep(6,13,d)-1.1*Math.exp(-((Math.hypot(dx+3,dz-4)/4.3)**2))};   // (the garden islands: gentle hills round a pond)
 SKIS[2].hf=(dx,dz)=>{const d=Math.hypot(dx,dz);return(Math.sin(dx*.13+4)*Math.cos(dz*.15+1)+.6*Math.sin((dx+dz)*.08))*1.5*sstep(6,13,d)-1.2*Math.exp(-((Math.hypot(dx-4,dz+3)/5.2)**2))};
-SKIS[3].hf=(dx,dz)=>{const d=Math.hypot(dx,dz);return .8*(1-sstep(11,13.2,d))+.8*(1-sstep(7.5,9.5,d))+.8*(1-sstep(4.5,6.2,d))+Math.sin(dx*.2)*Math.cos(dz*.17)*.35*sstep(15,22,d)-1.1*Math.exp(-((Math.hypot(dx,dz-17)/6)**2))};   // (the Sanctum: three marble tiers round the middle, a reflecting pool to the south)
+SKIS[3].hf=(dx,dz)=>{const d=Math.hypot(dx,dz);return .8*(1-sstep(12,14,d))+.8*(1-sstep(9,11,d))+.8*(1-sstep(6,8,d))+Math.sin(dx*.2)*Math.cos(dz*.17)*.35*sstep(15,22,d)-1.1*Math.exp(-((Math.hypot(dx,dz-17)/6)**2))};   // (the Sanctum: three marble tiers round the middle, a reflecting pool to the south)
 const islHI=(I,dx,dz)=>I===SKI?islH(dx,dz):I.hf(dx,dz),
   islAt=(x,z)=>{let b=SKIS[0],bd=1e9;for(const I of SKIS){const d=Math.hypot(x-I.x,z-I.z)-I.r;if(d<bd){bd=d;b=I}}return b},
   islTop=(x,z)=>{const I=islAt(x,z);return I.y+islHI(I,x-I.x,z-I.z)},
   islOK=(x,z)=>SKIS.some(I=>{const dx=x-I.x,dz=z-I.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-1.6});
-const GARFX={spin:[],aur:[],flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
+const GARFX={orbit:[],spin:[],aur:[],flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
 // a waterfall pouring over an island's edge: a streaky see-through sheet with mist at the lip and at the bottom
 const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y=Math.random()*h,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,3+Math.random()*4,l)}},1,3);
 function mkFall(I,ang,w,len){const R=islR(ang,I)*.96,x=I.x+Math.cos(ang)*R,z=I.z+Math.sin(ang)*R,top=islTop(x,z)-.2,
@@ -5164,33 +5164,57 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
     rimOK=(dx,dz,m)=>Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-2-(m||0),glow=(c,sz,x,y,z)=>{const g=glowSprite(c,sz);g.position.set(x,y,z);GARG.add(g);return g},
     marble=M('#f3efe6',.55),gold=new THREE.MeshStandardMaterial({color:'#e8b84a',roughness:.35,metalness:.6,flatShading:true,emissive:'#ffb300',emissiveIntensity:.22}),goldB=new THREE.MeshBasicMaterial({color:'#ffd982',side:THREE.DoubleSide}),
     MB=new THREE.Color('#efe9d8'),MR=new THREE.Color('#d8cfb4');
-  I.tint=(C,x,z)=>{const d=Math.hypot(x,z),k=1-sstep(12.4,13.6,d);if(k>0)C.lerp(MB,k);const l=Math.abs(z);if(d>12&&l<1.7)C.lerp(MR,.85*(1-sstep(1.1,1.7,l)))};
+  I.tint=(C,x,z)=>{const d=Math.hypot(x,z),k=1-sstep(13.4,14.6,d);if(k>0)C.lerp(MB,k);const l=Math.abs(z);if(d>13&&l<1.7)C.lerp(MR,.85*(1-sstep(1.1,1.7,l)))};
   islBody(I,['#86d9a6','#63c28e','#8a6a44','#a69bb6','#5b5379']);
-  // golden crystals hanging underneath, clouds and drifting rocks round about
+  // golden crystals hanging underneath, clouds, and the planets
   {const gc=new THREE.MeshBasicMaterial({color:'#ffe2a0'});for(let i=0;i<8;i++){const a=i*2.1+.4,r=4+(i%3)*6,c=at(new THREE.Mesh(new THREE.ConeGeometry(.9+(i%2)*.5,3.8,5),gc),X(Math.cos(a)*r),I.y-11-(i%4)*4,Z(Math.sin(a)*r));c.rotation.x=Math.PI;if(i%2===0)GARFX.flames.push(glow('rgba(255,220,140,.7)',5,c.position.x,c.position.y,c.position.z))}
     for(let i=0;i<14;i++){const a=i/14*6.283+rg()*.3,r=34+rg()*16,sp=glow('rgba(255,255,255,.42)',22+rg()*10,X(Math.cos(a)*r),I.y-5-rg()*14,Z(Math.sin(a)*r));GARFX.floaters.push({m:sp,y:sp.position.y,p:i*1.7})}
-    for(let i=0;i<7;i++){const a=i/7*6.283+.4,r=38+rg()*8,k=at(new THREE.Mesh(new THREE.DodecahedronGeometry(1.4+rg()*1.6,0),M('#8b84a0',.95)),X(Math.cos(a)*r),I.y-2+rg()*12,Z(Math.sin(a)*r));GARFX.floaters.push({m:k,y:k.position.y,p:i*2.3})}}
+    // the planets: they wheel round the sun on faint orbits, each turning on its own
+    {const band=(c1,c2,n)=>canvasTex(128,64,(g,w,h)=>{for(let y=0;y<h;y++){g.fillStyle=(Math.floor(y/h*n*2)%2)?c1:c2;g.fillRect(0,y,w,1)}}),
+      PL=[['Mercury',1.3,'#a39a94',null,40,.5],['Venus',1.9,'#e8c98a',null,46,.42],['Earth',2.1,'#3f7fd8',null,53,.36],['Mars',1.7,'#c4553a',null,60,.3],['Jupiter',4.6,'#d9a773',band('#d9a773','#b9825a',7),69,.22],['Saturn',3.8,'#e3cf9b',band('#e3cf9b','#cdb27a',5),79,.17],['Uranus',2.7,'#8fe0e6',null,89,.13],['Neptune',2.6,'#4a63e0',null,98,.1]];
+      PL.forEach(([nm,sz,col,tex,r,sp],i)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(sz,24,16),new THREE.MeshStandardMaterial({color:'#ffffff',map:tex||null,roughness:.85,emissive:col,emissiveIntensity:tex?.12:.22}));if(!tex)m.material.color.set(col);GARG.add(m);
+        if(nm==='Earth'){const mo=new THREE.Mesh(new THREE.SphereGeometry(.45,10,8),M('#d8d8dc'));m.add(mo);mo.position.set(3.2,.4,0)}
+        if(nm==='Saturn'){const rg2=new THREE.Mesh(new THREE.RingGeometry(sz*1.4,sz*2.2,48),new THREE.MeshBasicMaterial({color:'#e3cf9b',transparent:true,opacity:.7,side:THREE.DoubleSide}));rg2.rotation.x=Math.PI/2-.4;m.add(rg2)}
+        const orb={m,cx:I.x,cz:I.z,y:I.y+7,r,sp,ph:i*2.4+.7,tl:2.5+i*.5};GARFX.orbit.push(orb);m.position.set(orb.cx+Math.cos(orb.ph)*r,orb.y,orb.cz+Math.sin(orb.ph)*r);
+        const ring=new THREE.Mesh(new THREE.RingGeometry(r-.12,r+.12,128),new THREE.MeshBasicMaterial({color:'#ffe9b0',transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));ring.rotation.x=-Math.PI/2;ring.position.set(I.x,I.y+7,I.z);GARG.add(ring)})}}
   // gold inlay on the tiers, and paved roads out to the two portals (tinted into the ground)
-  [3.9,6.8,10.2,14.1].forEach(r=>{const m=at(new THREE.Mesh(new THREE.RingGeometry(r-.14,r+.14,96),goldB),X(0),gnd(r,0)+.06,Z(0));m.rotation.x=-Math.PI/2});
-  // the armillary: three gold rings turning round a small sun, over the middle tier
-  {const gy=gnd(0,0),ped=at(new THREE.Mesh(new Cy(.6,.95,.9,12),marble),X(0),gy+.45,Z(0)),ag=new THREE.Group();ag.position.set(X(0),gy+4.6,Z(0));GARG.add(ag);
-    [[2.3,'x',.35],[1.85,'y',-.5],[1.4,'z',.7]].forEach(([r,ax,sp],i)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,.07,8,56),gold);if(i===0)t.rotation.y=Math.PI/2;if(i===2)t.rotation.x=Math.PI/2;ag.add(t);GARFX.spin.push({m:t,ax:ax==='x'?'x':ax==='y'?'y':'z',sp})});
-    const core=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),new THREE.MeshBasicMaterial({color:'#fff3c0'}));ag.add(core);const g=glowSprite('rgba(255,225,140,.85)',9);ag.add(g);GARFX.flames.push(g);
-    const stem=at(new THREE.Mesh(new Cy(.12,.12,3,6),gold),X(0),gy+2.4,Z(0))}
-  // the throne, with a great sun rising behind it
-  {const g=new THREE.Group(),ty=gnd(0,-3.6);g.position.set(X(0),ty,Z(-3.6));GARG.add(g);
-    const bx=(w,h,d,x,y,z,m)=>{const q=new THREE.Mesh(new B(w,h,d),m);q.position.set(x,y,z);g.add(q);return q};
-    bx(3.6,.4,3,0,.2,0,marble);bx(2.4,.9,1.9,0,.85,.1,marble);bx(2.4,4.4,.45,0,3,-.85,marble);bx(.45,1,1.7,-1.3,1.3,.1,marble);bx(.45,1,1.7,1.3,1.3,.1,marble);bx(2.7,.18,.55,0,5.3,-.85,gold);bx(2.1,.12,1.6,0,1.35,.1,M('#c5384a',.8));
-    [-1.15,1.15].forEach(sx=>{const sp=new THREE.Mesh(new THREE.ConeGeometry(.3,1.5,6),gold);sp.position.set(sx,6,-.85);g.add(sp)});
-    const sun=new THREE.Group();sun.position.set(0,5.4,-1.5);g.add(sun);
-    sun.add(new THREE.Mesh(new THREE.CircleGeometry(3.3,48),new THREE.MeshBasicMaterial({color:'#ffd470',transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));
-    const rays=new THREE.Group();sun.add(rays);for(let i=0;i<16;i++){const a=i/16*6.283,r=new THREE.Mesh(new B(.2,i%2?1.5:2.4,.05),goldB);r.position.set(Math.cos(a)*4.7,Math.sin(a)*4.7,0);r.rotation.z=a-Math.PI/2;rays.add(r)}
-    GARFX.spin.push({m:rays,ax:'z',sp:.09});const gl=glowSprite('rgba(255,215,120,.6)',16);gl.position.set(0,5.4,-1.2);g.add(gl);GARFX.flames.push(gl)}
-  // eight columns round the garden, each with a light floating above it, joined by a gold ring
-  for(let i=0;i<8;i++){const a=i/8*6.283+.393,dx=Math.cos(a)*16,dz=Math.sin(a)*16,y=gnd(dx,dz),hh=I.y+7.2-y;
-    at(new THREE.Mesh(new B(1.7,.5,1.7),marble),X(dx),y+.25,Z(dz));at(new THREE.Mesh(new Cy(.5,.62,hh-.5,10),marble),X(dx),y+.5+(hh-.5)/2,Z(dz));at(new THREE.Mesh(new B(1.5,.4,1.5),gold),X(dx),I.y+7.4,Z(dz));
-    const o=at(new THREE.Mesh(new THREE.SphereGeometry(.45,12,10),new THREE.MeshBasicMaterial({color:'#ffe9a0'})),X(dx),I.y+9.3,Z(dz));o.add(glowSprite('rgba(255,225,140,.8)',6));GARFX.orbs.push({m:o,y:o.position.y,p:i*.9})}
-  {const r=at(new THREE.Mesh(new THREE.TorusGeometry(16,.12,6,96),gold),X(0),I.y+7.65,Z(0));r.rotation.x=Math.PI/2}
+  [5.6,8.5,11.5,14.5].forEach(r=>{const m=at(new THREE.Mesh(new THREE.RingGeometry(r-.14,r+.14,96),goldB),X(0),gnd(r,0)+.06,Z(0));m.rotation.x=-Math.PI/2});
+  // the armillary: three gold rings turning round a small sun, floating over the reflecting pool
+  {const ag=new THREE.Group();ag.position.set(X(0),I.y+4.6,Z(17));GARG.add(ag);
+    [[2.3,'x',.35],[1.85,'y',-.5],[1.4,'z',.7]].forEach(([r,ax,sp],i)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,.07,8,56),gold);if(i===0)t.rotation.y=Math.PI/2;if(i===2)t.rotation.x=Math.PI/2;ag.add(t);GARFX.spin.push({m:t,ax,sp})});
+    const core=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),new THREE.MeshBasicMaterial({color:'#fff3c0'}));ag.add(core);const g=glowSprite('rgba(255,225,140,.85)',9);ag.add(g);GARFX.flames.push(g)}
+  // greek columns: a fluted shaft swelling a little at the middle, a round base and an ionic capital with scrolls
+  const flute=(r1,r2,h)=>{const g=new THREE.CylinderGeometry(r1,r2,h,56,8),q=g.attributes.position;for(let i=0;i<q.count;i++){const x=q.getX(i),y=q.getY(i),z=q.getZ(i),th=Math.atan2(z,x),k=(1-.06*(.5-.5*Math.cos(th*14)))*(1+.05*Math.sin(Math.PI*(y/h+.5)));q.setXYZ(i,x*k,y,z*k)}g.computeVertexNormals();return g},
+    greek=(x,y,z,top,sc,face)=>{const g=new THREE.Group(),H=top-y-1.12*sc,ad=(m,px,py,pz)=>{m.position.set(px,py,pz);g.add(m);return m};g.position.set(x,y,z);g.rotation.y=face;GARG.add(g);
+      ad(new THREE.Mesh(new B(1.9*sc,.3*sc,1.9*sc),marble),0,.15*sc,0);ad(new THREE.Mesh(new Cy(.86*sc,.92*sc,.2*sc,24),marble),0,.4*sc,0);const tb=ad(new THREE.Mesh(new THREE.TorusGeometry(.66*sc,.07*sc,8,24),gold),0,.54*sc,0);tb.rotation.x=Math.PI/2;
+      ad(new THREE.Mesh(flute(.52*sc,.64*sc,H),marble),0,.6*sc+H/2,0);const t0=.6*sc+H;
+      ad(new THREE.Mesh(new Cy(.78*sc,.52*sc,.3*sc,24),marble),0,t0+.15*sc,0);ad(new THREE.Mesh(new B(1.7*sc,.22*sc,1.7*sc),marble),0,t0+.41*sc,0);
+      [-1,1].forEach(sd=>{ad(new THREE.Mesh(new THREE.TorusGeometry(.3*sc,.08*sc,8,16),gold),sd*.74*sc,t0+.28*sc,0);ad(new THREE.Mesh(new THREE.SphereGeometry(.1*sc,8,6),gold),sd*.74*sc,t0+.28*sc,0)})};
+  // the throne: three steps, a tall winged back, jewels, a golden crown floating above it and a great sun rising behind
+  {const g=new THREE.Group(),tz=-3.4,ty=gnd(0,tz);g.position.set(X(0),ty,Z(tz));GARG.add(g);
+    const bx=(w,h,d,x,y,z,m)=>{const q=new THREE.Mesh(new B(w,h,d),m);q.position.set(x,y,z);g.add(q);return q},gem=(c,x,y,z,sz)=>{const q=new THREE.Mesh(new THREE.OctahedronGeometry(sz,0),new THREE.MeshBasicMaterial({color:c}));q.position.set(x,y,z);g.add(q);const gl=glowSprite(c==='#ff4a5e'?'rgba(255,90,110,.8)':'rgba(110,190,255,.8)',sz*9);gl.position.copy(q.position);g.add(gl);GARFX.flames.push(gl)},
+      cush=M('#b3243a',.8);
+    bx(5,.3,4,0,.15,0,marble);bx(4.2,.3,3.4,0,.45,0,marble);bx(3.6,.3,2.8,0,.75,0,gold);bx(2.4,.8,1.9,0,1.15,.1,marble);bx(2.1,.14,1.6,0,1.62,.1,cush);
+    bx(2.7,5.2,.5,0,3.7,-.95,marble);bx(2.9,.2,.65,0,6.4,-.95,gold);bx(2.9,.2,.65,0,1.4,-.95,gold);bx(.5,1,1.9,-1.4,1.7,.1,marble);bx(.5,1,1.9,1.4,1.7,.1,marble);bx(.62,.14,2.1,-1.4,2.25,.1,gold);bx(.62,.14,2.1,1.4,2.25,.1,gold);
+    [-1,1].forEach(sx=>{for(let i=0;i<4;i++){const f=bx(.14,3.4-i*.55,.7,sx*(1.7+i*.5),4.2-i*.05,-.95,i%2?marble:M('#fff8e8',.6));f.rotation.z=-sx*(.22+i*.13);const tp=new THREE.Mesh(new THREE.ConeGeometry(.12,.45,5),gold);tp.position.set(sx*(1.7+i*.5+Math.sin(.22+i*.13)*(1.7-i*.27)),4.2-i*.05+Math.cos(.22+i*.13)*(1.7-i*.27)+.15,-.95);tp.rotation.z=-sx*(.22+i*.13);g.add(tp)}
+      const sp=new THREE.Mesh(new THREE.ConeGeometry(.3,1.6,6),gold);sp.position.set(sx*1.15,7.1,-.95);g.add(sp);gem('#6ec0ff',sx*1.4,2.45,.7,.2)});
+    const sp0=new THREE.Mesh(new THREE.ConeGeometry(.4,2.2,6),gold);sp0.position.set(0,7.4,-.95);g.add(sp0);gem('#ff4a5e',0,5.2,-.62,.32);
+    // the crown, turning slowly
+    {const cr=new THREE.Group();cr.position.set(0,9,-.6);g.add(cr);const rb=new THREE.Mesh(new THREE.TorusGeometry(.75,.1,8,28),gold);rb.rotation.x=Math.PI/2;cr.add(rb);for(let i=0;i<7;i++){const a=i/7*6.283,c=new THREE.Mesh(new THREE.ConeGeometry(.2,.8,5),gold);c.position.set(Math.cos(a)*.75,.42,Math.sin(a)*.75);cr.add(c);const j=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),new THREE.MeshBasicMaterial({color:i%2?'#ff4a5e':'#6ec0ff'}));j.position.set(Math.cos(a)*.75,.88,Math.sin(a)*.75);cr.add(j)}
+      GARFX.spin.push({m:cr,ax:'y',sp:.6});const cg=glowSprite('rgba(255,225,140,.8)',6);cg.position.set(0,9.1,-.6);g.add(cg);GARFX.flames.push(cg)}
+    const sun=new THREE.Group();sun.position.set(0,6,-1.6);g.add(sun);
+    sun.add(new THREE.Mesh(new THREE.CircleGeometry(3.6,48),new THREE.MeshBasicMaterial({color:'#ffd470',transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));
+    const rays=new THREE.Group();sun.add(rays);for(let i=0;i<20;i++){const a=i/20*6.283,r=new THREE.Mesh(new B(.2,i%2?1.6:2.6,.05),goldB);r.position.set(Math.cos(a)*5.1,Math.sin(a)*5.1,0);r.rotation.z=a-Math.PI/2;rays.add(r)}
+    GARFX.spin.push({m:rays,ax:'z',sp:.09});const gl=glowSprite('rgba(255,215,120,.65)',18);gl.position.set(0,6,-1.3);g.add(gl);GARFX.flames.push(gl);
+    SEATS.push({x:X(0),z:Z(tz)+.15,face:0,h:1.65,kind:'bench',label:'👑 Sit on the Keeper’s throne'})}
+  // the throne room: a red carpet down the middle, and a half ring of columns behind the throne under a marble architrave
+  for(let z=-1.2;z<11.5;z+=1){const y=gnd(0,z),sl=gnd(0,z+.5)-gnd(0,z-.5),a=at(new THREE.Mesh(new B(2.5,.04,1.15),gold),X(0),y+.04,Z(z)),c=at(new THREE.Mesh(new B(2.05,.06,1.15),M('#a3202f',.85)),X(0),y+.07,Z(z));a.rotation.x=c.rotation.x=-Math.atan(sl)}
+  {const n=7,a0=3.578,da=.378;for(let k=0;k<n;k++){const a=a0+k*da,dx=Math.cos(a)*8.6,dz=Math.sin(a)*8.6;greek(X(dx),gnd(dx,dz),Z(dz),I.y+5.6,.85,Math.atan2(-dx,-dz));if(k%2===0){const o=glow('rgba(255,225,150,.6)',5,X(dx),I.y+6.4,Z(dz));GARFX.flames.push(o)}}
+    const arc=new THREE.Group();arc.position.set(X(0),I.y+5.75,Z(0));arc.rotation.y=-a0;GARG.add(arc);[[.2,marble,0],[.09,gold,.2]].forEach(([tube,mt,up])=>{const t=new THREE.Mesh(new THREE.TorusGeometry(8.6,tube,6,48,da*(n-1)),mt);t.rotation.x=Math.PI/2;t.position.y=up;arc.add(t)})}
+  // twelve great columns round the garden, each with a light floating above it, joined by a marble architrave with a gold cornice
+  for(let i=0;i<12;i++){const a=i/12*6.283+.262,dx=Math.cos(a)*16,dz=Math.sin(a)*16;greek(X(dx),gnd(dx,dz),Z(dz),I.y+7.4,1.25,Math.atan2(-dx,-dz));
+    const o=at(new THREE.Mesh(new THREE.SphereGeometry(.45,12,10),new THREE.MeshBasicMaterial({color:'#ffe9a0'})),X(dx),I.y+9.6,Z(dz));o.add(glowSprite('rgba(255,225,140,.8)',6));GARFX.orbs.push({m:o,y:o.position.y,p:i*.9})}
+  {const r=at(new THREE.Mesh(new THREE.TorusGeometry(16,.3,6,96),marble),X(0),I.y+7.78,Z(0));r.rotation.x=Math.PI/2;const r2=at(new THREE.Mesh(new THREE.TorusGeometry(16,.1,6,96),gold),X(0),I.y+8.15,Z(0));r2.rotation.x=Math.PI/2}
   // the reflecting pool
   {const wm=new THREE.MeshStandardMaterial({color:'#1d2c5e',roughness:.05,metalness:.6,transparent:true,opacity:.9,emissive:'#3b4fb0',emissiveIntensity:.35}),w=at(new THREE.Mesh(new THREE.CircleGeometry(6,40),wm),X(0),I.y-.35,Z(17));w.rotation.x=-Math.PI/2;
     for(let i=0;i<16;i++){const a=i/16*6.283,dx=Math.cos(a)*6.5,dz=17+Math.sin(a)*6.5;at(new THREE.Mesh(new THREE.DodecahedronGeometry(.5+rg()*.3,0),marble),X(dx),gnd(dx,dz)+.08,Z(dz)).scale.y=.7}
@@ -5198,15 +5222,12 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
   // golden trees
   {const trunk=M('#e9dcc0',.8);[[-19,-9,1],[19,-9,1],[-10,-19,.9],[10,-19,.9],[-20,11,.9],[20,11,.9]].forEach(([dx,dz,sc])=>{if(!rimOK(dx,dz,2))return;const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.22*sc,.4*sc,3.6*sc,7),trunk),X(dx),y+1.7*sc,Z(dz));
       [[0,4.6,0,2.3],[1.5,4,.5,1.7],[-1.4,4.2,-.6,1.8],[.2,5.7,.3,1.5]].forEach(([ox,oy,oz,r],k)=>{const c=at(new THREE.Mesh(new THREE.IcosahedronGeometry(r*sc,1),M(k%2?'#ffd36a':'#ffe08a',.7,'#ffb830',.5)),X(dx)+ox*sc,y+oy*sc,Z(dz)+oz*sc);c.scale.y=.8});GARFX.flames.push(glow('rgba(255,215,120,.5)',10*sc,X(dx),y+4.6*sc,Z(dz)))})}
-  // banners either side of the two roads
-  {const bt=canvasTex(128,300,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#24306e');gr.addColorStop(1,'#101842');g.fillStyle=gr;g.fillRect(0,0,w,h);g.strokeStyle='#ffd470';g.lineWidth=5;g.strokeRect(6,6,w-12,h-12);g.fillStyle='#ffd470';g.beginPath();g.arc(w/2,125,26,0,6.283);g.fill();for(let i=0;i<12;i++){const a=i/12*6.283;g.beginPath();g.moveTo(w/2+Math.cos(a-.12)*34,125+Math.sin(a-.12)*34);g.lineTo(w/2+Math.cos(a)*52,125+Math.sin(a)*52);g.lineTo(w/2+Math.cos(a+.12)*34,125+Math.sin(a+.12)*34);g.fill()}});
-    [[-19,-6],[-19,6],[19,-6],[19,6]].forEach(([dx,dz])=>{const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.08,.1,9,6),gold),X(dx),y+4.5,Z(dz));at(new THREE.Mesh(new B(2.5,.12,.12),gold),X(dx),y+8.7,Z(dz));at(new THREE.Mesh(new THREE.PlaneGeometry(2.1,4.9),new THREE.MeshStandardMaterial({map:bt,roughness:.9,side:THREE.DoubleSide,emissive:'#ffffff',emissiveMap:bt,emissiveIntensity:.25})),X(dx),y+6.2,Z(dz))})}
   // braziers on the lowest tier
-  for(let i=0;i<4;i++){const a=i/4*6.283+.785,dx=Math.cos(a)*10.3,dz=Math.sin(a)*10.3,y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.15,.22,1.4,6),gold),X(dx),y+.7,Z(dz));at(new THREE.Mesh(new Cy(.6,.32,.5,10),gold),X(dx),y+1.6,Z(dz));
+  for(let i=0;i<4;i++){const a=i/4*6.283+.785,dx=Math.cos(a)*12.5,dz=Math.sin(a)*12.5,y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.15,.22,1.4,6),gold),X(dx),y+.7,Z(dz));at(new THREE.Mesh(new Cy(.6,.32,.5,10),gold),X(dx),y+1.6,Z(dz));
     const f=at(new THREE.Mesh(new THREE.ConeGeometry(.36,1.1,6),new THREE.MeshBasicMaterial({color:'#ffb347'})),X(dx),y+2.3,Z(dz));GARFX.flames.push(f);GARFX.flames.push(glow('rgba(255,170,80,.75)',4,X(dx),y+2.4,Z(dz)))}
   // an inscription
   {const dark=M('#4b4d57'),tb=canvasTex(512,256,(g,w,h)=>{g.fillStyle='#2c2f4a';g.fillRect(0,0,w,h);g.strokeStyle='#ffd470';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);g.fillStyle='#fff3d0';g.textAlign='center';g.font='bold 50px Georgia,serif';g.fillText('THE SANCTUM',w/2,100);g.font='26px Georgia,serif';g.fillText('Home of the Keeper of Tambayan',w/2,156);g.font='22px Georgia,serif';g.fillStyle='#ffd470';g.fillText('Walk softly. You are a guest here.',w/2,206)}),
-      m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]),y=gnd(0,10.4);at(m,X(0),y+1.1,Z(10.4));m.rotation.y=Math.PI;m.rotation.x=-.12}
+      m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]),y=gnd(5,12.4);at(m,X(5),y+1.1,Z(12.4));m.rotation.y=Math.PI;m.rotation.x=-.12}
   // northern lights hanging behind
   {const at2=canvasTex(256,128,(g,w,h)=>{const gr=g.createLinearGradient(0,h,0,0);gr.addColorStop(0,'rgba(90,255,176,0)');gr.addColorStop(.3,'rgba(90,255,176,.8)');gr.addColorStop(.65,'rgba(150,120,255,.6)');gr.addColorStop(1,'rgba(176,128,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);for(let i=0;i<40;i++){g.fillStyle='rgba(0,0,0,'+(Math.random()*.35)+')';g.fillRect(Math.random()*w,0,2+Math.random()*5,h)}});
     [[-30,-34,16],[0,-42,21],[30,-34,16]].forEach(([dx,dz,dy],i)=>{const mt=new THREE.MeshBasicMaterial({map:at2,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),m=at(new THREE.Mesh(new THREE.PlaneGeometry(48,30),mt),X(dx),I.y+dy,Z(dz));m.rotation.y=(i-1)*.35;GARFX.aur.push({m,mt,o:.4,p:i,x0:m.position.x})})}
@@ -5271,6 +5292,7 @@ function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(
   if(GARFX.flash&&GARFX.flash.visible){GARFX.flash.material.opacity-=dt*1.6;if(GARFX.flash.material.opacity<=.02)GARFX.flash.visible=false}
   if(ONSKY&&!ASC.m&&alive&&!open&&!sitting&&!riding)for(const p of PORTS){const d=Math.hypot(px-p.x,pz-p.z);if(d>3.6)p.armed=true;if(d<1.7&&p.armed){p.charge+=dt;if(p.charge>=.7){p.charge=0;portalGo(p);break}}else p.charge=0}
   GARFX.spin.forEach(q=>q.m.rotation[q.ax]+=dt*q.sp);{const nn=typeof nt==='number'?nt:.6;GARFX.aur.forEach(q=>{q.mt.opacity=q.o*(.25+.75*nn)*(.7+.3*Math.sin(t*.35+q.p*2));q.m.position.x=q.x0+Math.sin(t*.1+q.p)*3})}
+  GARFX.orbit.forEach(q=>{const a=q.ph+t*q.sp;q.m.position.set(q.cx+Math.cos(a)*q.r,q.y+Math.sin(a*2)*q.tl,q.cz+Math.sin(a)*q.r);q.m.rotation.y=t*.25});
   GARFX.floaters.forEach(f=>{f.m.position.y=f.y+Math.sin(t*.5+f.p)*1.2;f.m.rotation.y=t*.15+f.p;f.m.rotation.x=Math.sin(t*.3+f.p)*.2});
   if(ONSKY||ASC.m){GARFX.parts.forEach(q=>{const pa=q.pa,R=q.I.r*.95;for(let i=0;i<pa.length;i+=3){if(q.m==='f'){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=q.h;pa[i]=(Math.random()-.5)*2*R;pa[i+2]=(Math.random()-.5)*2*R}}else{pa[i+1]+=dt*(.5+.4*Math.sin(i));pa[i]+=Math.sin(t*.7+i)*dt*.4;pa[i+2]+=Math.cos(t*.6+i)*dt*.4;if(pa[i+1]>q.h){pa[i+1]=0;pa[i]=(Math.random()-.5)*2*R;pa[i+2]=(Math.random()-.5)*2*R}}}q.pts.geometry.attributes.position.needsUpdate=true});const pa=GARFX.petals;for(let i=0;i<pa.length;i+=3){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=16;pa[i]=(Math.random()-.5)*2*SKI.r;pa[i+2]=(Math.random()-.5)*2*SKI.r}}GARFX.pts.geometry.attributes.position.needsUpdate=true}}
 
