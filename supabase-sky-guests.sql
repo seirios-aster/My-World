@@ -12,4 +12,5 @@ create table if not exists public.sky_guests (
 );
 alter table public.sky_guests enable row level security;
 revoke all on public.sky_guests from anon, authenticated;
+grant select, insert, update on public.sky_guests to service_role;   -- (the function runs as service_role; without this it fails with "permission denied")
 -- to let someone back in after a lock-out, a GM can run:  update public.sky_guests set total_tries = 0, tries = 0 where user_id = '...';
