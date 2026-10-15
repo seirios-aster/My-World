@@ -3199,8 +3199,8 @@ addEventListener('pointerdown',e=>{if(emoPick.classList.contains('on')&&!emoPick
 function sendChat(){const t=clean(chatIn.value).slice(0,80);
   const cm=/^\/level(?:\s+(\d{1,3}))?\s*$/i.exec(t);   // a command for the GM alone: "/level 99" sets your own level (to try things out, like the level 99 aura). Nothing is sent to anyone.
   if(cm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cm[1])toast('','Type /level and a number from 1 to 99, like /level 99',true);else if(rpgHook)rpgHook.setLevel(+cm[1]);return}
-  const sm=/^\/(vit|str|agi)(?:\s+(\d{1,4}))?\s*$/i.exec(t);   // GM only too: "/str 999" puts all the stat points you have (up to 999) into strength; /agi and /vit likewise (no number = one point)
-  if(sm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.addStat(['vit','str','agi'].indexOf(sm[1].toLowerCase()),Math.max(1,+sm[2]||1));return}
+  const sm=/^\/(vit|str|agi|dex)(?:\s+(\d{1,4}))?\s*$/i.exec(t);   // GM only too: "/str 999" puts all the stat points you have (up to 999) into strength; /agi and /vit likewise (no number = one point)
+  if(sm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.addStat(['vit','str','agi','dex'].indexOf(sm[1].toLowerCase()),Math.max(1,+sm[2]||1));return}
   const gm=/^\/give(?:\s+(weapon|upper|lower|boots)(?:\s+(common|rare|epic|legendary))?(?:\s+(knight|mage|archer))?)?\s*$/i.exec(t);   // GM only: "/give weapon legendary mage" puts a test item in your bag (slot, rarity and, for a weapon, class are all optional)
   if(gm){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!gm[1])toast('','Type /give, then weapon, upper, lower or boots, then common, rare, epic or legendary (and a class for weapons)',true);else if(rpgHook)rpgHook.give(['weapon','upper','lower','boots'].indexOf(gm[1].toLowerCase()),['common','rare','epic','legendary'].indexOf((gm[2]||'common').toLowerCase()),Math.max(0,['knight','mage','archer'].indexOf((gm[3]||'').toLowerCase())<0?(rpgHook.cls?rpgHook.cls():0):['knight','mage','archer'].indexOf(gm[3].toLowerCase())));return}
   const rn=/^\/refine(?:\s+(weapon|upper|lower|boots|all))?\s+(\d|10)\s*$/i.exec(t),fs2=/^\/set(?:\s+(common|rare|epic|legendary))?\s*$/i.exec(t);   // GM only: "/refine 5" or "/refine weapon 3" sets the refine level of what you wear; "/set" (or "/set epic") puts on a full set of that rarity (legendary by default)
@@ -4340,12 +4340,12 @@ const MOB=(()=>{
     v3=new THREE.Vector3(),fxs=[],nums=[];
   let GOD=false,simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
-  const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],kb:1,c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
+  const RPG={l:1,xp:0,s:[0,0,0,0],k:[1,1,1],kb:1,c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3)-(RPG.kb-1),
     maxHp=()=>CLS[RPG.c].hp+16*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.3:.12)*(RPG.k[i]-1))*(1+atkB()/100)*(GOD?1000:1),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
-    cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])*(1-Math.min(.4,bonSum(3)/100))),RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
+    cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[3])*(1-Math.min(.4,bonSum(3)/100))),accP=()=>40+4*RPG.s[3]+2*RPG.l,evaP=()=>10+3*RPG.s[2]+RPG.l,RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
     BRSI=['🌪️','🌠','🎯'],BRST=[['🌪️','Blade Storm','Four spinning hits all round you'],['🌠','Starfall','Nine meteors rain around the nearest enemy'],['🎯','Arrow Barrage','Fourteen arrows into the nearest enemies']],ATKI=['⚔️','⚔️','⚔️'],SLMI=['💥','☄️','🌧️'],DSHI=['💨','✨','🥾'],
-    SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+1.5% crit chance, 2% faster cooldowns each']],
+    SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+3 evasion (dodge) and +1.5% crit chance each'],['Dexterity','+4 accuracy and 2% faster cooldowns each']],
     KDEFS=[[['⚔️','Slash',r=>'Damage '+(100+12*(r-1))+'% · reach '+(3.3+.2*(r-1)).toFixed(1)+' m'],['💥','Slam',r=>'Damage '+(100+30*(r-1))+'% · radius '+(5.5+.4*(r-1)).toFixed(1)+' m'],['💨','Dash',r=>'Cooldown '+(3.5-.3*(r-1)).toFixed(1)+' s · distance '+(7+.6*(r-1)).toFixed(1)+' m']],
     [['⚔️','Arcane Bolt',r=>'Damage '+(100+12*(r-1))+'% · range '+(10+.5*(r-1)).toFixed(1)+' m'],['☄️','Meteor',r=>'Damage '+(100+30*(r-1))+'% · blast '+(4.2+.3*(r-1)).toFixed(1)+' m · falls on the nearest enemy'],['✨','Blink',r=>'Cooldown '+(5-.3*(r-1)).toFixed(1)+' s · distance '+(8+.6*(r-1)).toFixed(1)+' m']],
     [['⚔️','Quick Shot',r=>'Damage '+(100+12*(r-1))+'% · range '+(13+.5*(r-1)).toFixed(1)+' m'],['🌧️','Arrow Volley',r=>'Three arrows, each '+(100+30*(r-1))+'% damage'],['🥾','Evade',r=>'Cooldown '+(4-.3*(r-1)).toFixed(1)+' s · rolls back '+(7+.6*(r-1)).toFixed(1)+' m']]],KDEF=()=>KDEFS[RPG.c];
@@ -4389,10 +4389,10 @@ const MOB=(()=>{
   function spend(n){if(COIN<n){toast('','You need '+coinStr(n)+' for that',true);return false}COIN-=n;rpgSave();rpgDraw();shopDraw();return true}
   let SEL=null;   // (the item picked in the Hero window: {k:'e' (worn) or 'b' (bag), i})
   const rpgKey=u=>'myworld.rpg.'+(u&&u.id?u.id:'guest');let rpgUser=null;
-  const rpgOut=()=>[RPG.l,RPG.xp,...RPG.s,...RPG.k,RPG.c+3*(RPG.kb-1),...gFlat()];   // (the burst's rank rides in the class number: class + 3 x (rank - 1), so older saves still load)
+  const rpgOut=()=>[RPG.l,RPG.xp,...RPG.s.slice(0,3),...RPG.k,RPG.c+3*(RPG.kb-1)+15*RPG.s[3],...gFlat()];   // (the burst's rank and the dexterity points ride in the class number: class + 3 x (rank - 1) + 15 x dexterity, so older saves still load)
   function rpgSet(a){const n=x=>Math.max(0,Math.floor(+x)||0);if(!Array.isArray(a)||a.length<8)return false;
     const l=Math.min(MAXL,Math.max(1,n(a[0]))),s=[n(a[2]),n(a[3]),n(a[4])],k=[1,2,3].map(i=>Math.min(5,Math.max(1,n(a[4+i])||1)));
-    const c8=Math.max(0,Math.floor(+a[8])||0),kb=Math.min(5,1+Math.floor(c8/3));if(sum(s)>3*(l-1)||sum(k)-3+kb-1>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
+    const c9=Math.max(0,Math.floor(+a[8])||0),dx=Math.min(999,Math.floor(c9/15)),c8=c9%15,kb=Math.min(5,1+Math.floor(c8/3));s.push(dx);if(sum(s)>3*(l-1)||sum(k)-3+kb-1>l-1)return false;                                  // (more points spent than a level can have earned: ignore it)
     RPG.l=l;RPG.xp=Math.min(n(a[1]),need(l)-1);RPG.s=s;RPG.k=k;RPG.c=c8%3;RPG.kb=kb;gLoad(a);return true}
   function rpgSave(){try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}if(typeof touchState==='function')touchState(false)}
   function gearEnsure(){const w=INV.eq[0];if(!w||ic(w)===RPG.c)return;   // (everyone always holds a weapon for their class: the best one in the bag, or else a plain starter one)
@@ -4409,8 +4409,8 @@ const MOB=(()=>{
     $('rpsk').innerHTML=KDEF().map((d,i)=>'<div class="rpr"><div class="rpn">'+d[0]+' '+d[1]+' <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.k[i])+'○'.repeat(5-RPG.k[i])+'</span><small>'+d[2](RPG.k[i])+'</small></div><button type="button" class="rpb" data-k="'+i+'" aria-label="Improve '+d[1]+'"'+(kp>0&&RPG.k[i]<5?'':' disabled')+'>+</button></div>').join('')+'<div class="rpr"><div class="rpn">'+BRST[RPG.c][0]+' '+BRST[RPG.c][1]+' · burst <span style="letter-spacing:2px;color:var(--ink-soft)">'+'●'.repeat(RPG.kb)+'○'.repeat(5-RPG.kb)+'</span><small>'+BRST[RPG.c][2]+' · damage '+(100+30*(RPG.kb-1))+'%. It charges as you fight, then press 🌟R.</small></div><button type="button" class="rpb" data-k="3" aria-label="Improve '+BRST[RPG.c][1]+'"'+(kp>0&&RPG.kb<5?'':' disabled')+'>+</button></div>';$('rpreset').textContent='Reset points'+(resetCost()?' · '+coinStr(resetCost()):'');sumDraw();tabDraw()}
   function tabDraw(){$('rpts').classList.toggle('on',RPT==='s');$('rptk').classList.toggle('on',RPT==='k');document.querySelectorAll('#rptabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===RPT))}
   $('rptabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){RPT=b.dataset.tab;tabDraw()}});
-  function sumDraw(){const ar=armed(),mul=dmgMul(0),bs=ar?[10,14]:[5,7],reach=!ar?2.3:RPG.c===0?3.3+.2*(RPG.k[0]-1):RNG(),cdr=Math.round((1-Math.max(.6,1-.02*RPG.s[2])*(1-Math.min(.4,bonSum(3)/100)))*100);
-    $('rpsum').innerHTML=[['❤️','Max HP',maxHp()],['⚔️',ar?'Attack':'Punch',Math.round(bs[0]*mul)+'–'+Math.round(bs[1]*mul)],['🛡️','Defense',Math.round(defAll())+' ('+Math.round(defRed()*100)+'%)'],['🎯','Crit chance',Math.round(critP()*100)+'%'],['⚡','Atk speed',cdOf('a').toFixed(2)+' s'],['📏','Reach',reach.toFixed(1)+' m'],['💥','Dmg bonus','+'+Math.round((mul-1)*100)+'%'],['⏱️','Cooldowns','−'+cdr+'%']].map(r=>'<div>'+r[0]+' '+r[1]+'<span>'+r[2]+'</span></div>').join('')}
+  function sumDraw(){const ar=armed(),mul=dmgMul(0),bs=ar?[10,14]:[5,7],reach=!ar?2.3:RPG.c===0?3.3+.2*(RPG.k[0]-1):RNG(),cdr=Math.round((1-Math.max(.6,1-.02*RPG.s[3])*(1-Math.min(.4,bonSum(3)/100)))*100);
+    $('rpsum').innerHTML=[['❤️','Max HP',maxHp()],['⚔️',ar?'Attack':'Punch',Math.round(bs[0]*mul)+'–'+Math.round(bs[1]*mul)],['🛡️','Defense',Math.round(defAll())+' ('+Math.round(defRed()*100)+'%)'],['🎯','Crit chance',Math.round(critP()*100)+'%'],['👁️','Accuracy',accP()],['💨','Evasion',evaP()],['⚡','Atk speed',cdOf('a').toFixed(2)+' s'],['📏','Reach',reach.toFixed(1)+' m'],['💥','Dmg bonus','+'+Math.round((mul-1)*100)+'%'],['⏱️','Cooldowns','−'+cdr+'%']].map(r=>'<div>'+r[0]+' '+r[1]+'<span>'+r[2]+'</span></div>').join('')}
   function gearDraw(){const tile=(it,k,i,sl)=>'<button type="button" class="rpt'+(it?'':' empty')+(SEL&&SEL.k===k&&SEL.i===i?' sel':'')+'" data-'+k+'="'+i+'" style="'+(it?'border-color:'+RAR[it[1]].c:'')+'" aria-label="'+(it?RAR[it[1]].n+' '+gName(it):SLN[i]+' (empty)')+'">'+(it?gIcon(it):SLI[sl])+(it&&rf(it)?'<b class="rfl">+'+rf(it)+'</b>':'')+(it&&k==='e'?'<small>'+SLN[i]+'</small>':'')+'</button>';
     $('rpeqs').innerHTML=INV.eq.map((it,i)=>tile(it,'e',i,i)).join('');$('rpbag').innerHTML=INV.bag.map((it,i)=>tile(it,'b',i,it[0])).join('')+'<span class="rpt empty"></span>'.repeat(Math.max(0,BAGMAX-INV.bag.length));$('rpcoin').textContent='Coins  '+coinStr(COIN);
     $('rpbg').textContent=INV.bag.length+' / '+BAGMAX;
@@ -4444,13 +4444,13 @@ const MOB=(()=>{
   rpgEl.addEventListener('click',e=>{const cb=e.target.closest('button[data-c]');if(cb){RPG.c=+cb.dataset.c;gearEnsure();rpgApply();rpgSave();return}   // (the class can be changed any time, for free)
     const b=e.target.closest('button[data-s],button[data-k]');if(!b||b.disabled)return;
     if(b.dataset.s!=null&&spLeft()>0)RPG.s[+b.dataset.s]++;else if(b.dataset.k==='3'&&kpLeft()>0&&RPG.kb<5)RPG.kb++;else if(b.dataset.k!=null&&b.dataset.k!=='3'&&kpLeft()>0&&RPG.k[+b.dataset.k]<5)RPG.k[+b.dataset.k]++;else return;rpgApply();rpgSave()});
-  $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3+RPG.kb-1<=0)return;const rc=resetCost();if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.'+(rc?' It costs '+coinStr(rc)+'.':''),ok:'Reset',cancel:'Keep'})){if(rc&&!spend(rc))return;RPG.s=[0,0,0];RPG.k=[1,1,1];RPG.kb=1;rpgApply();rpgSave()}};
+  $('rpreset').onclick=async()=>{if(sum(RPG.s)+sum(RPG.k)-3+RPG.kb-1<=0)return;const rc=resetCost();if(await ask({title:'Reset your points?',text:'You get all your stat and skill points back to spend again. Your level stays.'+(rc?' It costs '+coinStr(rc)+'.':''),ok:'Reset',cancel:'Keep'})){if(rc&&!spend(rc))return;RPG.s=[0,0,0,0];RPG.k=[1,1,1];RPG.kb=1;rpgApply();rpgSave()}};
   const XPGAP=10,XPSTEP=.1,XPMIN=.1,xpMul=(pl,ml)=>pl-ml>XPGAP?Math.max(XPMIN,1-XPSTEP*(pl-ml-XPGAP)):1;   // (a monster more than 10 levels below you gives less: 10% less for each level beyond that, never under 10%)
   function gainXp(n,ml){const f=ml>0?xpMul(RPG.l,ml):1;n=Math.max(1,Math.round(n*f));if(RPG.l>=MAXL)return;RPG.xp+=n;numAt(P.position.x,P.position.y+2.9,P.position.z,'+'+n+' XP'+(f<1?' (low)':''),'xp');let up=0;
     while(RPG.l<MAXL&&RPG.xp>=need(RPG.l)){RPG.xp-=need(RPG.l);RPG.l++;up++}
     if(up){if(RPG.l>=MAXL)RPG.xp=0;HP.max=maxHp();HP.v=HP.max;toast('',RPG.l>=MAXL?'MAX LEVEL! Level '+RPG.l+': your aura awakens ✨':'Level up! You are now level '+RPG.l+' 🎉  +'+3*up+' stat points, +'+up+' skill point'+(up>1?'s':''),true);ringFx(P.position.x,P.position.z,4,'#ffd24a',700);sfx('lvl')}
     rpgApply();rpgSave()}
-  rpgHook={addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
+  rpgHook={addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility','Dexterity'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
       if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3+RPG.kb-1>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1];RPG.kb=1}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],give:(sl,r,c)=>gearGive(sl,r,c),
       refine(sl,n){const a=(sl<0?INV.eq:[INV.eq[sl]]).filter(Boolean);if(!a.length){toast('','Nothing worn there to upgrade',true);return}a.forEach(it=>{it[2]=ic(it)+3*n});rpgApply();rpgSave();toast('','Refined '+a.length+' worn item'+(a.length>1?'s':'')+' to +'+n,true)},   // (GM: set the refine level of what you wear)
       fullSet(r){for(let sl=0;sl<4;sl++){const it=[sl,r,sl===0?RPG.c:0,gMax(sl,r)],b=rollBon(r,true,sl),old=INV.eq[sl];if(b)it[4]=b;INV.eq[sl]=it;if(old&&INV.bag.length<BAGMAX)INV.bag.push(old)}rpgApply();rpgSave();toast('','You are now wearing a full '+RAR[r].n+' set ✨',true)},   // (GM: a full set of one rarity, at the best roll, worn at once)
@@ -4560,7 +4560,9 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function kill(m){m.st=3;m.hp=0;m.deadAt=performance.now();if(TY[m.ty].boss)bossDead[m.ty]=m.deadAt}
   function vanish(m){m.st=3;m.deadAt=performance.now()}   // (gone without being beaten: no experience for it)
   // ---- hits on a slime (anyone's): the host decides; everyone else shows it at once and tells the host ----
-  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;m.mine=true;
+  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;
+    if(!GOD){const A=accP(),E=10+4*TY[m.ty].lv;if(Math.random()>A/(A+.2*E)){numAt(m.x,m.y+1.3*TY[m.ty].sc,m.z,'Miss','');return}}   // (accuracy against the monster's evasion: about 9 in 10 at the same level, more with dexterity)
+    m.mine=true;
     if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+5*(1+bonSum(4)/100));   // (hits charge the burst; a burst's own hits don't)
     const ny=m.y+1.3*TY[m.ty].sc;numAt(m.x,ny,m.z,(crit?'💥 ':'')+d,crit?'crit':'');m.flash=1;sfx('hit');
     if(host){m.hp-=d;if(!TY[m.ty].boss){m.x+=dx*.8;m.z+=dz*.8}m.tp='';if(m.hp<=0)kill(m)}
@@ -4584,9 +4586,9 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function mv(m,dx,dz,st){const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;const nx=m.x+dx*st,nz=m.z+dz*st,ok=(x,z)=>walkable(x,z)&&H(x,z)>.6&&!crossWall(m.x,m.z,x,z);
     if(ok(nx,nz)){m.x=nx;m.z=nz}else if(ok(nx,m.z))m.x=nx;else if(ok(m.x,nz))m.z=nz;m.ry=Math.atan2(dx,dz)}
   function strike(m,ps){const T=TY[m.ty],p=ps.find(q=>q.key===m.tp);if(!p||Math.hypot(p.x-m.x,p.z-m.z)>1.7+.5*T.sc+1)return;const d=T.dmg+rnd(0,3);
-    if(p.me)hurtMe(d,m.x,m.z);else NET.send('d',{to:p.key,d,x:+m.x.toFixed(1),z:+m.z.toFixed(1)})}
+    const ac=30+5*T.lv;if(p.me)hurtMe(d,m.x,m.z,ac);else NET.send('d',{to:p.key,d,a:ac,x:+m.x.toFixed(1),z:+m.z.toFixed(1)})}
   function aoe(x,z,r,d0,ps,L){for(const p of ps)if(Math.hypot(p.x-x,p.z-z)<r){const d=L?Math.round(d0*(1+Math.min(1,.18*Math.max(0,L-(p.lv||99))))):d0;   // (a boss hits someone far below its level up to twice as hard)
-      if(p.me)hurtMe(d,x,z);else NET.send('d',{to:p.key,d,x:+x.toFixed(1),z:+z.toFixed(1)})}}
+      const ac=L?30+5*L:0;if(p.me)hurtMe(d,x,z,ac);else NET.send('d',{to:p.key,d,a:ac,x:+x.toFixed(1),z:+z.toFixed(1)})}}
   function bossStep(m,dt,ps){const T=TY[m.ty],LR=m.zone===ZONES.length?LAIR:GLAIR,mini=T.gob?3:0,mr=1.6+.6*T.sc;m.cd-=dt;m.lc-=dt;m.mc=(m.mc||0)-dt;   // (mr: how far its plain melee blow reaches)
     // the plain blow comes on its own clock, so it still lands while the boss is winding up a smash or a leap: anyone close is hit every second or so, whatever else it is doing
     if(m.mw>0){m.mw-=dt;if(m.mw<=0){aoe(m.x,m.z,mr+.6,Math.round(T.dmg*.5)+rnd(0,5),ps,T.lv);m.mc=.9;m.flash=1}}
@@ -4620,14 +4622,16 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
       if(hp<m.hp){numAt(m.x,m.y+1.3*TY[m.ty].sc,m.z,String(Math.round(m.hp-hp)));m.flash=1;m.hp=hp}else if(now-m.pt>700)m.hp=hp}
     list.forEach(m=>{if(!seen.has(m.id)){if(!m.dead)burst(m.x,m.y,m.z,TY[m.ty].col);dropMon(m)}})});
   // ---- me: hit points, the three moves ----
-  function hurtMe(d,fx,fz){if(GOD||HP.inv>0||HP.v<=0)return;d=Math.min(400,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;   // (only a boss hits for more than 40 before defence; the cap is just there to bound a made-up message)
+  function hurtMe(d,fx,fz,ac){if(GOD||HP.inv>0||HP.v<=0)return;
+    if(ac>0){const E=evaP();if(Math.random()>ac/(ac+.2*E)){numAt(P.position.x,P.position.y+2.4,P.position.z,'Dodge','me');return}}   // (evasion: the attacker's accuracy against yours; a plain monster hits about 19 in 20 at its own level, a nimble character far fewer)
+    d=Math.min(400,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;   // (only a boss hits for more than 40 before defence; the cap is just there to bound a made-up message)
     HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3*(1+bonSum(4)/100));sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
     document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),220);
     const dx=P.position.x-fx,dz=P.position.z-fz,l=Math.hypot(dx,dz)||1,nx=P.position.x+dx/l*1.1,nz=P.position.z+dz/l*1.1;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}
     HP.inv=.5;if(HP.v<=0)faint()}
   function faint(){toast('','You fainted… you wake up back at the hub 😵',true);if(sitting)standUp();if(riding)toggleBike();JUMP.y=JUMP.v=0;ONSKY=false;ASC.m=0;
     const hx=HUB[0],hz=HUB[1]+4;P.position.set(hx,groundY(hx,hz),hz);DOG.reset=1;HP.v=HP.max;HP.inv=3}
-  NET.on('d',d=>{if(d&&d.to===NET.key()&&NET.key())hurtMe(+d.d||1,+d.x||P.position.x,+d.z||P.position.z)});
+  NET.on('d',d=>{if(d&&d.to===NET.key()&&NET.key())hurtMe(+d.d||1,+d.x||P.position.x,+d.z||P.position.z,Math.min(1000,Math.max(0,+d.a||0)))});
   NET.on('fx',d=>{if(!d||typeof d.k!=='string')return;const R=NET.peers().find(r=>r.key===d.k);if(!R)return;
     if(!DUR[d.t])return;const c=d.c===1||d.c===2||(d.c===3&&d.t==='a')?d.c:0;R.fxa={k:d.t,t0:performance.now(),c};
     if(c===3){setTimeout(()=>ringFx(R.x+Math.sin(R.r)*1.3,R.z+Math.cos(R.r)*1.3,.9,'#ffffff',200),150);return}
@@ -4793,7 +4797,7 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   const ARR=[],ASP=24,ALIFE=.9;
   function arrowFx(x,z,dx,dz){const y=groundY(x,z)+1.25;projFx(x+dx*.8,y,z+dz*.8,x+dx*(ASP*ALIFE),y-.15,z+dz*(ASP*ALIFE),ASP,'a')}
   function arrowsTick(dt,ps){for(let i=ARR.length-1;i>=0;i--){const a=ARR[i];a.x+=a.dx*ASP*dt;a.z+=a.dz*ASP*dt;a.t+=dt;let hit=false;
-      for(const p of ps){if(Math.hypot(p.x-a.x,p.z-a.z)<.95){hit=true;const d=a.d;if(p.me)hurtMe(d,a.x-a.dx*3,a.z-a.dz*3);else NET.send('d',{to:p.key,d,x:+(a.x-a.dx*3).toFixed(1),z:+(a.z-a.dz*3).toFixed(1)});break}}
+      for(const p of ps){if(Math.hypot(p.x-a.x,p.z-a.z)<.95){hit=true;const d=a.d;if(p.me)hurtMe(d,a.x-a.dx*3,a.z-a.dz*3,150);else NET.send('d',{to:p.key,d,a:150,x:+(a.x-a.dx*3).toFixed(1),z:+(a.z-a.dz*3).toFixed(1)});break}}
       if(hit||a.t>ALIFE)ARR.splice(i,1)}}
   NET.on('ar',d=>{if(host||!d)return;const x=+d.x,z=+d.z,dx=+d.dx,dz=+d.dz;if(!(Math.abs(x)<500&&Math.abs(z)<500&&Math.abs(dx)<=1.01&&Math.abs(dz)<=1.01))return;arrowFx(x,z,dx,dz)});
   function archerStep(m,dt,ps){const T=TY[6],Z=zoneOf(m);m.cd-=dt;
