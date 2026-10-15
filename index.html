@@ -4589,7 +4589,7 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function strike(m,ps){const T=TY[m.ty],p=ps.find(q=>q.key===m.tp);if(!p||Math.hypot(p.x-m.x,p.z-m.z)>1.7+.5*T.sc+1)return;const d=T.dmg+rnd(0,3);
     const ac=30+5*T.lv;if(p.me)hurtMe(d,m.x,m.z,ac);else NET.send('d',{to:p.key,d,a:ac,x:+m.x.toFixed(1),z:+m.z.toFixed(1)})}
   function aoe(x,z,r,d0,ps,L){for(const p of ps)if(Math.hypot(p.x-x,p.z-z)<r){const d=L?Math.round(d0*(1+Math.min(1,.18*Math.max(0,L-(p.lv||99))))):d0;   // (a boss hits someone far below its level up to twice as hard)
-      const ac=L?30+5*L:0;if(p.me)hurtMe(d,x,z,ac);else NET.send('d',{to:p.key,d,a:ac,x:+x.toFixed(1),z:+z.toFixed(1)})}}
+      const ac=L?100+15*L:0;if(p.me)hurtMe(d,x,z,ac);else NET.send('d',{to:p.key,d,a:ac,x:+x.toFixed(1),z:+z.toFixed(1)})}}
   function bossStep(m,dt,ps){const T=TY[m.ty],LR=m.zone===ZONES.length?LAIR:GLAIR,mini=T.gob?3:0,mr=1.6+.6*T.sc;m.cd-=dt;m.lc-=dt;m.mc=(m.mc||0)-dt;   // (mr: how far its plain melee blow reaches)
     // the plain blow comes on its own clock, so it still lands while the boss is winding up a smash or a leap: anyone close is hit every second or so, whatever else it is doing
     if(m.mw>0){m.mw-=dt;if(m.mw<=0){aoe(m.x,m.z,mr+.6,Math.round(T.dmg*.5)+rnd(0,5),ps,T.lv);m.mc=.9;m.flash=1}}
