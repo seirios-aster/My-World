@@ -4998,7 +4998,7 @@ const islHI=(I,dx,dz)=>I===SKI?islH(dx,dz):I.hf(dx,dz),
   islAt=(x,z)=>{let b=SKIS[0],bd=1e9;for(const I of SKIS){const d=Math.hypot(x-I.x,z-I.z)-I.r;if(d<bd){bd=d;b=I}}return b},
   islTop=(x,z)=>{const I=islAt(x,z);return I.y+islHI(I,x-I.x,z-I.z)},
   islOK=(x,z)=>SKIS.some(I=>{const dx=x-I.x,dz=z-I.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-1.6});
-const GARFX={orbit:[],spin:[],aur:[],flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
+const GARFX={clouds:[],orbit:[],spin:[],aur:[],flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
 // a waterfall pouring over an island's edge: a streaky see-through sheet with mist at the lip and at the bottom
 const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y=Math.random()*h,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,3+Math.random()*4,l)}},1,3);
 function mkFall(I,ang,w,len){const R=islR(ang,I)*.96,x=I.x+Math.cos(ang)*R,z=I.z+Math.sin(ang)*R,top=islTop(x,z)-.2,
@@ -5166,8 +5166,16 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
     MB=new THREE.Color('#efe9d8'),MR=new THREE.Color('#d8cfb4');
   I.tint=(C,x,z)=>{const d=Math.hypot(x,z),k=1-sstep(13.4,14.6,d);if(k>0)C.lerp(MB,k);const l=Math.abs(z);if(d>13&&l<1.7)C.lerp(MR,.85*(1-sstep(1.1,1.7,l)))};
   islBody(I,['#86d9a6','#63c28e','#8a6a44','#a69bb6','#5b5379']);
-  // golden crystals hanging underneath, and the planets
+  // golden crystals hanging underneath, puffy clouds, and the planets
   {const gc=new THREE.MeshBasicMaterial({color:'#ffe2a0'});for(let i=0;i<8;i++){const a=i*2.1+.4,r=4+(i%3)*6,c=at(new THREE.Mesh(new THREE.ConeGeometry(.9+(i%2)*.5,3.8,5),gc),X(Math.cos(a)*r),I.y-11-(i%4)*4,Z(Math.sin(a)*r));c.rotation.x=Math.PI;if(i%2===0)GARFX.flames.push(glow('rgba(255,220,140,.7)',5,c.position.x,c.position.y,c.position.z))}
+    // clouds under the island: puffy shapes with flat, shaded bottoms, tinted by the time of day. Only drawn while you are on the ground (up on the islands they would hide the view)
+    {const CT=[0,1,2].map(()=>canvasTex(256,128,(g,w,h)=>{const base=h*.76,puff=(x,y,r)=>{const gr=g.createRadialGradient(x,y-r*.3,r*.1,x,y,r);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.65,'rgba(244,247,255,.97)');gr.addColorStop(1,'rgba(228,235,250,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,6.283);g.fill()};
+        for(let i=0;i<11;i++){const u=i/10,edge=Math.max(.5,1-Math.abs(u-.5)*1.5),r=(20+rg()*14)*edge;puff(22+u*(w-44)+(rg()-.5)*8,base-r*.55,r)}
+        for(let i=0;i<5;i++){const u=.2+i*.15+(rg()-.5)*.05,r=(20+rg()*14)*(1-Math.abs(u-.5)*.9);puff(u*w,base-r*.55-20-rg()*12,r)}
+        g.globalCompositeOperation='source-atop';const sh=g.createLinearGradient(0,base-34,0,base+4);sh.addColorStop(0,'rgba(150,165,200,0)');sh.addColorStop(1,'rgba(150,165,200,.6)');g.fillStyle=sh;g.fillRect(0,0,w,h);
+        g.globalCompositeOperation='destination-out';const fl=g.createLinearGradient(0,base-2,0,base+10);fl.addColorStop(0,'rgba(0,0,0,0)');fl.addColorStop(1,'rgba(0,0,0,1)');g.fillStyle=fl;g.fillRect(0,base-2,w,h)}));
+      for(let i=0;i<16;i++){const a=i/16*6.283+rg()*.3,r=30+rg()*28,wd=34+rg()*20,sp=new THREE.Sprite(new THREE.SpriteMaterial({map:CT[i%3],transparent:true,depthWrite:false,opacity:.92}));sp.scale.set(wd,wd*.5,1);
+        sp.position.set(X(Math.cos(a)*r),I.y-8-rg()*12,Z(Math.sin(a)*r));GARG.add(sp);GARFX.clouds.push(sp);GARFX.floaters.push({m:sp,y:sp.position.y,p:i*1.9})}}
     // the planets: they wheel round the sun on faint orbits, each turning on its own
     {const band=(c1,c2,n)=>canvasTex(128,64,(g,w,h)=>{for(let y=0;y<h;y++){g.fillStyle=(Math.floor(y/h*n*2)%2)?c1:c2;g.fillRect(0,y,w,1)}}),
       PL=[['Mercury',1.3,'#a39a94',null,40,.5],['Venus',1.9,'#e8c98a',null,46,.42],['Earth',2.1,'#3f7fd8',null,53,.36],['Mars',1.7,'#c4553a',null,60,.3],['Jupiter',4.6,'#d9a773',band('#d9a773','#b9825a',7),69,.22],['Saturn',3.8,'#e3cf9b',band('#e3cf9b','#cdb27a',5),79,.17],['Uranus',2.7,'#8fe0e6',null,89,.13],['Neptune',2.6,'#4a63e0',null,98,.1]];
@@ -5270,6 +5278,7 @@ async function skyKnock(){if(SKYG.busy)return;SKYG.busy=true;
   finally{SKYG.busy=false}}
 function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(px-BEAM.x,pz-BEAM.z);
   if(ONSKY&&!ASC.m&&!SKIS.some(I=>Math.hypot(px-I.x,pz-I.z)<I.r*1.3))ONSKY=false;   // (teleported away from up there)
+  {const k=nt,cr=1-.82*k,cg=1-.8*k,cb=1-.62*k;GARFX.clouds.forEach(c=>{c.visible=!ONSKY;c.material.color.setRGB(cr,cg,cb)})}   // (the Sanctum's clouds only show from the ground, tinted darker at night, so they never hide the view from up on the islands)
   const lv=MOB.RPG.l>=99||SKYG.st===3,alive=MOB.HP.v>0,now=performance.now(),PR=4.6;   // (PR: the radius of the stone circle)
   if(!ASC.m&&alive&&!open){
     if(!ONSKY){if(near>PR+.8)ASC.armedG=true;   // (after a ride down you have to step off the circle before it will take you up again)
