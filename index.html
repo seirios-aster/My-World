@@ -3403,8 +3403,8 @@ const SUNDIR=new THREE.Vector3(0,1,0),MOONDIR=new THREE.Vector3(0,-1,0);
 let SUNSW=1;const _fw=new THREE.Vector3();
 const faceCam=(g,d,k)=>{g.children[0].quaternion.copy(cam.quaternion);g.scale.setScalar(k*Math.max(_fw.dot(d),.25))};
 // the draw distance, the camera's near plane and the size of the sea grow with VIS; the sea follows the camera and snaps to its own grid (5 units, doubling as it grows) so its waves never swim
-function sightTick(){const far=Math.max(1000,280*VIS*1.7),near=Math.max(.1,.1*VIS/3);if(Math.abs(far-cam.far)>8||Math.abs(near-cam.near)>.02){cam.far=far;cam.near=near;cam.updateProjectionMatrix()}
-  const ws=VIS<2?1:VIS<4?2:VIS<8?4:VIS<16?8:16,g=5*ws;water.scale.set(ws,1,ws);water.position.x=Math.round(cam.position.x/g)*g;water.position.z=Math.round(cam.position.z/g)*g}
+function sightTick(){const far=Math.max(1000,280*VIS*1.7),near=Math.max(.1,.1*VIS/3);if(Math.abs(far-cam.far)>8||Math.abs(near-cam.near)>.02||(VIS<=1&&cam.near!==.1)){cam.far=far;cam.near=near;cam.updateProjectionMatrix()}
+  const ws=VIS<=1?1:VIS<=2?2:VIS<=4?4:VIS<=8?8:16,g=5*ws;water.scale.set(ws,1,ws);water.position.x=Math.round(cam.position.x/g)*g;water.position.z=Math.round(cam.position.z/g)*g}
 function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=hzDip();HZE.value=-dip;HZY.value=cam.position.y-R0*dip}
 /* ---- shooting stars + meteor showers: a small pool of glowing point-trails in the night sky ----
    Every device works out the SAME streaks from the real clock (nothing is sent over the network), so players together see the same ones at the same moments.
@@ -5021,9 +5021,12 @@ const islHI=(I,dx,dz)=>I===SKI?islH(dx,dz):I.hf(dx,dz),
   islOK=(x,z)=>SKIS.some(I=>{const dx=x-I.x,dz=z-I.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-1.6});
 const GARFX={pq:[],clouds:[],orbit:[],spin:[],aur:[],flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
 // a waterfall pouring over an island's edge: a streaky see-through sheet with mist at the lip and at the bottom
-const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y=Math.random()*h,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,3+Math.random()*4,l)}g.globalCompositeOperation='destination-in';const m=g.createLinearGradient(0,0,w,0);m.addColorStop(0,'rgba(0,0,0,0)');m.addColorStop(.25,'rgba(0,0,0,1)');m.addColorStop(.75,'rgba(0,0,0,1)');m.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=m;g.fillRect(0,0,w,h)},1,3);
+const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y0=Math.random()*h,sw=3+Math.random()*4;for(const o of[-h,0,h]){const y=y0+o,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,sw,l)}}g.globalCompositeOperation='destination-in';const m=g.createLinearGradient(0,0,w,0);m.addColorStop(0,'rgba(0,0,0,0)');m.addColorStop(.25,'rgba(0,0,0,1)');m.addColorStop(.75,'rgba(0,0,0,1)');m.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=m;g.fillRect(0,0,w,h)},1,3);
 function mkFall(I,ang,w,len){const R=islR(ang,I)*.96,x=I.x+Math.cos(ang)*R,z=I.z+Math.sin(ang)*R,top=islTop(x,z)-.2,
-    m=new THREE.Mesh(new THREE.PlaneGeometry(w,len),new THREE.MeshBasicMaterial({map:fallTex,color:'#dff4ff',transparent:true,opacity:.75,side:THREE.DoubleSide,depthWrite:false,fog:false}));
+    gm=new THREE.PlaneGeometry(w,len,1,10),ps=gm.attributes.position,ca=new Float32Array(ps.count*4);
+  // the lower end thins out to nothing (per-vertex alpha, so it does not scroll with the streaks)
+  for(let i=0;i<ps.count;i++){const v=Math.min(1,(ps.getY(i)/len+.5)/.4);ca.set([1,1,1,v*v*(3-2*v)],i*4)}gm.setAttribute('color',new THREE.BufferAttribute(ca,4));
+  const m=new THREE.Mesh(gm,new THREE.MeshBasicMaterial({map:fallTex,vertexColors:true,color:'#dff4ff',transparent:true,opacity:.75,side:THREE.DoubleSide,depthWrite:false,fog:false}));
   m.position.set(x,top-len/2,z);m.rotation.y=Math.PI/2-ang;GARG.add(m);
   const mist=glowSprite('rgba(230,245,255,.55)',w*3.2);mist.position.set(x+Math.cos(ang)*.6,top-len*.55,z+Math.sin(ang)*.6);GARG.add(mist);
   const lip=glowSprite('rgba(230,245,255,.5)',w*2);lip.position.set(x,top+.2,z);GARG.add(lip)}
@@ -5301,9 +5304,9 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
           float ray=nz(u*46.+t*.35)*.55+nz(u*17.-t*.2)*.45;
           float wave=sin(u*9.+t*.4+nz(u*5.)*3.)*.5+.5;
           float lo=.1+.22*wave;
-          float a=ray*smoothstep(lo,lo+.3,y)*(1.-smoothstep(.5,1.,y))*smoothstep(0.,.2,u)*smoothstep(1.,.8,u);
+          float a=ray*smoothstep(lo,lo+.3,y)*(1.-smoothstep(.5,1.,y))*smoothstep(0.,.2,u)*(1.-smoothstep(.8,1.,u));
           vec3 c=mix(vec3(.2,1.,.55),vec3(.15,.75,.9),smoothstep(.2,.55,y));c=mix(c,vec3(.62,.38,1.),smoothstep(.5,.95,y));
-          gl_FragColor=vec4(c*k,a*k);}`}),
+          gl_FragColor=vec4(c,a*k);}`}),
       au=at(new THREE.Mesh(new THREE.CylinderGeometry(86,86,34,96,1,true,Math.PI*.55,Math.PI*.9),mt),X(0),I.y+8,Z(0));au.renderOrder=2;GARFX.aur.push({u:mt.uniforms})}
   mkFall(I,Math.PI*.5,3,38);mkFall(I,Math.PI*.3,2.2,32);mkFall(I,Math.PI*.7,2.2,32);
   mkParts(I,150,'#ffe9a0',.5,'r',20,true);mkParts(I,100,'#ffd978',.45,'f',22,true)}
