@@ -4327,9 +4327,9 @@ if(/[?&]debug\b/.test(location.search)){const d=document.createElement('pre');d.
 const MOB=(()=>{
   const NET=MP.net,ZONES=[{n:'the misty woods',x:-132,z:78,r:34},{n:'the summit slopes',x:-20,z:-74,r:30},{n:'the middle fields',x:-45,z:12,r:22},{n:'the west meadow',x:-105,z:-40,r:22},{n:'the coast woods',x:-150,z:25,r:22},{n:'the north woods',x:-60,z:-70,r:20},{n:'the far woods',x:-140,z:120,r:22},{n:'Goblin Wilds',x:-25,z:218,r:36,gob:true}],
     CAP=16,   // (never more than this many slimes alive at once, wherever they are)
-    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a',xp:7,lv:2},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0',xp:30,lv:6},{hp:900,dmg:22,sp:2.4,ag:26,sc:3.4,col:'#e2b43c',xp:199,lv:10,boss:true,name:'Slime King',ar:[5.5,6]},
+    TY=[{hp:30,dmg:8,sp:3.1,ag:11,sc:1,col:'#6fd68a',xp:7,lv:2},{hp:90,dmg:15,sp:2.5,ag:14,sc:1.55,col:'#c47be0',xp:30,lv:6},{hp:900,dmg:80,sp:2.4,ag:26,sc:3.4,col:'#e2b43c',xp:199,lv:10,boss:true,name:'Slime King',ar:[5.5,6]},
       {hp:120,dmg:18,sp:3.9,ag:15,sc:1,col:'#7bb661',xp:30,lv:16,gob:1},{hp:420,dmg:30,sp:3,ag:15,sc:1.45,col:'#5d8c46',xp:97,lv:18,gob:2},
-      {hp:1100,dmg:30,sp:3.2,ag:26,sc:2.3,col:'#4a7a38',xp:338,lv:20,boss:true,gob:3,name:'Goblin Lord',ar:[4.4,5]},
+      {hp:1100,dmg:150,sp:3.2,ag:26,sc:2.3,col:'#4a7a38',xp:338,lv:20,boss:true,gob:3,name:'Goblin Lord',ar:[4.4,5]},
       {hp:90,dmg:14,sp:3.2,ag:20,sc:1,col:'#e6e0c8',xp:39,lv:24,skel:1},
       {hp:150,dmg:20,sp:1.9,ag:16,sc:1.05,col:'#7f9d72',xp:24,lv:12,zomb:1}],   // (3: a goblin, 4: a goblin brute, 5: the Goblin Lord, 6: a skeleton archer (not placed yet), 7: a zombie. lv is the monster's level and xp what a kill gives: set so that, at about 3 kills a minute, reaching level 99 takes around 1000 hours)
     list=new Map(),box=$('mon'),hpb=$('hpb'),hpf=hpb.firstElementChild,hpt=hpb.querySelector('b'),fight=$('fight'),btn={a:$('batk'),z:$('bslam'),d:$('bdash'),b:$('bburst')},
@@ -4338,11 +4338,11 @@ const MOB=(()=>{
     slashG=new THREE.RingGeometry(.8,1.9,20,1,-Math.PI*.42,Math.PI*.84).rotateX(-Math.PI/2),ringG=new THREE.RingGeometry(.9,1.1,36).rotateX(-Math.PI/2),pG=new THREE.SphereGeometry(.12,6,5),
     eyeM=new THREE.MeshBasicMaterial({color:'#ffffff'}),pupM=new THREE.MeshBasicMaterial({color:'#1b1b2b'}),
     v3=new THREE.Vector3(),fxs=[],nums=[];
-  let toldWeak=0,GOD=false,simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
+  let GOD=false,simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
   const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],kb:1,c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3)-(RPG.kb-1),
-    maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.3:.12)*(RPG.k[i]-1))*(1+atkB()/100)*(GOD?1000:1),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
+    maxHp=()=>CLS[RPG.c].hp+16*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.3:.12)*(RPG.k[i]-1))*(1+atkB()/100)*(GOD?1000:1),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
     cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])*(1-Math.min(.4,bonSum(3)/100))),RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
     BRSI=['🌪️','🌠','🎯'],BRST=[['🌪️','Blade Storm','Four spinning hits all round you'],['🌠','Starfall','Nine meteors rain around the nearest enemy'],['🎯','Arrow Barrage','Fourteen arrows into the nearest enemies']],ATKI=['⚔️','⚔️','⚔️'],SLMI=['💥','☄️','🌧️'],DSHI=['💨','✨','🥾'],
     SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+1.5% crit chance, 2% faster cooldowns each']],
@@ -4372,7 +4372,7 @@ const MOB=(()=>{
     bonUnpack=(k,r)=>{const n=BCNT[r]||0;if(!k||!n)return null;const o=[],seen={};for(let i=0;i<n;i++){let e=Math.floor(k/Math.pow(512,i))%512,t,p;if(e>=404&&e<=453){t=3;p=(e-403)*2}else if(e>=454&&e<=503){t=4;p=(e-453)*2}else{t=Math.floor(e/101)-1;p=e%101}if(t<0||t>4||p<1||seen[t])continue;seen[t]=1;o.push([t,p])}return o.length?o:null},
     bonSum=t=>{let q=0;for(let i=0;i<4;i++){const e=INV.eq[i];if(!e||!e[4]||(i===0&&ic(e)!==RPG.c))continue;e[4].forEach(([k,p])=>{if(k===t)q+=bonVal(k,e[1],p)})}return q},
     bonTxt=it=>it[4]?it[4].map(([t,p])=>' · +'+bonVal(t,it[1],p)+BT[t][0]+BT[t][1]+(p===100?' ★':'')).join(''):'',
-    atkB=()=>{const w=INV.eq[0];return(w&&ic(w)===RPG.c?ev(w):0)+bonSum(0)},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?ev(INV.eq[i]):0),0)+bonSum(1),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
+    atkB=()=>{const w=INV.eq[0];return(w&&ic(w)===RPG.c?ev(w):0)+bonSum(0)},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?ev(INV.eq[i]):0),0)+bonSum(1),defAll=()=>defT()+1.5*(RPG.l-1),defRed=()=>defAll()/(defAll()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
     gMake=(sl,r,c)=>{const v=Math.max(1,Math.round(GBASE[sl][r]*(.85+.3*Math.random()))),it=[sl,r,sl===0?c:0,v],b=rollBon(r,PERFECT&&IS_GM===true,sl);if(b)it[4]=b;return it},
     gOk=(a,sl)=>{if(!Array.isArray(a)||a.length!==4)return null;const[s,r,c,v0]=a.map(x=>Math.floor(+x)),v=v0%100,k=Math.floor(v0/100);if(!(s>=0&&s<4&&r>=0&&r<4&&c>=0&&c<33&&v>=1))return null;if(sl!=null&&s!==sl)return null;if(s>0&&c%3!==0)return null;const o=[s,r,c,Math.min(v,gMax(s,r))],b=bonUnpack(k,r);if(b)o[4]=b;return o},
     gFlat=()=>{const o=[];for(let i=0;i<4;i++){const e=INV.eq[i];o.push(...(e?[e[0],e[1],e[2],e[3]+100*bonPack(e)]:[-1,0,0,0]))}INV.bag.forEach(b=>o.push(b[0],b[1],b[2],b[3]+100*bonPack(b)));return o},
@@ -4410,7 +4410,7 @@ const MOB=(()=>{
   function tabDraw(){$('rpts').classList.toggle('on',RPT==='s');$('rptk').classList.toggle('on',RPT==='k');document.querySelectorAll('#rptabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===RPT))}
   $('rptabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){RPT=b.dataset.tab;tabDraw()}});
   function sumDraw(){const ar=armed(),mul=dmgMul(0),bs=ar?[10,14]:[5,7],reach=!ar?2.3:RPG.c===0?3.3+.2*(RPG.k[0]-1):RNG(),cdr=Math.round((1-Math.max(.6,1-.02*RPG.s[2])*(1-Math.min(.4,bonSum(3)/100)))*100);
-    $('rpsum').innerHTML=[['❤️','Max HP',maxHp()],['⚔️',ar?'Attack':'Punch',Math.round(bs[0]*mul)+'–'+Math.round(bs[1]*mul)],['🛡️','Defense',defT()+' ('+Math.round(defRed()*100)+'%)'],['🎯','Crit chance',Math.round(critP()*100)+'%'],['⚡','Atk speed',cdOf('a').toFixed(2)+' s'],['📏','Reach',reach.toFixed(1)+' m'],['💥','Dmg bonus','+'+Math.round((mul-1)*100)+'%'],['⏱️','Cooldowns','−'+cdr+'%']].map(r=>'<div>'+r[0]+' '+r[1]+'<span>'+r[2]+'</span></div>').join('')}
+    $('rpsum').innerHTML=[['❤️','Max HP',maxHp()],['⚔️',ar?'Attack':'Punch',Math.round(bs[0]*mul)+'–'+Math.round(bs[1]*mul)],['🛡️','Defense',Math.round(defAll())+' ('+Math.round(defRed()*100)+'%)'],['🎯','Crit chance',Math.round(critP()*100)+'%'],['⚡','Atk speed',cdOf('a').toFixed(2)+' s'],['📏','Reach',reach.toFixed(1)+' m'],['💥','Dmg bonus','+'+Math.round((mul-1)*100)+'%'],['⏱️','Cooldowns','−'+cdr+'%']].map(r=>'<div>'+r[0]+' '+r[1]+'<span>'+r[2]+'</span></div>').join('')}
   function gearDraw(){const tile=(it,k,i,sl)=>'<button type="button" class="rpt'+(it?'':' empty')+(SEL&&SEL.k===k&&SEL.i===i?' sel':'')+'" data-'+k+'="'+i+'" style="'+(it?'border-color:'+RAR[it[1]].c:'')+'" aria-label="'+(it?RAR[it[1]].n+' '+gName(it):SLN[i]+' (empty)')+'">'+(it?gIcon(it):SLI[sl])+(it&&rf(it)?'<b class="rfl">+'+rf(it)+'</b>':'')+(it&&k==='e'?'<small>'+SLN[i]+'</small>':'')+'</button>';
     $('rpeqs').innerHTML=INV.eq.map((it,i)=>tile(it,'e',i,i)).join('');$('rpbag').innerHTML=INV.bag.map((it,i)=>tile(it,'b',i,it[0])).join('')+'<span class="rpt empty"></span>'.repeat(Math.max(0,BAGMAX-INV.bag.length));$('rpcoin').textContent='Coins  '+coinStr(COIN);
     $('rpbg').textContent=INV.bag.length+' / '+BAGMAX;
@@ -4561,14 +4561,12 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function vanish(m){m.st=3;m.deadAt=performance.now()}   // (gone without being beaten: no experience for it)
   // ---- hits on a slime (anyone's): the host decides; everyone else shows it at once and tells the host ----
   function hitMon(m,d,dx,dz,crit){if(m.st===3)return;m.mine=true;
-    {const T=TY[m.ty];if(T.boss){const gap=T.lv-RPG.l,f=gap<=1?1:Math.max(.04,1-.3*(gap-1));   // (a boss shrugs off the blows of someone far below its level: full damage from one level under, then less and less, and next to nothing from 5 under)
-      if(f<1){d=Math.max(1,Math.round(d*f));if(performance.now()>toldWeak){toldWeak=performance.now()+8000;toast('',T.name+' shrugs it off 💢 Come back stronger (Lv '+(T.lv-1)+'+)',true)}}}}
     if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+5*(1+bonSum(4)/100));   // (hits charge the burst; a burst's own hits don't)
     const ny=m.y+1.3*TY[m.ty].sc;numAt(m.x,ny,m.z,(crit?'💥 ':'')+d,crit?'crit':'');m.flash=1;sfx('hit');
-    if(host){m.hp-=d;m.lh=performance.now();if(!TY[m.ty].boss){m.x+=dx*.8;m.z+=dz*.8}m.tp='';if(m.hp<=0)kill(m)}
+    if(host){m.hp-=d;if(!TY[m.ty].boss){m.x+=dx*.8;m.z+=dz*.8}m.tp='';if(m.hp<=0)kill(m)}
     else{m.hp-=d;m.pt=performance.now();NET.send('h',{id:m.id,d,x:P.position.x,z:P.position.z})}}
   NET.on('h',d=>{if(!host||!d||typeof d.id!=='string')return;const m=list.get(d.id),dm=Math.min(40,Math.max(1,Math.round(+d.d)||0));if(!m||m.st===3||!dm)return;
-    const dx=m.x-(+d.x||0),dz=m.z-(+d.z||0),l=Math.hypot(dx,dz)||1,ny=m.y+1.3*TY[m.ty].sc;m.hp-=dm;m.lh=performance.now();if(!TY[m.ty].boss){m.x+=dx/l*.8;m.z+=dz/l*.8}m.flash=1;numAt(m.x,ny,m.z,String(dm));if(m.hp<=0)kill(m)});
+    const dx=m.x-(+d.x||0),dz=m.z-(+d.z||0),l=Math.hypot(dx,dz)||1,ny=m.y+1.3*TY[m.ty].sc;m.hp-=dm;if(!TY[m.ty].boss){m.x+=dx/l*.8;m.z+=dz/l*.8}m.flash=1;numAt(m.x,ny,m.z,String(dm));if(m.hp<=0)kill(m)});
   // ---- the host's side: spawning, chasing, striking ----
   function spawn(zi,ps){const Z=ZONES[zi];for(let k=0;k<14;k++){const a=Math.random()*6.283,r=Z.r*Math.sqrt(Math.random());let x=Z.x+Math.cos(a)*r,z=Z.z+Math.sin(a)*r;
       if(!walkable(x,z)||H(x,z)<.8||SPOTS.some(s=>Math.hypot(s.x-x,s.z-z)<12)||Math.hypot(x-LAIR.x,z-LAIR.z)<LAIR.r+6||Math.hypot(x-GOB.x,z-GOB.z)<GOB.fr+5||ps.some(p=>Math.hypot(p.x-x,p.z-z)<14))continue;
@@ -4590,9 +4588,8 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function aoe(x,z,r,d0,ps,L){for(const p of ps)if(Math.hypot(p.x-x,p.z-z)<r){const d=L?Math.round(d0*(1+Math.min(1,.18*Math.max(0,L-(p.lv||99))))):d0;   // (a boss hits someone far below its level up to twice as hard)
       if(p.me)hurtMe(d,x,z);else NET.send('d',{to:p.key,d,x:+x.toFixed(1),z:+z.toFixed(1)})}}
   function bossStep(m,dt,ps){const T=TY[m.ty],LR=m.zone===ZONES.length?LAIR:GLAIR,mini=T.gob?3:0;m.cd-=dt;m.lc-=dt;
-    if(m.hp>0&&m.hp<m.hpm&&performance.now()-(m.lh||0)>5000)m.hp=Math.min(m.hpm,m.hp+m.hpm*.02*dt);   // (hit and run does not work: left alone for five seconds it mends 2% of its health a second, so you have to keep up the pressure)
     if(m.st===2){m.wind-=dt;if(m.wind<=0){aoe(m.x,m.z,T.ar[0],T.dmg+rnd(0,5),ps,T.lv);m.st=0;m.cd=2}return}   // a smash all round it
-    if(m.st===4){m.wind-=dt;if(m.wind<=0){m.x=m.jx;m.z=m.jz;aoe(m.jx,m.jz,T.ar[1],T.dmg+8+rnd(0,5),ps,T.lv);m.st=0;m.cd=1.5;m.lc=3.5+Math.random()*2.5}return}   // a leap to where you were standing
+    if(m.st===4){m.wind-=dt;if(m.wind<=0){m.x=m.jx;m.z=m.jz;aoe(m.jx,m.jz,T.ar[1],Math.round(T.dmg*1.35)+rnd(0,8),ps,T.lv);m.st=0;m.cd=1.5;m.lc=3.5+Math.random()*2.5}return}   // a leap to where you were standing
     let best=null,bd=1e9;for(const p of ps){if(Math.hypot(p.x-LR.x,p.z-LR.z)>LR.r+8)continue;const d=Math.hypot(p.x-m.x,p.z-m.z);if(d<bd){bd=d;best=p}}   // (it never goes far from its lair)
     if(!best){m.st=0;if(!ps.some(p=>Math.hypot(p.x-m.x,p.z-m.z)<70)){m.hp=m.hpm;m.pp=0}if(Math.hypot(m.x-LR.x,m.z-LR.z)>1.5)mv(m,LR.x-m.x,LR.z-m.z,T.sp*dt);return}   // (nobody about: it heals and goes back to its throne)
     const f=m.hp/m.hpm;if((f<.66&&m.pp<1)||(f<.33&&m.pp<2)){m.pp++;for(let i=0;i<2;i++){const a=Math.random()*6.283,x=m.x+Math.cos(a)*6,z=m.z+Math.sin(a)*6;if(walkable(x,z)){let id;do{id=Math.random().toString(36).slice(2,6)}while(list.has(id));addMon(id,mini,x,z,TY[mini].hp,m.zone).cd=2}}}   // (it calls two little ones at two thirds and at one third of its health)
@@ -4620,7 +4617,8 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
       if(hp<m.hp){numAt(m.x,m.y+1.3*TY[m.ty].sc,m.z,String(Math.round(m.hp-hp)));m.flash=1;m.hp=hp}else if(now-m.pt>700)m.hp=hp}
     list.forEach(m=>{if(!seen.has(m.id)){if(!m.dead)burst(m.x,m.y,m.z,TY[m.ty].col);dropMon(m)}})});
   // ---- me: hit points, the three moves ----
-  function hurtMe(d,fx,fz){if(GOD||HP.inv>0||HP.v<=0)return;d=Math.min(40,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3*(1+bonSum(4)/100));sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
+  function hurtMe(d,fx,fz){if(GOD||HP.inv>0||HP.v<=0)return;d=Math.min(400,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;   // (only a boss hits for more than 40 before defence; the cap is just there to bound a made-up message)
+    HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3*(1+bonSum(4)/100));sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
     document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),220);
     const dx=P.position.x-fx,dz=P.position.z-fz,l=Math.hypot(dx,dz)||1,nx=P.position.x+dx/l*1.1,nz=P.position.z+dz/l*1.1;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}
     HP.inv=.5;if(HP.v<=0)faint()}
