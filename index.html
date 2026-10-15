@@ -3768,7 +3768,7 @@ function toggleBike(){JUMP.y=JUMP.v=0;if(riding){riding=false;myBike.g.visible=f
 
 /* =========================== SITTING: on a bench, a log by a campfire, a deck chair, or right down on the ground (C, the 🪑 button, or the prompt) =========================== */
 let sitting=null;   // null while standing; otherwise the seat: {kind:'ground'|'bench'|'lounge'|'swing', h: seat height, who: whoever is on it}
-const nearSeat=()=>{let b=null,bd=1.7;for(const s of SEATS){if(s.who&&s.who!=='me')continue;const w=s.sw,d=Math.hypot((w?w.x:s.x)-P.position.x,(w?w.z:s.z)-P.position.z);if(d<bd){bd=d;b=s}}return b};   // (the swing's seat moves; a seat someone's on is taken)
+const nearSeat=()=>{let b=null,bd=1.7;for(const s of SEATS){if(s.who&&s.who!=='me')continue;if(s.gm&&IS_GM!==true)continue;const w=s.sw,d=Math.hypot((w?w.x:s.x)-P.position.x,(w?w.z:s.z)-P.position.z);if(d<bd){bd=d;b=s}}return b};   // (the swing's seat moves; a seat someone's on is taken)
 const lean=(p,a,dy)=>{const v=p.pv,b=p.body;b.rotation.set(a,0,0);b.position.set(0,v-v*Math.cos(a)+dy,-v*Math.sin(a))};   // tilt the body about the hips (p.pv: how high they are), so it stays on the seat; p.sy is where the seat meets the body
 function sitPose(p,s,keepArm){const L=p.legs,arm=(x,z)=>p.arms.forEach((a,i)=>{if(keepArm&&i)return;a.rotation.x=x;a.rotation.z=(i?1:-1)*z});
   if(s.kind==='ground'){lean(p,-.12,.03-p.sy);L.forEach((l,i)=>{l.rotation.x=-1.32;l.rotation.z=(i?1:-1)*.07});arm(.62,.36)}   // legs out on the sand, leaning back on the hands
@@ -5206,7 +5206,7 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
     sun.add(new THREE.Mesh(new THREE.CircleGeometry(3.6,48),new THREE.MeshBasicMaterial({color:'#ffd470',transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));
     const rays=new THREE.Group();sun.add(rays);for(let i=0;i<20;i++){const a=i/20*6.283,r=new THREE.Mesh(new B(.2,i%2?1.6:2.6,.05),goldB);r.position.set(Math.cos(a)*5.1,Math.sin(a)*5.1,0);r.rotation.z=a-Math.PI/2;rays.add(r)}
     GARFX.spin.push({m:rays,ax:'z',sp:.09});const gl=lite('rgba(255,215,120,.65)',18);gl.position.set(0,6,-1.3);g.add(gl);GARFX.flames.push(gl);
-    SEATS.push({x:X(0),z:Z(tz)+.15,face:0,h:1.65,kind:'bench',label:'👑 Sit on the Keeper’s throne'})}
+    SEATS.push({x:X(0),z:Z(tz)+.15,face:0,h:1.65,kind:'bench',gm:true,label:'👑 Sit on the Keeper’s throne'})}
   // the throne room: a red carpet down the middle, and a half ring of columns behind the throne under a marble architrave
   for(let z=-1.2;z<11.5;z+=1){const y=gnd(0,z),sl=gnd(0,z+.5)-gnd(0,z-.5),a=at(new THREE.Mesh(new B(2.5,.04,1.15),gold),X(0),y+.04,Z(z)),c=at(new THREE.Mesh(new B(2.05,.06,1.15),M('#a3202f',.85)),X(0),y+.07,Z(z));a.rotation.x=c.rotation.x=-Math.atan(sl)}
   {const n=7,a0=3.578,da=.378;for(let k=0;k<n;k++){const a=a0+k*da,dx=Math.cos(a)*8.6,dz=Math.sin(a)*8.6;greek(X(dx),gnd(dx,dz),Z(dz),I.y+5.6,.85,Math.atan2(-dx,-dz));if(k%2===0){const o=glow('rgba(255,225,150,.6)',5,X(dx),I.y+6.4,Z(dz));GARFX.flames.push(o)}}
