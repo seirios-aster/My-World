@@ -5228,8 +5228,7 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
           const rt=canvasTex(256,4,(c,w,h)=>{for(let x=0;x<w;x++){const t=x/w,al=t<.08?0:t<.2?.25:t<.52?.88:t<.58?.06:t<.88?.66:t<.9?.08:t<.97?.5:0;c.fillStyle='rgba(226,209,165,'+(al*(.8+.2*Math.sin(x*1.9+Math.sin(x*.4)*2)))+')';c.fillRect(x,0,1,h)}}),
             rm=new THREE.Mesh(rg2,new THREE.MeshBasicMaterial({map:rt,transparent:true,side:THREE.DoubleSide,depthWrite:false}));rm.rotation.x=-Math.PI/2;tg.add(rm)}
         if(kind==='uranus'){const ur=new THREE.Mesh(new THREE.RingGeometry(sz*1.55,sz*1.7,96),new THREE.MeshBasicMaterial({color:'#cfeff2',transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));ur.rotation.x=-Math.PI/2;tg.add(ur)}
-        const orb={m:g,cx:I.x,cz:I.z,y:I.y+7,r,sp,ph:i*2.4+.7,tl:2.5+i*.5};GARFX.orbit.push(orb);g.position.set(orb.cx+Math.cos(orb.ph)*r,orb.y,orb.cz+Math.sin(orb.ph)*r);
-        const ring=new THREE.Mesh(new THREE.RingGeometry(r-.12,r+.12,128),new THREE.MeshBasicMaterial({color:'#ffe9b0',transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));ring.rotation.x=-Math.PI/2;ring.position.set(I.x,I.y+7,I.z);GARG.add(ring)})}}
+        const orb={m:g,cx:I.x,cz:I.z,y:I.y+7,r,sp,ph:i*2.4+.7,tl:2.5+i*.5};GARFX.orbit.push(orb);g.position.set(orb.cx+Math.cos(orb.ph)*r,orb.y,orb.cz+Math.sin(orb.ph)*r);})}}
   // gold inlay on the tiers, and paved roads out to the two portals (tinted into the ground)
   [5.6,8.5,11.5,14.5].forEach(r=>{const m=at(new THREE.Mesh(new THREE.RingGeometry(r-.14,r+.14,96),goldB),X(0),gnd(r,0)+.06,Z(0));m.rotation.x=-Math.PI/2});
   // the armillary: three gold rings turning round a small sun, floating over the reflecting pool
