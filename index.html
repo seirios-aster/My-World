@@ -2051,10 +2051,11 @@ CS.forEach(([nm,sd,ld])=>{const cen=[0,0,0];sd.split(';').forEach(s=>{const[n,ra
   if(nm!=='*'){const l=Math.hypot(...cen);LBL.push([nm,cen.map(k=>k/l),1])}});
 ['Sirius','Betelgeuse','Rigel'].forEach(n=>LBL.push([n,STAR[n],0]));
 for(let i=0;i<1100;i++){const z=rnd()*2-1,a=rnd()*6.283,r=Math.sqrt(1-z*z);addStar([r*Math.cos(a),r*Math.sin(a),z],4.2+rnd()*1.7)}
-const starMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},t:{value:0},pr:{value:pixelRatio()},hzy:HZY},transparent:true,depthWrite:false,
+const SKYBLEND={blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor};   // (alpha blending without being 'transparent', so these stay in the early sky pass instead of being drawn after the scene)
+const starMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},t:{value:0},pr:{value:pixelRatio()},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
   vertexShader:`attribute vec3 col;attribute float sz;uniform float pr;varying vec3 vc;varying float vh,ph;void main(){vc=col;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;ph=position.x*.13+position.z*.07;gl_PointSize=sz*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
   fragmentShader:`uniform float op,t,hzy;varying vec3 vc;varying float vh,ph;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float tw=.86+.14*sin(t*2.5+ph);gl_FragColor=vec4(vc*tw,op*smoothstep(hzy,hzy+22.,vh)*(1.-d*1.7));}`});
-const lineMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},hzy:HZY},transparent:true,depthWrite:false,
+const lineMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
   vertexShader:`varying float vh;void main(){vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_Position=projectionMatrix*viewMatrix*w;}`,
   fragmentShader:`uniform float op,hzy;varying float vh;void main(){gl_FragColor=vec4(.42,.6,1.,op*smoothstep(hzy,hzy+22.,vh));}`});
 {const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(STP,3));g.setAttribute('col',new THREE.Float32BufferAttribute(STC,3));g.setAttribute('sz',new THREE.Float32BufferAttribute(STS,1));
@@ -2064,7 +2065,7 @@ const lg=new THREE.Group();sky.add(lg);
 function buildStarTags(){LBL.forEach(([text,v,big])=>{const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');
   g.font=(big?'600 28px':'500 24px')+' Fredoka, Nunito, system-ui, sans-serif';g.textAlign='center';g.fillStyle='#d4e3ff';g.shadowColor='#000';g.shadowBlur=6;g.fillText(text,128,40);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,fog:false,opacity:0}));s.center.set(.5,1.6);s.scale.set(28,7,1);s.position.set(v[0]*R0*.99,v[1]*R0*.99,v[2]*R0*.99);s.frustumCulled=false;lg.add(s)})}
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,...SKYBLEND,depthTest:false,depthWrite:false,fog:false,opacity:0}));s.renderOrder=-4;s.center.set(.5,1.6);s.scale.set(28,7,1);s.position.set(v[0]*R0*.99,v[1]*R0*.99,v[2]*R0*.99);s.frustumCulled=false;lg.add(s)})}
 
 // sun + moon
 function glowSprite(c,s){const k=document.createElement('canvas');k.width=k.height=128;const g=k.getContext('2d'),r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,c);r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,128,128);
@@ -3411,7 +3412,7 @@ const metGeo=new THREE.BufferGeometry();
 metGeo.setAttribute('position',new THREE.BufferAttribute(metPos,3).setUsage(THREE.DynamicDrawUsage));
 metGeo.setAttribute('mc',new THREE.BufferAttribute(metCol,4).setUsage(THREE.DynamicDrawUsage));
 metGeo.setAttribute('sz',new THREE.BufferAttribute(metSz,1).setUsage(THREE.DynamicDrawUsage));
-const metMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{pr:{value:1},hzy:HZY},
+const metMat=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{pr:{value:1},hzy:HZY},
   vertexShader:`attribute vec4 mc;attribute float sz;uniform float pr;varying vec4 vc;varying float vh;void main(){vc=mc;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_PointSize=sz*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
   fragmentShader:`uniform float hzy;varying vec4 vc;varying float vh;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(vc.rgb,vc.a*smoothstep(hzy,hzy+22.,vh)*(1.-d*1.8));}`});
 {const o=new THREE.Points(metGeo,metMat);o.frustumCulled=false;o.renderOrder=-3;metG.add(o)}
