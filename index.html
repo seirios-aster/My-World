@@ -492,7 +492,7 @@ const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTF
 const GOB={n:'Goblin Lair',x:-28,z:258,fr:17},GLAIR={x:GOB.x,z:GOB.z+5,r:GOB.fr+3};   // the goblin lord's lair: a crater at the far end of the south, open to the north
 const wildsW=(x,z)=>sstep(168,192,z)*(1-sstep(266,290,z))*sstep(-92,-72,x)*(1-sstep(28,48,x));   // the Goblin Wilds: 1 over the rough, barren hills in front of the lair   // the goblins' camp: a crater in the far south, open to the north, with a flat floor 16 m across
 const BEAM={x:-68,z:98},SKI={x:-68,z:98,y:118,r:34},inBeam=(x,z,m)=>Math.hypot(x-BEAM.x,z-BEAM.z)<6+m;   // the Sky Garden: a floating island over the middle of the map, and the beam of light on the ground that lifts level 99 players up to it
-const SKIS=[SKI,{id:'w',x:SKI.x-118,z:SKI.z,y:SKI.y+6,r:26,ph:2.1},{id:'e',x:SKI.x+118,z:SKI.z,y:SKI.y+6,r:26,ph:4.0},{id:'s',x:SKI.x,z:SKI.z+132,y:SKI.y+20,r:30,ph:5.3,n:96,tr:26,dp:40}];   // (the Lobby, the two garden islands either side of it, and the Celestial Sanctum: the home of the Keeper, reached only through a garden's south portal)
+const SKIS=[SKI,{id:'w',x:SKI.x-118,z:SKI.z,y:SKI.y+6,r:26,ph:2.1},{id:'e',x:SKI.x+118,z:SKI.z,y:SKI.y+6,r:26,ph:4.0},{id:'s',x:SKI.x,z:SKI.z-132,y:SKI.y+20,r:30,ph:5.3,n:96,tr:26,dp:40}];   // (the Lobby, the two garden islands either side of it, and the Celestial Sanctum: the home of the Keeper, reached only through a garden's north portal)
 let ONSKY=false;const ASC={m:0,t:0,y0:0,y1:0,armed:true,armedG:false,charge:0,told:0,welcomed:false};   // (ONSKY: I am up on the island. ASC: a ride on the beam, 1 up, 2 down)
 const LAIR={n:'the Slime Throne',x:-25,z:75,r:18};   // the boss slime's lair: a flat ring of standing stones in the quiet southern valley, off every trail and well away from the sports complex (built in MOB; no trees grow here)
 const SPOTS=[
@@ -5113,7 +5113,7 @@ function buildSide(I){const W1=I.id==='w',M=(c,r=.9,e,ei)=>new THREE.MeshStandar
     // cherry blossom trees: a dark gnarled trunk, splayed branches and a wide flat crown of pale blossom clumps, with fallen petals underneath. Placed by hand: pairs along the path, a grove behind, a great weeping one over the pond
     {const bark=M('#4a3327',.95),bl=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,1),M('#ffffff',.85,'#ff9ec0',.16),760),pet=new THREE.InstancedMesh(new THREE.CircleGeometry(.13,5),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide}),520),
       bc=['#fff4f8','#ffe3ee','#ffd0e1','#ffc0d6','#f9a9c6'],pcol=['#ffd0e1','#ffc0d6','#fff4f8','#f9a9c6'],q4=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),eu=new THREE.Euler();let bn=0,pn=0;
-      [[11,-6.5,1.05],[11,6.5,1],[5.5,-7,.9],[6,8,1.1],[15,-10,.95],[15,10,1],[-10.5,6,1.5],[-18,-2,1.1],[-17,11,.9],[-8,-14.5,1],[8,-15,1.1],[-6,15,1],[10,16.5,.95],[-21,7,.85],[-1,-10,.9]].forEach(([dx,dz,sc],i)=>{if(!rimOK(dx,dz,2.5))return;
+      [[11,-6.5,1.05],[11,6.5,1],[5.5,-7,.9],[6,8,1.1],[15,-10,.95],[15,10,1],[-10.5,6,1.5],[-18,-2,1.1],[-17,11,.9],[-8,-14.5,1],[8,-15,1.1],[-6,15,1],[2,18,.95],[-21,7,.85],[-1,-10,.9]].forEach(([dx,dz,sc],i)=>{if(!rimOK(dx,dz,2.5))return;
         const y=gnd(dx,dz),lean=(rg()-.5)*.25,th=3.2*sc,TX=X(dx)-Math.sin(lean)*th,TY=y-.1+Math.cos(lean)*th,TZ=Z(dz);
         at(new THREE.Mesh(new Cy(.2*sc,.42*sc,th,7),bark),X(dx)-Math.sin(lean)*th/2,y-.1+Math.cos(lean)*th/2,TZ).rotation.z=lean;
         const nb=4+(i%2),clump=(x,yy,z,s2)=>{if(bn>=760)return;m4.compose(new THREE.Vector3(x,yy,z),q4.identity(),new THREE.Vector3(s2,s2*.62,s2));bl.setMatrixAt(bn,m4);bl.setColorAt(bn,cc.set(bc[Math.floor(rg()*5)]));bn++};
@@ -5141,12 +5141,12 @@ function buildSide(I){const W1=I.id==='w',M=(c,r=.9,e,ei)=>new THREE.MeshStandar
       GARFX.flames.push(glow(i%2?'rgba(255,150,220,.65)':'rgba(130,210,255,.65)',3,X(dx),y+.7,Z(dz)))}
     // willows
     const wt=M('#5a4a78');
-    [[-10,-8,1.1],[-12,9,1],[-3,12,1.2],[9,11,1],[17,3,.95],[15,-11,1],[8,-17,.9],[-9,-17,1],[-19,-9,.9],[-9,16,.9]].forEach(([dx,dz,sc])=>{if(!rimOK(dx,dz,3))return;const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.22*sc,.4*sc,4.2*sc,6),wt),X(dx),y+2*sc,Z(dz));
+    [[-10,-8,1.1],[-12,9,1],[-3,12,1.2],[9,11,1],[17,3,.95],[15,-11,1],[8,-17,.9],[-9,-17,1],[-19,-9,.9],[0,18,.9]].forEach(([dx,dz,sc])=>{if(!rimOK(dx,dz,3))return;const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.22*sc,.4*sc,4.2*sc,6),wt),X(dx),y+2*sc,Z(dz));
       const cr=at(new THREE.Mesh(new THREE.IcosahedronGeometry(2.6*sc,1),M('#7a6ad8',.8,'#5a4ad0',.35)),X(dx),y+4.6*sc,Z(dz));cr.scale.y=.6;
       for(let k=0;k<20;k++){const aa=k/20*6.283+rg()*.3,rr=(1.3+rg()*1.8)*sc,len=(2.4+rg()*2.4)*sc;at(new THREE.Mesh(new Cy(.035,.02,len,4),new THREE.MeshBasicMaterial({color:k%3?'#9fe8ff':'#d9b8ff'})),X(dx)+Math.cos(aa)*rr,y+4.3*sc-len/2,Z(dz)+Math.sin(aa)*rr)}
       GARFX.flames.push(glow('rgba(150,130,255,.5)',9*sc,X(dx),y+4.2*sc,Z(dz)))});
     // glowing mushrooms
-    for(let t=0,n=0;t<200&&n<10;t++){const a=rg()*6.283,r=6+rg()*(I.r-10),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,2)||offPath(dx,dz,2.6)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+1.5||Math.hypot(dx,dz-20)<5)continue;n++;
+    for(let t=0,n=0;t<200&&n<10;t++){const a=rg()*6.283,r=6+rg()*(I.r-10),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,2)||offPath(dx,dz,2.6)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+1.5||Math.hypot(dx,dz+20)<5)continue;n++;
       const y=gnd(dx,dz),h=.7+rg()*1.2,col=n%2?'#7ad0ff':'#ff8ad8';at(new THREE.Mesh(new Cy(.12,.16,h,6),M('#f2eefc')),X(dx),y+h/2,Z(dz));const cap=at(new THREE.Mesh(new THREE.SphereGeometry(.6+rg()*.4,10,6,0,6.283,0,1.6),new THREE.MeshBasicMaterial({color:col})),X(dx),y+h,Z(dz));cap.scale.y=.7;
       GARFX.flames.push(glow(n%2?'rgba(120,200,255,.6)':'rgba(255,130,215,.6)',3.4,X(dx),y+h+.2,Z(dz)))}
     // luminous flowers
@@ -5158,7 +5158,7 @@ function buildSide(I){const W1=I.id==='w',M=(c,r=.9,e,ei)=>new THREE.MeshStandar
   if(W1){const fl=new THREE.InstancedMesh(new THREE.OctahedronGeometry(.17,0),M('#ffffff',.8),420),pc=['#ffffff','#ffb8d1','#ff9fc2','#d9c9ff','#fff2a8'];let n=0;
     for(let t=0;t<1400&&n<420;t++){const a=rg()*6.283,r=5+rg()*(I.r-8),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,1)||offPath(dx,dz,1.6)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+.6)continue;m4.makeTranslation(X(dx),gnd(dx,dz)+.12,Z(dz));fl.setMatrixAt(n,m4);fl.setColorAt(n,cc.set(pc[n%5]));n++}fl.count=n;GARG.add(fl)}}
 buildSide(SKIS[1]);buildSide(SKIS[2]);
-/* ---- the Celestial Sanctum: the home of the Keeper (the GM). It floats high above and beyond the Lobby; the only way in is the south portal of the Blossom Garden or the Starlight Garden ---- */
+/* ---- the Celestial Sanctum: the home of the Keeper (the GM). It floats high above and beyond the Lobby; the only way in is the north portal of the Blossom Garden or the Starlight Garden ---- */
 function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({color:c,roughness:r,flatShading:true,emissive:e||'#000000',emissiveIntensity:ei||0}),Cy=THREE.CylinderGeometry,B=THREE.BoxGeometry,
     X=dx=>I.x+dx,Z=dz=>I.z+dz,gnd=(dx,dz)=>islTop(X(dx),Z(dz)),at=(m,x,y,z)=>{m.position.set(x,y,z);GARG.add(m);return m},rg=(()=>{let q=5521;return()=>(q=(q*16807)%2147483647)/2147483647})(),
     rimOK=(dx,dz,m)=>Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-2-(m||0),lite=()=>new THREE.Object3D(),glow=(c,sz,x,y,z)=>{const g=lite();g.position.set(x,y,z);GARG.add(g);return g},
@@ -5229,7 +5229,7 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
       m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]),y=gnd(5,12.4);at(m,X(5),y+1.1,Z(12.4));m.rotation.y=Math.PI;m.rotation.x=-.12}
   // northern lights hanging behind
   {const at2=canvasTex(256,128,(g,w,h)=>{const gr=g.createLinearGradient(0,h,0,0);gr.addColorStop(0,'rgba(90,255,176,0)');gr.addColorStop(.3,'rgba(90,255,176,.8)');gr.addColorStop(.65,'rgba(150,120,255,.6)');gr.addColorStop(1,'rgba(176,128,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);for(let i=0;i<40;i++){g.fillStyle='rgba(0,0,0,'+(Math.random()*.35)+')';g.fillRect(Math.random()*w,0,2+Math.random()*5,h)}});
-    [[-30,34,16],[0,42,21],[30,34,16]].forEach(([dx,dz,dy],i)=>{const mt=new THREE.MeshBasicMaterial({map:at2,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),m=at(new THREE.Mesh(new THREE.PlaneGeometry(48,30),mt),X(dx),I.y+dy,Z(dz));m.rotation.y=(i-1)*.35;GARFX.aur.push({m,mt,o:.4,p:i,x0:m.position.x})})}
+    [[-30,-34,16],[0,-42,21],[30,-34,16]].forEach(([dx,dz,dy],i)=>{const mt=new THREE.MeshBasicMaterial({map:at2,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),m=at(new THREE.Mesh(new THREE.PlaneGeometry(48,30),mt),X(dx),I.y+dy,Z(dz));m.rotation.y=(i-1)*.35;GARFX.aur.push({m,mt,o:.4,p:i,x0:m.position.x})})}
   mkFall(I,Math.PI*.5,3,38);mkFall(I,Math.PI*.3,2.2,32);mkFall(I,Math.PI*.7,2.2,32);
   mkParts(I,150,'#ffe9a0',.5,'r',20,true);mkParts(I,100,'#ffd978',.45,'f',22,true)}
 buildSanctum(SKIS[3]);
@@ -5248,8 +5248,8 @@ function mkPortal(I,ang,c1,c2,gc,label,welcome){const R=I.r*.78,x=I.x+Math.cos(a
   PORTS.push({x,z,arrive:{x:x+Math.sin(th)*3.8,z:z+Math.cos(th)*3.8},armed:true,charge:0,mat,label,welcome,to:-1});return PORTS.length-1}
 {const a=mkPortal(SKI,Math.PI,'#ffb3d1','#ffe9f2','rgba(255,190,220,.7)','Blossom Garden','Welcome to the Blossom Garden 🌸'),b=mkPortal(SKIS[1],0,'#ffb3d1','#ffe9f2','rgba(255,190,220,.7)','Back to the Lobby','Back in the Lobby ✨'),
     c=mkPortal(SKI,0,'#8fd8ff','#c9a8ff','rgba(150,200,255,.7)','Starlight Garden','Welcome to the Starlight Garden ✨'),d=mkPortal(SKIS[2],Math.PI,'#8fd8ff','#c9a8ff','rgba(150,200,255,.7)','Back to the Lobby','Back in the Lobby ✨'),
-    e=mkPortal(SKIS[1],Math.PI/2,'#ffd27a','#fff2c0','rgba(255,215,130,.75)','Celestial Sanctum','Welcome to the Celestial Sanctum ✨ Home of the Keeper.'),f=mkPortal(SKIS[3],Math.PI,'#ffb3d1','#ffe9f2','rgba(255,190,220,.7)','Back to the Blossom Garden','Back in the Blossom Garden 🌸'),
-    g=mkPortal(SKIS[2],Math.PI/2,'#ffd27a','#fff2c0','rgba(255,215,130,.75)','Celestial Sanctum','Welcome to the Celestial Sanctum ✨ Home of the Keeper.'),h=mkPortal(SKIS[3],0,'#8fd8ff','#c9a8ff','rgba(150,200,255,.7)','Back to the Starlight Garden','Back in the Starlight Garden ✨');
+    e=mkPortal(SKIS[1],-Math.PI/2,'#ffd27a','#fff2c0','rgba(255,215,130,.75)','Celestial Sanctum','Welcome to the Celestial Sanctum ✨ Home of the Keeper.'),f=mkPortal(SKIS[3],Math.PI,'#ffb3d1','#ffe9f2','rgba(255,190,220,.7)','Back to the Blossom Garden','Back in the Blossom Garden 🌸'),
+    g=mkPortal(SKIS[2],-Math.PI/2,'#ffd27a','#fff2c0','rgba(255,215,130,.75)','Celestial Sanctum','Welcome to the Celestial Sanctum ✨ Home of the Keeper.'),h=mkPortal(SKIS[3],0,'#8fd8ff','#c9a8ff','rgba(150,200,255,.7)','Back to the Starlight Garden','Back in the Starlight Garden ✨');
   PORTS[a].to=b;PORTS[b].to=a;PORTS[c].to=d;PORTS[d].to=c;PORTS[e].to=f;PORTS[f].to=e;PORTS[g].to=h;PORTS[h].to=g;
   const fl=glowSprite('rgba(235,245,255,.95)',16);fl.visible=false;GARG.add(fl);GARFX.flash=fl}
 function portalGo(p){const q=PORTS[p.to];q.armed=false;P.position.x=q.arrive.x;P.position.z=q.arrive.z;const f=GARFX.flash;f.position.set(q.arrive.x,islTop(q.arrive.x,q.arrive.z)+1.6,q.arrive.z);f.material.opacity=1;f.visible=true;try{chime(1)}catch(_){}toast('',q.welcome||'Welcome to the '+q.label+' ✨',true)}
