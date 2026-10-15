@@ -567,6 +567,7 @@ R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
 const cv=R.domElement;cv.id='world';cv.tabIndex=0;document.body.prepend(cv);
 const W=new THREE.Scene();
 W.fog=new THREE.Fog(0xcfe9f6,80,280);
+let VIS=1;   // how many times further you can see than from the ground or the sky islands: it grows with the camera's height beyond that (so that from way up high the world below is still there, not hidden in haze), and the sea, the haze, the draw distance and the camera planes all grow with it
 const cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,1000);
 const composer=new EffectComposer(R,new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4}));
 composer.addPass(new RenderPass(W,cam));
@@ -2016,6 +2017,14 @@ const dome=new THREE.Mesh(new THREE.SphereGeometry(500,32,16),new THREE.ShaderMa
       c=mix(c,mix(uPink,c,smoothstep(0.,.4,hh)),uDusk*pow(1.-az,1.4)*.65*(1.-smoothstep(0.,.42,hh))*dn);
       float s=max(dot(d,uSun),0.);c+=uGlow*(pow(s,5.)*.32+pow(s,48.)*.5)+uRed*pow(s,14.)*uDusk*.55;gl_FragColor=vec4(c,1.);}`}));
 dome.renderOrder=-10;dome.frustumCulled=false;W.add(dome);
+/* the haze cap: a bowl covering everything below the horizon in the same haze colour the far sea fades into. It is drawn right after the stars, sun and moon and before the scene, so the sun and the moon always set BEHIND the horizon (never in front of the sea), whatever height the camera is at. HZE: where the horizon line is (a little below eye level, more the higher you stand);
+   HZY: the same thing as a height in the star sky, for fading stars and meteors out as they near it */
+const HZE={value:0},HZY={value:0};
+const hazeCap=new THREE.Mesh(new THREE.SphereGeometry(470,48,20,0,Math.PI*2,Math.PI/2-.2,Math.PI/2+.2),new THREE.ShaderMaterial({uniforms:{uFog:{value:W.fog.color},uEdge:HZE},side:THREE.BackSide,depthTest:false,depthWrite:false,
+  blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor,
+  vertexShader:`varying float vY;void main(){vY=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`uniform vec3 uFog;uniform float uEdge;varying float vY;void main(){gl_FragColor=vec4(uFog,1.-smoothstep(uEdge,uEdge+.07,vY));}`}));
+hazeCap.renderOrder=-2;hazeCap.frustumCulled=false;W.add(hazeCap);
 
 // real star sky: true RA/Dec positions (J2000), rotated by sidereal time for an observer at latitude LAT
 const R0=170,sky=new THREE.Group();sky.matrixAutoUpdate=false;W.add(sky);
@@ -2043,12 +2052,13 @@ CS.forEach(([nm,sd,ld])=>{const cen=[0,0,0];sd.split(';').forEach(s=>{const[n,ra
   if(nm!=='*'){const l=Math.hypot(...cen);LBL.push([nm,cen.map(k=>k/l),1])}});
 ['Sirius','Betelgeuse','Rigel'].forEach(n=>LBL.push([n,STAR[n],0]));
 for(let i=0;i<1100;i++){const z=rnd()*2-1,a=rnd()*6.283,r=Math.sqrt(1-z*z);addStar([r*Math.cos(a),r*Math.sin(a),z],4.2+rnd()*1.7)}
-const starMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},t:{value:0},pr:{value:pixelRatio()}},transparent:true,depthWrite:false,
+const SKYBLEND={blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor};   // (alpha blending without being 'transparent', so these stay in the early sky pass instead of being drawn after the scene)
+const starMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},t:{value:0},pr:{value:pixelRatio()},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
   vertexShader:`attribute vec3 col;attribute float sz;uniform float pr;varying vec3 vc;varying float vh,ph;void main(){vc=col;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;ph=position.x*.13+position.z*.07;gl_PointSize=sz*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
-  fragmentShader:`uniform float op,t;varying vec3 vc;varying float vh,ph;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float tw=.86+.14*sin(t*2.5+ph);gl_FragColor=vec4(vc*tw,op*smoothstep(0.,22.,vh)*(1.-d*1.7));}`});
-const lineMat=new THREE.ShaderMaterial({uniforms:{op:{value:0}},transparent:true,depthWrite:false,
+  fragmentShader:`uniform float op,t,hzy;varying vec3 vc;varying float vh,ph;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float tw=.86+.14*sin(t*2.5+ph);gl_FragColor=vec4(vc*tw,op*smoothstep(hzy,hzy+22.,vh)*(1.-d*1.7));}`});
+const lineMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
   vertexShader:`varying float vh;void main(){vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_Position=projectionMatrix*viewMatrix*w;}`,
-  fragmentShader:`uniform float op;varying float vh;void main(){gl_FragColor=vec4(.42,.6,1.,op*smoothstep(0.,22.,vh));}`});
+  fragmentShader:`uniform float op,hzy;varying float vh;void main(){gl_FragColor=vec4(.42,.6,1.,op*smoothstep(hzy,hzy+22.,vh));}`});
 {const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(STP,3));g.setAttribute('col',new THREE.Float32BufferAttribute(STC,3));g.setAttribute('sz',new THREE.Float32BufferAttribute(STS,1));
   const s=new THREE.Points(g,starMat);s.frustumCulled=false;s.renderOrder=-5;sky.add(s)}
 const lineObj=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(LNP,3)),lineMat);lineObj.frustumCulled=false;lineObj.renderOrder=-4;sky.add(lineObj);
@@ -2056,7 +2066,7 @@ const lg=new THREE.Group();sky.add(lg);
 function buildStarTags(){LBL.forEach(([text,v,big])=>{const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');
   g.font=(big?'600 28px':'500 24px')+' Fredoka, Nunito, system-ui, sans-serif';g.textAlign='center';g.fillStyle='#d4e3ff';g.shadowColor='#000';g.shadowBlur=6;g.fillText(text,128,40);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,fog:false,opacity:0}));s.center.set(.5,1.6);s.scale.set(28,7,1);s.position.set(v[0]*R0*.99,v[1]*R0*.99,v[2]*R0*.99);s.frustumCulled=false;lg.add(s)})}
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,...SKYBLEND,depthTest:false,depthWrite:false,fog:false,opacity:0}));s.renderOrder=-4;s.center.set(.5,1.6);s.scale.set(28,7,1);s.position.set(v[0]*R0*.99,v[1]*R0*.99,v[2]*R0*.99);s.frustumCulled=false;lg.add(s)})}
 
 // sun + moon
 function glowSprite(c,s){const k=document.createElement('canvas');k.width=k.height=128;const g=k.getContext('2d'),r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,c);r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,128,128);
@@ -2066,7 +2076,6 @@ const sunG=new THREE.Group(),moonG=new THREE.Group();
 // The small depth offset keeps the additive glow sprite (the same distance away) from fighting with the disc.
 const DISCDEPTH={polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4};
 sunG.add(new THREE.Mesh(new THREE.CircleGeometry(6,64),new THREE.MeshBasicMaterial({color:new THREE.Color(7,6,4.2),fog:false,...DISCDEPTH})),glowSprite('rgba(255,214,140,.55)',60));
-const HORIZON=new THREE.Plane(new THREE.Vector3(0,1,0),0);R.localClippingEnabled=true;   // the sea level: nothing of the sun or moon is drawn below it
 // the moon's face is painted (a flat disc is not lit): pale highlands, soft limb darkening, dusky seas (maria) roughly where the real ones are, and a few craters
 const MOONTEX=canvasTex(256,256,(g,w,h)=>{
   g.fillStyle='#efeee9';g.fillRect(0,0,w,h);
@@ -2079,13 +2088,10 @@ const MOONTEX=canvasTex(256,256,(g,w,h)=>{
   {const r=g.createRadialGradient(.47*w,.84*h,0,.47*w,.84*h,.06*w);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(.35*w,.7*h,.25*w,.25*h)}   // Tycho
   const l=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);[[.5,0],[.7,.04],[.85,.12],[1,.3]].forEach(([o,a])=>l.addColorStop(o,`rgba(24,28,44,${a})`));g.fillStyle=l;g.fillRect(0,0,w,h)});   // limb darkening
 moonG.add(new THREE.Mesh(new THREE.CircleGeometry(4.5,64),new THREE.MeshBasicMaterial({color:new THREE.Color(1.7,1.7,1.6),map:MOONTEX,fog:false,...DISCDEPTH})),glowSprite('rgba(170,190,255,.45)',30));
-sunG.renderOrder=moonG.renderOrder=-3;W.add(sunG,moonG);
-[sunG,moonG].forEach(g=>g.children.forEach(o=>{o.material.clippingPlanes=[HORIZON]}));
-const SUNDISC=sunG.children[0].material,SUNGLOW=sunG.children[1],MOONGLOW=moonG.children[1],MOONDISC=moonG.children[0].material,HZU={value:0};
-// near the horizon the moon fades softly into the haze instead of being sliced flat by the sea line (which made it look sunk in the water): its lowest part gets more and more see-through
-MOONDISC.transparent=true;MOONDISC.customProgramCacheKey=()=>'moonfade';
-MOONDISC.onBeforeCompile=sh=>{sh.uniforms.hzy=HZU;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying float vWy;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWy=(modelMatrix*vec4(position,1.0)).y;');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vWy;uniform float hzy;').replace('#include <dithering_fragment>','#include <dithering_fragment>\ngl_FragColor.a*=smoothstep(hzy,hzy+3.4,vWy);')};
+[sunG,moonG].forEach(g=>g.children.forEach(o=>{o.renderOrder=-3}));W.add(sunG,moonG);   // (on each disc and glow, not on the group: a group's order is sorted FIRST, which would draw them before the sky dome and let the dome cover them)
+// the discs and their glows are painted in the sky pass: before the scene, with no depth, and (not 'transparent', so they stay ahead of the haze cap in the draw order) so everything nearer, the haze below the horizon, the sea and the land, is drawn over them
+[sunG,moonG].forEach(g=>g.children.forEach(o=>{const m=o.material;m.depthTest=false;m.depthWrite=false;m.transparent=false}));
+const SUNDISC=sunG.children[0].material,SUNGLOW=sunG.children[1],MOONGLOW=moonG.children[1],MOONDISC=moonG.children[0].material;
 
 // clouds: faceted puffs lit by the sun, shaded with sky colour, fading out at night
 const cloudU={uLit:{value:new THREE.Color()},uShade:{value:new THREE.Color()},uSun:{value:new THREE.Vector3(0,1,0)},uOp:{value:.95},fogColor:{value:W.fog.color},fogNear:{value:80},fogFar:{value:280}};
@@ -3390,13 +3396,16 @@ function palette(ey){for(let i=1;i<PAL.length;i++){if(ey<=PAL[i][0]||i===PAL.len
 // sun, moon and stars hang off the camera like the dome does, so from a hilltop they are at their true height (not sunk towards the sea), and none of it is drawn below the horizon
 const placeDir=(o,d,s)=>{o.visible=d.y>-.06-hzDip();o.position.set(cam.position.x+d.x*160*s,cam.position.y+d.y*160*s,cam.position.z+d.z*160*s)};
 // where the sea line really is, as an elevation below eye level: the water is fully lost in haze by 280 units out, so from height h the visible horizon sits at -h/sqrt(h²+280²) (the further up the camera, the lower it dips)
-const hzDip=()=>{const h=Math.max(cam.position.y,0);return h/Math.hypot(h,280)};
+const hzDip=()=>.085*(1-Math.exp(-Math.max(cam.position.y,0)/60));   // (how far below eye level the horizon sits: a hair at the ground, about 4 degrees from the sky islands, like a real horizon seen from up high. It is a fixed line in the sky, the same for the sun, moon, stars and haze, so they never shift against each other)
 const SUNDIR=new THREE.Vector3(0,1,0),MOONDIR=new THREE.Vector3(0,-1,0);
 // each disc turns to face the camera and is scaled by cos(angle off the view axis): square-on to the camera it would otherwise grow by 1/cos towards the sides of the view, so it stays round and the same size wherever it is on screen
 // (the sun's sunset swell, SUNSW, is set by skyTick and multiplied in here; the glow sprites share the group's scale)
 let SUNSW=1;const _fw=new THREE.Vector3();
 const faceCam=(g,d,k)=>{g.children[0].quaternion.copy(cam.quaternion);g.scale.setScalar(k*Math.max(_fw.dot(d),.25))};
-function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=hzDip();HORIZON.constant=-(cam.position.y-160*dip);HZU.value=-HORIZON.constant}   // (the horizon you see from up high is a little below eye level)
+// the draw distance, the camera's near plane and the size of the sea grow with VIS; the sea follows the camera and snaps to its own grid (5 units, doubling as it grows) so its waves never swim
+function sightTick(){const far=Math.max(1000,280*VIS*1.7),near=Math.max(.1,.1*VIS/3);if(Math.abs(far-cam.far)>8||Math.abs(near-cam.near)>.02||(VIS<=1&&cam.near!==.1)){cam.far=far;cam.near=near;cam.updateProjectionMatrix()}
+  const ws=VIS<=1?1:VIS<=2?2:VIS<=4?4:VIS<=8?8:16,g=5*ws;water.scale.set(ws,1,ws);water.position.x=Math.round(cam.position.x/g)*g;water.position.z=Math.round(cam.position.z/g)*g}
+function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=hzDip();HZE.value=-dip;HZY.value=cam.position.y-R0*dip}
 /* ---- shooting stars + meteor showers: a small pool of glowing point-trails in the night sky ----
    Every device works out the SAME streaks from the real clock (nothing is sent over the network), so players together see the same ones at the same moments.
    normal nights: one somewhere in the sky every ~15 s.  About 1 night in 4 is a shower: bursts of streaks from a radiant (16 s on, 14 s off).
@@ -3407,9 +3416,9 @@ const metGeo=new THREE.BufferGeometry();
 metGeo.setAttribute('position',new THREE.BufferAttribute(metPos,3).setUsage(THREE.DynamicDrawUsage));
 metGeo.setAttribute('mc',new THREE.BufferAttribute(metCol,4).setUsage(THREE.DynamicDrawUsage));
 metGeo.setAttribute('sz',new THREE.BufferAttribute(metSz,1).setUsage(THREE.DynamicDrawUsage));
-const metMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{pr:{value:1}},
+const metMat=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{pr:{value:1},hzy:HZY},
   vertexShader:`attribute vec4 mc;attribute float sz;uniform float pr;varying vec4 vc;varying float vh;void main(){vc=mc;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_PointSize=sz*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
-  fragmentShader:`varying vec4 vc;varying float vh;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(vc.rgb,vc.a*smoothstep(0.,22.,vh)*(1.-d*1.8));}`});
+  fragmentShader:`uniform float hzy;varying vec4 vc;varying float vh;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(vc.rgb,vc.a*smoothstep(hzy,hzy+22.,vh)*(1.-d*1.8));}`});
 {const o=new THREE.Points(metGeo,metMat);o.frustumCulled=false;o.renderOrder=-3;metG.add(o)}
 const MET=Array.from({length:MET_N},()=>({on:false,age:0,life:1,sp:.4,big:false,d:new THREE.Vector3(),t:new THREE.Vector3()}));
 const MS={k:0,q:[],shower:false,nid:null,toldN:null,nightOn:false,sayCd:0},_mc=new THREE.Vector3(),_mu=new THREE.Vector3(),_mr=new THREE.Vector3();
@@ -3463,6 +3472,7 @@ function meteorTick(dt){
   metG.position.copy(P.position);metG.visible=any||metGeo.userData.was;metGeo.userData.was=any;
   if(metG.visible){metGeo.attributes.position.needsUpdate=metGeo.attributes.mc.needsUpdate=metGeo.attributes.sz.needsUpdate=true}}
 function skyTick(dt){
+  VIS=Math.max(1,cam.position.y/140);waterU.fogNear.value=80*VIS;waterU.fogFar.value=280*VIS;cloudU.fogNear.value=80*VIS;cloudU.fogFar.value=280*VIS;
   simH=tmode===1?(simH+dt*.2)%24:tmode===2?simH:clockH();
   const phi=(simH-6)/12*Math.PI;sdir.set(Math.cos(phi),Math.sin(phi)*.85,Math.sin(phi)*.5).normalize();/* east = +x (sunrise over the east sea), west = -x (sunset over the west coast), south = +z */
   const ey=sdir.y,s=clamp((ey+.12)/.27,0,1);nt=1-s*s*(3-2*s);
@@ -3532,10 +3542,10 @@ function fxTick(dt){
   const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z;
   // a grey, closer, dimmer day (and a dark grey night) while it rains or snows
   if(wi>.003){FXGREY.setRGB(.62,.66,.7).multiplyScalar(1-nt*.82);
-    W.fog.color.lerp(FXGREY,.55*wi);W.fog.near=80*(1-.6*wi);W.fog.far=280*(1-.5*wi);
+    W.fog.color.lerp(FXGREY,.55*wi);W.fog.near=80*VIS*(1-.6*wi);W.fog.far=280*VIS*(1-.5*wi);
     domeU.uTop.value.lerp(FXGREY,.6*wi);domeU.uHor.value.lerp(FXGREY,.7*wi);domeU.uBot.value.lerp(FXGREY,.7*wi);
     key.intensity*=1-.6*wi;hemi.intensity*=1-.2*wi;cloudU.uLit.value.multiplyScalar(1-.3*wi);cloudU.uShade.value.multiplyScalar(1-.3*wi);cloudU.uOp.value=lerp(cloudU.uOp.value,1,wi)}
-  else{W.fog.near=80;W.fog.far=280}
+  else{W.fog.near=80*VIS;W.fog.far=280*VIS}
   // rain
   rainObj.visible=FXS.ir>.01;
   if(rainObj.visible){rainMat.opacity=.65*FXS.ir;const sx=.18,len=.9;
@@ -5011,16 +5021,19 @@ const islHI=(I,dx,dz)=>I===SKI?islH(dx,dz):I.hf(dx,dz),
   islOK=(x,z)=>SKIS.some(I=>{const dx=x-I.x,dz=z-I.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-1.6});
 const GARFX={pq:[],clouds:[],orbit:[],spin:[],aur:[],flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
 // a waterfall pouring over an island's edge: a streaky see-through sheet with mist at the lip and at the bottom
-const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y=Math.random()*h,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,3+Math.random()*4,l)}},1,3);
+const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y0=Math.random()*h,sw=3+Math.random()*4;for(const o of[-h,0,h]){const y=y0+o,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,sw,l)}}g.globalCompositeOperation='destination-in';const m=g.createLinearGradient(0,0,w,0);m.addColorStop(0,'rgba(0,0,0,0)');m.addColorStop(.25,'rgba(0,0,0,1)');m.addColorStop(.75,'rgba(0,0,0,1)');m.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=m;g.fillRect(0,0,w,h)},1,3);
 function mkFall(I,ang,w,len){const R=islR(ang,I)*.96,x=I.x+Math.cos(ang)*R,z=I.z+Math.sin(ang)*R,top=islTop(x,z)-.2,
-    m=new THREE.Mesh(new THREE.PlaneGeometry(w,len),new THREE.MeshBasicMaterial({map:fallTex,color:'#dff4ff',transparent:true,opacity:.75,side:THREE.DoubleSide,depthWrite:false,fog:false}));
+    gm=new THREE.PlaneGeometry(w,len,1,10),ps=gm.attributes.position,ca=new Float32Array(ps.count*4);
+  // the lower end thins out to nothing (per-vertex alpha, so it does not scroll with the streaks)
+  for(let i=0;i<ps.count;i++){const v=Math.min(1,(ps.getY(i)/len+.5)/.4);ca.set([1,1,1,v*v*(3-2*v)],i*4)}gm.setAttribute('color',new THREE.BufferAttribute(ca,4));
+  const m=new THREE.Mesh(gm,new THREE.MeshBasicMaterial({map:fallTex,vertexColors:true,color:'#dff4ff',transparent:true,opacity:.75,side:THREE.DoubleSide,depthWrite:false,fog:false}));
   m.position.set(x,top-len/2,z);m.rotation.y=Math.PI/2-ang;GARG.add(m);
   const mist=glowSprite('rgba(230,245,255,.55)',w*3.2);mist.position.set(x+Math.cos(ang)*.6,top-len*.55,z+Math.sin(ang)*.6);GARG.add(mist);
   const lip=glowSprite('rgba(230,245,255,.5)',w*2);lip.position.set(x,top+.2,z);GARG.add(lip)}
 // drifting specks over an island: m 'f' falls like petals, 'r' rises like fireflies
 function mkParts(I,n,color,size,m,h,add){const pa=new Float32Array(n*3);for(let i=0;i<n;i++){pa[i*3]=(Math.random()-.5)*2*I.r*.95;pa[i*3+1]=Math.random()*h;pa[i*3+2]=(Math.random()-.5)*2*I.r*.95}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({color,size,transparent:true,opacity:.9,depthWrite:false,blending:add?THREE.AdditiveBlending:THREE.NormalBlending}));
-  pts.position.set(I.x,I.y,I.z);pts.frustumCulled=false;GARG.add(pts);GARFX.parts.push({pa,pts,I,m,h})}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({color,size:size*1.8,map:fxGlowTex,transparent:true,opacity:.9,depthWrite:false,fog:false,blending:add?THREE.AdditiveBlending:THREE.NormalBlending}));
+  pts.position.set(I.x,I.y,I.z);pts.frustumCulled=false;GARG.add(pts);GARFX.parts.push({pa,pts,I,m,h,add})}
 (function buildGarden(){const M=(c,r=.9)=>new THREE.MeshStandardMaterial({color:c,roughness:r,flatShading:true}),stone=M('#8d8f98'),dark=M('#4b4d57'),wood=M('#7a5230'),blue=new THREE.MeshBasicMaterial({color:'#9fe7ff'}),
     B=THREE.BoxGeometry,Cy=THREE.CylinderGeometry,at=(m,x,y,z)=>{m.position.set(x,y,z);GARG.add(m);return m},rg=(()=>{let q=77123;return()=>(q=(q*16807)%2147483647)/2147483647})();
   // the island: a grassy top, a band of soil and a long rocky underside tapering to a point
@@ -5081,7 +5094,7 @@ function mkParts(I,n,color,size,m,h,add){const pa=new Float32Array(n*3);for(let 
       m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]);const y=gnd(0,8);at(m,X(0),y+1.1,Z(8));m.rotation.y=Math.PI;m.rotation.x=-.12}
   // petals drifting down
   {const n=140,pa=new Float32Array(n*3);for(let i=0;i<n;i++){pa[i*3]=(rg()-.5)*2*SKI.r;pa[i*3+1]=rg()*16;pa[i*3+2]=(rg()-.5)*2*SKI.r}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({color:'#ffc2d8',size:.4,transparent:true,opacity:.85,depthWrite:false}));pts.position.set(SKI.x,SKI.y,SKI.z);pts.frustumCulled=false;GARG.add(pts);GARFX.petals=pa;GARFX.pts=pts}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({color:'#ffc2d8',size:.7,map:fxGlowTex,transparent:true,opacity:.85,depthWrite:false,fog:false}));pts.position.set(SKI.x,SKI.y,SKI.z);pts.frustumCulled=false;GARG.add(pts);GARFX.petals=pa;GARFX.pts=pts}
   // ---- the beam on the ground ----
   let gy=-1e9;for(const[ox,oz]of[[0,0],[4,0],[-4,0],[0,4],[0,-4]])gy=Math.max(gy,groundY(BEAM.x+ox,BEAM.z+oz));gy+=.08;GARFX.gy=gy;
   const gtop=new THREE.MeshStandardMaterial({color:'#ffffff',map:runes,emissive:'#ffe9a0',emissiveMap:runes,emissiveIntensity:.25,roughness:.8});GARFX.plm.push(gtop);const bg=at(new THREE.Mesh(new Cy(4.6,4.9,.35,32),[stone,gtop,stone]),BEAM.x,gy-.1,BEAM.z);
@@ -5281,9 +5294,20 @@ function buildSanctum(I){const M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({
   // an inscription
   {const dark=M('#4b4d57'),tb=canvasTex(512,256,(g,w,h)=>{g.fillStyle='#2c2f4a';g.fillRect(0,0,w,h);g.strokeStyle='#ffd470';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);g.fillStyle='#fff3d0';g.textAlign='center';g.font='bold 50px Georgia,serif';g.fillText('THE SANCTUM',w/2,100);g.font='26px Georgia,serif';g.fillText('Home of the Keeper of Tambayan',w/2,156);g.font='22px Georgia,serif';g.fillStyle='#ffd470';g.fillText('Walk softly. You are a guest here.',w/2,206)}),
       m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]),y=gnd(5,12.4);at(m,X(5),y+1.1,Z(12.4));m.rotation.y=Math.PI;m.rotation.x=-.12}
-  // northern lights hanging behind
-  {const at2=canvasTex(256,128,(g,w,h)=>{const gr=g.createLinearGradient(0,h,0,0);gr.addColorStop(0,'rgba(90,255,176,0)');gr.addColorStop(.3,'rgba(90,255,176,.8)');gr.addColorStop(.65,'rgba(150,120,255,.6)');gr.addColorStop(1,'rgba(176,128,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);for(let i=0;i<40;i++){g.fillStyle='rgba(0,0,0,'+(Math.random()*.35)+')';g.fillRect(Math.random()*w,0,2+Math.random()*5,h)}});
-    [[-30,-34,16],[0,-42,21],[30,-34,16]].forEach(([dx,dz,dy],i)=>{const mt=new THREE.MeshBasicMaterial({map:at2,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),m=at(new THREE.Mesh(new THREE.PlaneGeometry(48,30),mt),X(dx),I.y+dy,Z(dz));m.rotation.y=(i-1)*.35;GARFX.aur.push({m,mt,o:.4,p:i,x0:m.position.x})})}
+  // northern lights: a wide arc of soft, slowly waving curtains of light high behind the island, made of many vertical rays that fade out at the bottom, the top and both ends (green low, teal, then violet), strongest at night. No flat panels, so there is no hard edge to see
+  {const mt=new THREE.ShaderMaterial({uniforms:{t:{value:0},k:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,fog:false,
+      vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:`uniform float t,k;varying vec2 v;
+        float h(float n){return fract(sin(n*12.9898)*43758.5453);}
+        float nz(float x){float i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(h(i),h(i+1.),f);}
+        void main(){float u=v.x,y=v.y;
+          float ray=nz(u*46.+t*.35)*.55+nz(u*17.-t*.2)*.45;
+          float wave=sin(u*9.+t*.4+nz(u*5.)*3.)*.5+.5;
+          float lo=.1+.22*wave;
+          float a=ray*smoothstep(lo,lo+.3,y)*(1.-smoothstep(.5,1.,y))*smoothstep(0.,.2,u)*(1.-smoothstep(.8,1.,u));
+          vec3 c=mix(vec3(.2,1.,.55),vec3(.15,.75,.9),smoothstep(.2,.55,y));c=mix(c,vec3(.62,.38,1.),smoothstep(.5,.95,y));
+          gl_FragColor=vec4(c,a*k);}`}),
+      au=at(new THREE.Mesh(new THREE.CylinderGeometry(86,86,34,96,1,true,Math.PI*.55,Math.PI*.9),mt),X(0),I.y+8,Z(0));au.renderOrder=2;GARFX.aur.push({u:mt.uniforms})}
   mkFall(I,Math.PI*.5,3,38);mkFall(I,Math.PI*.3,2.2,32);mkFall(I,Math.PI*.7,2.2,32);
   mkParts(I,150,'#ffe9a0',.5,'r',20,true);mkParts(I,100,'#ffd978',.45,'f',22,true)}
 buildSanctum(SKIS[3]);
@@ -5346,7 +5370,7 @@ function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(
   PORTS.forEach(p=>p.mat.uniforms.t.value=t);fallTex.offset.y=(t*.8)%1;GARFX.orbs.forEach(o=>o.m.position.y=o.y+Math.sin(t*1.3+o.p)*.25);
   if(GARFX.flash&&GARFX.flash.visible){GARFX.flash.material.opacity-=dt*1.6;if(GARFX.flash.material.opacity<=.02)GARFX.flash.visible=false}
   if(ONSKY&&!ASC.m&&alive&&!open&&!sitting&&!riding)for(const p of PORTS){const d=Math.hypot(px-p.x,pz-p.z);if(d>3.6)p.armed=true;if(d<1.7&&p.armed){p.charge+=dt;if(p.charge>=.7){p.charge=0;portalGo(p);break}}else p.charge=0}
-  GARFX.spin.forEach(q=>q.m.rotation[q.ax]+=dt*q.sp);{const nn=typeof nt==='number'?nt:.6;GARFX.aur.forEach(q=>{q.mt.opacity=q.o*(.25+.75*nn)*(.7+.3*Math.sin(t*.35+q.p*2));q.m.position.x=q.x0+Math.sin(t*.1+q.p)*3})}
+  GARFX.spin.forEach(q=>q.m.rotation[q.ax]+=dt*q.sp);{const nn=typeof nt==='number'?nt:.6;GARFX.aur.forEach(q=>{q.u.t.value=t;q.u.k.value=.12+.88*nn});GARFX.parts.forEach(q=>{if(!q.add)q.pts.material.opacity=.9*(1-.6*nn)});if(GARFX.pts)GARFX.pts.material.opacity=.85*(1-.6*nn)}
   GARFX.orbit.forEach(q=>{const a=q.ph+t*q.sp;q.m.position.set(q.cx+Math.cos(a)*q.r,q.y+Math.sin(a*2)*q.tl,q.cz+Math.sin(a)*q.r)});
   GARFX.floaters.forEach(f=>{f.m.position.y=f.y+Math.sin(t*.5+f.p)*1.2;f.m.rotation.y=t*.15+f.p;f.m.rotation.x=Math.sin(t*.3+f.p)*.2});
   if(ONSKY||ASC.m){GARFX.parts.forEach(q=>{const pa=q.pa,R=q.I.r*.95;for(let i=0;i<pa.length;i+=3){if(q.m==='f'){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=q.h;pa[i]=(Math.random()-.5)*2*R;pa[i+2]=(Math.random()-.5)*2*R}}else{pa[i+1]+=dt*(.5+.4*Math.sin(i));pa[i]+=Math.sin(t*.7+i)*dt*.4;pa[i+2]+=Math.cos(t*.6+i)*dt*.4;if(pa[i+1]>q.h){pa[i+1]=0;pa[i]=(Math.random()-.5)*2*R;pa[i+2]=(Math.random()-.5)*2*R}}}q.pts.geometry.attributes.position.needsUpdate=true});const pa=GARFX.petals;for(let i=0;i<pa.length;i+=3){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=16;pa[i]=(Math.random()-.5)*2*SKI.r;pa[i+2]=(Math.random()-.5)*2*SKI.r}}GARFX.pts.geometry.attributes.position.needsUpdate=true}}
@@ -5408,7 +5432,7 @@ function frame(){
   cam.position.set(cpx-vx*dd,ty-vy*dd,P.position.z-vz*dd);
   const gy=H(cam.position.x,cam.position.z)+.8;if(cam.position.y<gy)cam.position.y=gy;
   cam.lookAt(cam.position.x+vx,cam.position.y+vy,cam.position.z+vz);
-  dome.position.copy(cam.position);anchorSky();
+  dome.position.copy(cam.position);hazeCap.position.copy(cam.position);anchorSky();sightTick();
   MIST.forEach((m,i)=>{const k=(t*.22+(i%5)/5)%1,F=m.userData.F;m.position.set(F.x+Math.sin(i*2.1+t*.3)*1.6,F.y+.4+k*3.2,F.z+Math.cos(i*1.7+t*.25)*1.6);m.scale.setScalar(2.4+k*3.2);m.material.opacity=.42*sstep(0,.2,k)*(1-k)*(1-nt*.6)});
   wheelG.rotation.x+=dt*.6;   // the wheel turns with the water (bottom moving downstream, to the east)
   lhTick(dt);
