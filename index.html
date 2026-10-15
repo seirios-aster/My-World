@@ -3204,6 +3204,9 @@ function sendChat(){const t=clean(chatIn.value).slice(0,80);
   if(fs2){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.fullSet(['common','rare','epic','legendary'].indexOf((fs2[1]||'legendary').toLowerCase()));return}
   const cn=/^\/coins?(?:\s+(\d{1,9}))?\s*$/i.exec(t);   // GM only: "/coin 5000" gives you that many copper (for trying the shop)
   if(cn){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(!cn[1])toast('','Type /coin and an amount of copper, like /coin 5000',true);else if(rpgHook)rpgHook.coin(+cn[1]);return}
+  const gd=/^\/god(?:\s+(on|off))?\s*$/i.exec(t),pf=/^\/perfect(?:\s+(on|off))?\s*$/i.exec(t);   // GM only: "/god" turns invincible and super strong on or off; "/perfect" makes new Epic and Legendary gear roll the best extra stats (or back to random)
+  if(gd){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.god(gd[1]?gd[1].toLowerCase()==='on':null);return}
+  if(pf){chatIn.value='';if(IS_GM!==true)toast('','Only the GM can use that command',true);else if(rpgHook)rpgHook.perfect(pf[1]?pf[1].toLowerCase()==='on':null);return}
   if(!t||!room)return;
   if(performance.now()-lastSend<1200)return;
   if(!room.connected()){toast('','Not connected yet - try again in a moment',true);return}
@@ -4331,20 +4334,21 @@ const MOB=(()=>{
     slashG=new THREE.RingGeometry(.8,1.9,20,1,-Math.PI*.42,Math.PI*.84).rotateX(-Math.PI/2),ringG=new THREE.RingGeometry(.9,1.1,36).rotateX(-Math.PI/2),pG=new THREE.SphereGeometry(.12,6,5),
     eyeM=new THREE.MeshBasicMaterial({color:'#ffffff'}),pupM=new THREE.MeshBasicMaterial({color:'#1b1b2b'}),
     v3=new THREE.Vector3(),fxs=[],nums=[];
-  let simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
+  let GOD=false,simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
   const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3),
-    maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1))*(1+atkB()/100),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
+    maxHp=()=>CLS[RPG.c].hp+10*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.15:.12)*(RPG.k[i]-1))*(1+atkB()/100)*(GOD?1000:1),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
     cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[2])),RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
-    BRSI=['🌪️','🌠','🎯'],BRST=[['🌪️','Blade Storm','Four spinning hits all round you'],['🌠','Starfall','Nine meteors rain around the nearest enemy'],['🎯','Arrow Barrage','Fourteen arrows into the nearest enemies']],ATKI=['⚔️','🔮','🏹'],SLMI=['💥','☄️','🌧️'],DSHI=['💨','✨','🥾'],
+    BRSI=['🌪️','🌠','🎯'],BRST=[['🌪️','Blade Storm','Four spinning hits all round you'],['🌠','Starfall','Nine meteors rain around the nearest enemy'],['🎯','Arrow Barrage','Fourteen arrows into the nearest enemies']],ATKI=['⚔️','⚔️','⚔️'],SLMI=['💥','☄️','🌧️'],DSHI=['💨','✨','🥾'],
     SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+1.5% crit chance, 2% faster cooldowns each']],
     KDEFS=[[['⚔️','Slash',r=>'Damage '+(100+12*(r-1))+'% · reach '+(3.3+.2*(r-1)).toFixed(1)+' m'],['💥','Slam',r=>'Damage '+(100+15*(r-1))+'% · radius '+(5.5+.4*(r-1)).toFixed(1)+' m'],['💨','Dash',r=>'Cooldown '+(3.5-.3*(r-1)).toFixed(1)+' s · distance '+(7+.6*(r-1)).toFixed(1)+' m']],
-    [['🔮','Arcane Bolt',r=>'Damage '+(100+12*(r-1))+'% · range '+(10+.5*(r-1)).toFixed(1)+' m'],['☄️','Meteor',r=>'Damage '+(100+15*(r-1))+'% · blast '+(4.2+.3*(r-1)).toFixed(1)+' m · falls on the nearest enemy'],['✨','Blink',r=>'Cooldown '+(5-.3*(r-1)).toFixed(1)+' s · distance '+(8+.6*(r-1)).toFixed(1)+' m']],
-    [['🏹','Quick Shot',r=>'Damage '+(100+12*(r-1))+'% · range '+(13+.5*(r-1)).toFixed(1)+' m'],['🌧️','Arrow Volley',r=>'Three arrows, each '+(100+15*(r-1))+'% damage'],['🥾','Evade',r=>'Cooldown '+(4-.3*(r-1)).toFixed(1)+' s · rolls back '+(7+.6*(r-1)).toFixed(1)+' m']]],KDEF=()=>KDEFS[RPG.c];
+    [['⚔️','Arcane Bolt',r=>'Damage '+(100+12*(r-1))+'% · range '+(10+.5*(r-1)).toFixed(1)+' m'],['☄️','Meteor',r=>'Damage '+(100+15*(r-1))+'% · blast '+(4.2+.3*(r-1)).toFixed(1)+' m · falls on the nearest enemy'],['✨','Blink',r=>'Cooldown '+(5-.3*(r-1)).toFixed(1)+' s · distance '+(8+.6*(r-1)).toFixed(1)+' m']],
+    [['⚔️','Quick Shot',r=>'Damage '+(100+12*(r-1))+'% · range '+(13+.5*(r-1)).toFixed(1)+' m'],['🌧️','Arrow Volley',r=>'Three arrows, each '+(100+15*(r-1))+'% damage'],['🥾','Evade',r=>'Cooldown '+(4-.3*(r-1)).toFixed(1)+' s · rolls back '+(7+.6*(r-1)).toFixed(1)+' m']]],KDEF=()=>KDEFS[RPG.c];
   const rpgEl=$('rpg'),bagEl=$('bag'),bHero=$('bhero'),hud=$('herobar');
   let RPT='s';   // (the Hero window's tab: s = stats, k = skills)
   /* ---- equipment: a weapon (made for one class), an upper, a lower and boots. Four rarities. A weapon adds % damage, armour adds defence. Items drop from slimes (rarely) and are kept in a bag of 30. An item is [slot, rarity, class, value]. ---- */
+  let PERFECT=false;   // (GM only: /perfect makes every new Epic or Legendary roll the best possible bonus stats)
   const RAR=[{n:'Common',c:'#9aa3a8'},{n:'Rare',c:'#4aa3ff'},{n:'Epic',c:'#b25cff'},{n:'Legendary',c:'#ffb42e'}],SLN=['Weapon','Upper','Lower','Boots'],SLI=['🗡️','🥋','👖','🥾'],WPI=['⚔️','🪄','🏹'],BAGMAX=30,
     WNM=[['Iron Sword','Steel Blade','Knight Saber','Dawnbreaker'],['Oak Wand','Crystal Staff','Arcane Scepter','Starweaver'],['Short Bow','Hunter Bow','Windcaller','Skypiercer']],
     ANM=[['Cloth Tunic','Leather Vest','Mythril Mail','Dragonscale Plate'],['Cloth Pants','Leather Leggings','Mythril Greaves','Dragonscale Cuisses'],['Worn Boots','Leather Boots','Mythril Sabatons','Dragonscale Boots']],
@@ -4355,11 +4359,18 @@ const MOB=(()=>{
     INV={eq:[[0,0,0,3],null,null,null],bag:[]},   // (a brand-new hero starts with a plain Iron Sword; a saved hero's own gear replaces this when it loads)
     
     ic=it=>it[2]%3,rf=it=>Math.floor(it[2]/3),REFB=[.15,.2,.25,.3],ev=it=>Math.round(it[3]*(1+REFB[it[1]]*rf(it))),   // (the class field also carries the refine level: class + 3 × refine, from +0 to +10. REFB: how much of the item's base value each refine level adds; the rarer the item, the more)
-    gName=it=>(rf(it)?'+'+rf(it)+' ':'')+(it[0]===0?WNM[ic(it)][it[1]]:ANM[it[0]-1][it[1]]),gIcon=it=>it[0]===0?WPI[ic(it)]:SLI[it[0]],gStat=it=>it[0]===0?'+'+ev(it)+'% damage':'+'+ev(it)+' defence',
-    atkB=()=>{const w=INV.eq[0];return w&&ic(w)===RPG.c?ev(w):0},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?ev(INV.eq[i]):0),0),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
-    gMake=(sl,r,c)=>{const v=Math.max(1,Math.round(GBASE[sl][r]*(.85+.3*Math.random())));return[sl,r,sl===0?c:0,v]},
-    gOk=(a,sl)=>{if(!Array.isArray(a)||a.length!==4)return null;const[s,r,c,v]=a.map(x=>Math.floor(+x));if(!(s>=0&&s<4&&r>=0&&r<4&&c>=0&&c<33&&v>=1))return null;if(sl!=null&&s!==sl)return null;if(s>0&&c%3!==0)return null;return[s,r,c,Math.min(v,gMax(s,r))]},
-    gFlat=()=>{const o=[];for(let i=0;i<4;i++){const e=INV.eq[i];o.push(...(e||[-1,0,0,0]))}INV.bag.forEach(b=>o.push(...b));return o},
+    gName=it=>(rf(it)?'+'+rf(it)+' ':'')+(it[0]===0?WNM[ic(it)][it[1]]:ANM[it[0]-1][it[1]]),gIcon=it=>it[0]===0?WPI[ic(it)]:SLI[it[0]],gStat=it=>(it[0]===0?'+'+ev(it)+'% damage':'+'+ev(it)+' defence')+bonTxt(it),
+    BT=[['%',' bonus damage',[3,6],[6,12]],['',' bonus defence',[2,5],[5,12]],['%',' max HP per second',[.2,.5],[.4,1]]],BCNT=[0,0,1,2],   // (extra stats on Epic (one) and Legendary (two) items: the unit and name, and the lowest and highest roll for Epic and for Legendary)
+    bonVal=(t,r,p)=>{const a=BT[t][r===3?3:2],v=a[0]+(a[1]-a[0])*p/100;return t===2?Math.round(v*100)/100:Math.round(v*10)/10},
+    rollBon=(r,best)=>{const n=BCNT[r]||0;if(!n)return null;return[0,1,2].sort(()=>Math.random()-.5).slice(0,n).map(t=>[t,best?100:1+Math.floor(Math.random()*100)])},   // (each extra stat is [kind, roll from 1 to 100 percent of its range])
+    bonPack=it=>(it[4]||[]).slice(0,2).reduce((q,[t,p],i)=>q+((t+1)*101+p)*Math.pow(512,i),0),
+    bonUnpack=(k,r)=>{const n=BCNT[r]||0;if(!k||!n)return null;const o=[],seen={};for(let i=0;i<n;i++){const e=Math.floor(k/Math.pow(512,i))%512,t=Math.floor(e/101)-1,p=e%101;if(t<0||t>2||p<1||seen[t])continue;seen[t]=1;o.push([t,p])}return o.length?o:null},
+    bonSum=t=>{let q=0;for(let i=0;i<4;i++){const e=INV.eq[i];if(!e||!e[4]||(i===0&&ic(e)!==RPG.c))continue;e[4].forEach(([k,p])=>{if(k===t)q+=bonVal(k,e[1],p)})}return q},
+    bonTxt=it=>it[4]?it[4].map(([t,p])=>' · +'+bonVal(t,it[1],p)+BT[t][0]+BT[t][1]+(p===100?' ★':'')).join(''):'',
+    atkB=()=>{const w=INV.eq[0];return(w&&ic(w)===RPG.c?ev(w):0)+bonSum(0)},defT=()=>[1,2,3].reduce((n,i)=>n+(INV.eq[i]?ev(INV.eq[i]):0),0)+bonSum(1),defRed=()=>defT()/(defT()+80),   // (defence cuts damage taken by DEF / (DEF + 80): it never reaches 100%)
+    gMake=(sl,r,c)=>{const v=Math.max(1,Math.round(GBASE[sl][r]*(.85+.3*Math.random()))),it=[sl,r,sl===0?c:0,v],b=rollBon(r,PERFECT&&IS_GM===true);if(b)it[4]=b;return it},
+    gOk=(a,sl)=>{if(!Array.isArray(a)||a.length!==4)return null;const[s,r,c,v0]=a.map(x=>Math.floor(+x)),v=v0%100,k=Math.floor(v0/100);if(!(s>=0&&s<4&&r>=0&&r<4&&c>=0&&c<33&&v>=1))return null;if(sl!=null&&s!==sl)return null;if(s>0&&c%3!==0)return null;const o=[s,r,c,Math.min(v,gMax(s,r))],b=bonUnpack(k,r);if(b)o[4]=b;return o},
+    gFlat=()=>{const o=[];for(let i=0;i<4;i++){const e=INV.eq[i];o.push(...(e?[e[0],e[1],e[2],e[3]+100*bonPack(e)]:[-1,0,0,0]))}INV.bag.forEach(b=>o.push(b[0],b[1],b[2],b[3]+100*bonPack(b)));return o},
     gLoad=a=>{const eq=[null,null,null,null],bag=[];for(let i=0;i<4;i++){const q=a.slice(9+4*i,13+4*i);if(+q[0]>=0)eq[i]=gOk(q,i)}
       for(let j=25;j+3<a.length&&bag.length<BAGMAX;j+=4){const b=gOk(a.slice(j,j+4));if(b)bag.push(b)}INV.eq=eq;INV.bag=bag};
   /* ---- coins (copper, silver = 100 copper, gold = 100 silver; kept as one number of copper) and healing potions. Earned from slimes and by selling gear; spent at Mira's shop and on point resets. ---- */
@@ -4403,9 +4414,10 @@ const MOB=(()=>{
       diff=worn||bad?'':(ev(it)>cv?' <span class="up">▲ +'+(ev(it)-cv)+'</span>':ev(it)<cv?' <span class="dn">▼ '+(ev(it)-cv)+'</span>':'');
     const stat=it[0]===0?'<div class="cdr">⚔️ <b>+'+ev(it)+'%</b> damage'+diff+'</div>':'<div class="cdr">🛡️ <b>+'+ev(it)+'</b> defence'+diff+'</div>',
       ref=rf(it)?'<div class="cdr">✨ Refined +'+rf(it)+' <small>(base '+(it[0]===0?'+'+it[3]+'%':'+'+it[3])+')</small></div>':'',
+      bn=(it[4]||[]).map(([t,p])=>'<div class="cdr">'+['💥','🛡️','💚'][t]+' <b>+'+bonVal(t,it[1],p)+BT[t][0]+'</b>'+BT[t][1]+(p===100?' ★ <small>best roll</small>':' <small>('+p+'% of the best)</small>')+'</div>').join(''),
       cls=it[0]===0?'<div class="cdr">'+(bad?'🚫':'✅')+' For '+CLS[ic(it)].n+'s'+(bad?' · switch class to use it':'')+'</div>':'';
     card.innerHTML='<div class="cdh"><span class="cdi" style="border-color:'+RAR[it[1]].c+'">'+gIcon(it)+'</span><div class="cdn"><b style="color:'+RAR[it[1]].c+'">'+gName(it)+'</b><small>'+RAR[it[1]].n+' '+SLN[it[0]].toLowerCase()+(worn?' · worn':'')+'</small></div><button type="button" class="cdx" data-a="close" aria-label="Close">✕</button></div>'
-      +'<p class="cdd">'+(it[0]===0?WDESC[ic(it)]:ADESC[it[0]-1])+'</p>'+stat+ref+cls+'<div class="cdr">🪙 Worth '+coinStr(sellP(it))+'</div>'
+      +'<p class="cdd">'+(it[0]===0?WDESC[ic(it)]:ADESC[it[0]-1])+'</p>'+stat+bn+ref+cls+'<div class="cdr">🪙 Worth '+coinStr(sellP(it))+'</div>'
       +'<div class="rpa">'+(worn?'<button type="button" data-a="un">Take off</button>'+(SEL.i===0?'<small>Without a weapon you punch</small>':''):'<button type="button" data-a="eq"'+(bad?' disabled':'')+'>Equip</button><button type="button" class="alt" data-a="drop">Discard</button>')+'</div>';
     card.classList.add('on');
     {const r=an.getBoundingClientRect(),w=card.offsetWidth,h=card.offsetHeight;let l=r.left-w-8;if(l<8)l=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2));card.style.left=l+'px';card.style.top=clamp(r.top+40,8,Math.max(8,innerHeight-h-8))+'px'}}
@@ -4436,8 +4448,8 @@ const MOB=(()=>{
   rpgHook={addStat(i,n){const can=spLeft(),k=Math.min(n,can),nm=['Vitality','Strength','Agility'][i];   // (the GM's shortcut: spend stat points in bulk, never more than the level has to give)
       if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1]}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],give:(sl,r,c)=>gearGive(sl,r,c),
       refine(sl,n){const a=(sl<0?INV.eq:[INV.eq[sl]]).filter(Boolean);if(!a.length){toast('','Nothing worn there to upgrade',true);return}a.forEach(it=>{it[2]=ic(it)+3*n});rpgApply();rpgSave();toast('','Refined '+a.length+' worn item'+(a.length>1?'s':'')+' to +'+n,true)},   // (GM: set the refine level of what you wear)
-      fullSet(r){for(let sl=0;sl<4;sl++){const it=[sl,r,sl===0?RPG.c:0,gMax(sl,r)],old=INV.eq[sl];INV.eq[sl]=it;if(old&&INV.bag.length<BAGMAX)INV.bag.push(old)}rpgApply();rpgSave();toast('','You are now wearing a full '+RAR[r].n+' set ✨',true)},   // (GM: a full set of one rarity, at the best roll, worn at once)
-coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN,POT],ein(a,u){rpgUser=u||rpgUser;ecoIn(a);try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}rpgDraw();shopDraw()},cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;try{ecoIn(JSON.parse(localStorage.getItem('myworld.eco.'+(u&&u.id?u.id:'guest'))||'null'))}catch(_){}let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+      fullSet(r){for(let sl=0;sl<4;sl++){const it=[sl,r,sl===0?RPG.c:0,gMax(sl,r)],b=rollBon(r,true),old=INV.eq[sl];if(b)it[4]=b;INV.eq[sl]=it;if(old&&INV.bag.length<BAGMAX)INV.bag.push(old)}rpgApply();rpgSave();toast('','You are now wearing a full '+RAR[r].n+' set ✨',true)},   // (GM: a full set of one rarity, at the best roll, worn at once)
+god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot be hurt and you hit for 1000x. Type /god again to turn it off ⚡':'God mode is off',true)},perfect(v){PERFECT=v==null?!PERFECT:!!v;toast('',PERFECT?'Perfect rolls are ON: new Epic and Legendary gear gets the best extra stats. Type /perfect again to turn it off ★':'Perfect rolls are off: extra stats roll at random',true)},coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN,POT],ein(a,u){rpgUser=u||rpgUser;ecoIn(a);try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}rpgDraw();shopDraw()},cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;try{ecoIn(JSON.parse(localStorage.getItem('myworld.eco.'+(u&&u.id?u.id:'guest'))||'null'))}catch(_){}let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}else gearDraw()};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false');gearDraw()};
@@ -4597,7 +4609,7 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
       if(hp<m.hp){numAt(m.x,m.y+1.3*TY[m.ty].sc,m.z,String(Math.round(m.hp-hp)));m.flash=1;m.hp=hp}else if(now-m.pt>700)m.hp=hp}
     list.forEach(m=>{if(!seen.has(m.id)){if(!m.dead)burst(m.x,m.y,m.z,TY[m.ty].col);dropMon(m)}})});
   // ---- me: hit points, the three moves ----
-  function hurtMe(d,fx,fz){if(HP.inv>0||HP.v<=0)return;d=Math.min(40,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3);sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
+  function hurtMe(d,fx,fz){if(GOD||HP.inv>0||HP.v<=0)return;d=Math.min(40,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3);sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
     document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),220);
     const dx=P.position.x-fx,dz=P.position.z-fz,l=Math.hypot(dx,dz)||1,nx=P.position.x+dx/l*1.1,nz=P.position.z+dz/l*1.1;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}
     HP.inv=.5;if(HP.v<=0)faint()}
@@ -4695,6 +4707,7 @@ coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN
 
     for(const k in CD)CD[k]=Math.max(0,CD[k]-dt);HP.inv=Math.max(0,HP.inv-dt);
     if(HP.v<HP.max&&now-HP.hurt>6000)HP.v=Math.min(HP.max,HP.v+2*dt);
+    if(HP.v>0&&HP.v<HP.max){const rg=bonSum(2);if(rg>0)HP.v=Math.min(HP.max,HP.v+HP.max*rg/100*dt)}   // (the HP regen from Epic and Legendary gear, in combat too)
     if(DASH.t>0){DASH.t-=dt;const st=DASH.sp*dt,nx=P.position.x+DASH.x*st,nz=P.position.z+DASH.z*st;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}}
     if(host)hostTick(dt,now);
     let near=1e9,bossM=null;
