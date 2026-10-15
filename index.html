@@ -2628,7 +2628,7 @@ const tpos=new Map();let pz=null;   // pinch to zoom: where each finger is, and 
 // keys are tracked by physical key (e.code) so modifiers can't desync press/release; anything that can swallow a keyup clears input
 function clearInput(){for(const k in keys)keys[k]=false;sv={x:0,z:0};sid=null;st=null;lid=null;lp=null;pz=null;tpos.clear()}
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.metaKey){clearInput();return}keys[e.code]=true;const k=(e.key||'').toLowerCase();
-  if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(MOB.shopNear())MOB.shopOpen();else if(MOB.forgeNear())MOB.forgeOpen();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(e.code==='Space'&&!open){e.preventDefault();if(!e.repeat)doJump()}if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
+  if(k==='e'&&!open){if(near)show(near);else if(atRack())toggleBike();else if(MOB.shopNear())MOB.shopOpen();else if(MOB.forgeNear())MOB.forgeOpen();else if(skyDoorNear())skyKnock();else if(dogNear())petDog()}if(k==='b'&&!open)toggleBike();if(k==='c'&&!open)sitToggle();if(e.code==='Space'&&!open){e.preventDefault();if(!e.repeat)doJump()}if(k==='escape')hide();if(e.key==='Enter'&&!open&&!e.repeat)openChat();if(open&&k==='arrowleft')pick(ci-1);if(open&&k==='arrowright')pick(ci+1);
   if(e.key==='+'||e.key==='=')zm(.8);if(e.key==='-')zm(1.25)});
 addEventListener('keyup',e=>{if(e.target&&e.target.tagName==='INPUT')return;keys[e.code]=false;if(e.key==='Meta')clearInput()});
 addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput()});
@@ -2749,7 +2749,7 @@ $('pv').onclick=()=>cur&&pick(ci-1);$('nx').onclick=()=>cur&&pick(ci+1);$('mx').
   vw.addEventListener('pointerup',e=>{if(e.pointerId!==sid)return;sid=null;const dx=e.clientX-sx,dy=e.clientY-sy;
     if(cur&&cur.items.length>1&&Math.abs(dx)>=45&&Math.abs(dx)>Math.abs(dy)*1.5&&performance.now()-st<900)pick(ci+(dx<0?-1:1))});
   vw.addEventListener('pointercancel',()=>{sid=null})}
-$('x').onclick=hide;pr.onclick=()=>{if(near)show(near);else if(sitting||(!riding&&!atRack()&&nearSeat()))sitToggle();else if(!riding&&!atRack()&&MOB.shopNear())MOB.shopOpen();else if(!riding&&!atRack()&&MOB.forgeNear())MOB.forgeOpen();else if(!riding&&!atRack()&&dogNear())petDog();else toggleBike()};
+$('x').onclick=hide;pr.onclick=()=>{if(near)show(near);else if(sitting||(!riding&&!atRack()&&nearSeat()))sitToggle();else if(!riding&&!atRack()&&MOB.shopNear())MOB.shopOpen();else if(!riding&&!atRack()&&MOB.forgeNear())MOB.forgeOpen();else if(!riding&&!atRack()&&skyDoorNear())skyKnock();else if(!riding&&!atRack()&&dogNear())petDog();else toggleBike()};
 $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')hide()});
 /* ---------------- waypoint photos & videos: a storage adapter. The gallery only calls put / url / thumbUrl / list / remove, so the backend can change later ----------------
    This one keeps everything in the browser's own database (IndexedDB) on this device. */
@@ -5055,15 +5055,16 @@ function ascStep(dt){ASC.t+=dt;const u=Math.min(1,ASC.t/(ASC.m===1?6:5)),e=u*u*(
   P.position.x+=(tx-P.position.x)*k;P.position.z+=(tz-P.position.z)*k;P.position.y=ASC.y0+(ASC.y1-ASC.y0)*e;P.rotation.y+=dt*(1.2+2.5*Math.sin(Math.PI*u));JUMP.y=JUMP.v=0;
   if(u>=1){ASC.charge=0;if(ASC.m!==1)ASC.armedG=false;if(ASC.m===1){ONSKY=true;ASC.armed=false;if(!ASC.welcomed){ASC.welcomed=true;toast('','Welcome to the Sky Garden 🌸 Few ever see this place.',true)}}else ONSKY=false;ASC.m=0}}
 function startAsc(m){if(riding)toggleBike();if(sitting)standUp();ASC.m=m;ASC.t=0;ASC.y0=P.position.y;ASC.y1=m===1?islTop(SKI.x,SKI.z):groundY(BEAM.x,BEAM.z);JUMP.y=JUMP.v=0;toast('',m===1?'The beam lifts you into the sky ✨':'The light carries you back down…',true)}
-const SKYG={st:0,next:0,busy:false};   // (the keeper's friends: st 0 = not asked yet, 2 = not a friend, 3 = a friend. Checked on the server (sky-pass); like the level, this page only trusts it for show)
-async function skyCheck(){if(SKYG.busy)return;SKYG.busy=true;
+const SKYG={st:0,busy:false};   // (the keeper's friends: st 0 = not asked yet, 2 = not a friend, 3 = a friend. Checked on the server (sky-pass); like the level, this page only trusts it for show)
+function skyDoorNear(){return!ONSKY&&!ASC.m&&SKYG.st!==3&&MOB.RPG.l<99&&!!(storage.gm&&storage.gm.sky)&&Math.hypot(P.position.x-BEAM.x,P.position.z-BEAM.z)<6}   // (standing at the stone circle without the right to use it: the prompt "Know the keeper?" shows, like Pet Awaw or Talk to Mira)
+async function skyKnock(){if(SKYG.busy)return;SKYG.busy=true;
   try{const g=storage.gm&&storage.gm.sky;if(!g)return;
     if(SKYG.st===0){const r=await g({action:'status'});SKYG.st=r&&r.granted?3:2;if(SKYG.st===3){toast('','The keeper remembers you. The circle is open to you 🌟',true);return}}
     if(SKYG.st!==2)return;
     const v=await ask({title:'The keeper’s circle',text:'Only level 99 can rise. But the keeper lets friends in. If you know them, type the day they were born.',input:'MM/DD/YYYY',ok:'Try it',cancel:'Not me'});
     if(typeof v!=='string'||!v.trim())return;
     const r=await g({action:'try',guess:v});if(r&&r.ok){SKYG.st=3;toast('','The stones light up for you. Welcome, friend of the keeper 🌟',true)}}
-  catch(e){const m=String(e&&e.message||'');if(/not quite/i.test(m))toast('','The stones stay quiet',true);else if(/too many|locked/i.test(m))toast('',m,true)}   // (not signed in, or not set up yet: say nothing)
+  catch(e){const m=String(e&&e.message||'');if(/not quite/i.test(m))toast('','The stones stay quiet',true);else if(/too many|locked/i.test(m))toast('',m,true);else if(/sign in/i.test(m))toast('','Sign in first to try the keeper’s secret',true)}   // (not set up yet: say nothing)
   finally{SKYG.busy=false}}
 function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(px-BEAM.x,pz-BEAM.z);
   if(ONSKY&&!ASC.m&&Math.hypot(px-SKI.x,pz-SKI.z)>SKI.r*1.3)ONSKY=false;   // (teleported away from up there)
@@ -5071,7 +5072,6 @@ function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(
   if(!ASC.m&&alive&&!open){
     if(!ONSKY){if(near>PR+.8)ASC.armedG=true;   // (after a ride down you have to step off the circle before it will take you up again)
       if(near<PR&&ASC.armedG&&lv){ASC.charge+=dt;if(ASC.charge>=.9){ASC.charge=0;startAsc(1)}}else ASC.charge=0;
-      if(!lv&&near<PR&&alive&&!open&&now>SKYG.next&&!SKYG.busy){SKYG.next=now+45000;skyCheck()}
       if(near<PR+2&&!lv&&now>ASC.told){ASC.told=now+9000;toast('','The stones are cold and the circle stays dark. Only level 99 can rise 🔒',true)}}
     else{const d=Math.hypot(px-SKI.x,pz-SKI.z);if(d>PR+.8)ASC.armed=true;
       if(d<PR&&ASC.armed){ASC.charge+=dt;if(ASC.charge>=.9){ASC.charge=0;startAsc(2)}}else ASC.charge=0}}
@@ -5123,7 +5123,7 @@ function frame(){
   // places
   near=SPOTS.find(s=>Math.hypot(s.x-P.position.x,s.z-P.position.z)<4.5)||null;
   const nsl=near||sitting||riding?null:nearSeat();
-  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'':nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):MOB.shopNear()?'🧑‍🌾 Talk to Mira'+(touch?'':'  ·  E'):MOB.forgeNear()?'⚒️ Talk to Brann'+(touch?'':'  ·  E'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
+  const ptx=near?near.emoji+' Enter '+near.name+(touch?'':'  ·  E'):atRack()?'🚲 Ride the '+BIKENAMES[nearestBike()]+' bike'+(touch?'':'  ·  B'):riding?'🚲 Hop off'+(touch?'':'  ·  B'):sitting?'':nsl?(nsl.label||'🪑 Sit down')+(touch?'':'  ·  C'):MOB.shopNear()?'🧑‍🌾 Talk to Mira'+(touch?'':'  ·  E'):MOB.forgeNear()?'⚒️ Talk to Brann'+(touch?'':'  ·  E'):skyDoorNear()?'🔑 Know the keeper?'+(touch?'':'  ·  E'):dogNear()?'🐶 Pet '+dogName+(touch?'':'  ·  E'):'';
   pr.style.display=ptx&&!open?'block':'none';if(ptx&&pr.textContent!==ptx)pr.textContent=ptx;
   ringMat.opacity=.55+.3*Math.sin(t*2.4);
   // sky life
