@@ -4338,7 +4338,7 @@ const MOB=(()=>{
     slashG=new THREE.RingGeometry(.8,1.9,20,1,-Math.PI*.42,Math.PI*.84).rotateX(-Math.PI/2),ringG=new THREE.RingGeometry(.9,1.1,36).rotateX(-Math.PI/2),pG=new THREE.SphereGeometry(.12,6,5),
     eyeM=new THREE.MeshBasicMaterial({color:'#ffffff'}),pupM=new THREE.MeshBasicMaterial({color:'#1b1b2b'}),
     v3=new THREE.Vector3(),fxs=[],nums=[];
-  let GOD=false,simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
+  let toldWeak=0,GOD=false,simT=0,sendT=0,sentAny=false,spawnAt=[0,0,0,0,0,0,0,0,0,0],bossDead={},toldLair=false,toldGob=false,toldWilds=false,fightUntil=0,host=true;
   /* ---- level, stats and skills. Saved with the account (and on this device). Experience comes from slimes you hit when they fall. 3 stat points and 1 skill point per level. ---- */
   const RPG={l:1,xp:0,s:[0,0,0],k:[1,1,1],kb:1,c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3)-(RPG.kb-1),
@@ -4496,7 +4496,7 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
     return P}
   const crownG=[new THREE.CylinderGeometry(.5,.58,.2,10),new THREE.ConeGeometry(.11,.34,5),new THREE.SphereGeometry(.07,6,5)],crownM=new THREE.MeshStandardMaterial({color:'#ffd24a',roughness:.3,metalness:.6,emissive:'#4a3000'}),gemM=new THREE.MeshStandardMaterial({color:'#ff4a6a',roughness:.2,emissive:'#7a0020'}),telG=new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2);
   const night=()=>{const h=clockH();return h>=19||h<5},monsOn=()=>FXS.mo==='always'||(FXS.mo!=='off'&&night()),rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
-  const players=()=>{const a=[];if(HP.v>0&&!ONSKY&&!ASC.m)a.push({key:'',x:P.position.x,z:P.position.z,me:true});NET.peers().forEach(R=>{if(R.ty==null)a.push({key:R.key,x:R.x,z:R.z})});return a};   // (nobody up on the Sky Garden is in reach of the monsters below)
+  const players=()=>{const a=[];if(HP.v>0&&!ONSKY&&!ASC.m)a.push({key:'',x:P.position.x,z:P.position.z,me:true,lv:RPG.l});NET.peers().forEach(R=>{if(R.ty==null)a.push({key:R.key,x:R.x,z:R.z,lv:R.lv||1})});return a};   // (nobody up on the Sky Garden is in reach of the monsters below)
   const CLANG=[['square',1500,700,.09,.06,0],['triangle',2300,1200,.2,.05,.012],['sine',200,100,.14,.09,0]],   // (a hammer on an anvil)
     SFXM={anvil:CLANG,refok:[...CLANG,['triangle',660,660,.14,.07,.25],['triangle',830,830,.14,.07,.35],['triangle',990,990,.16,.07,.45],['triangle',1320,1320,.45,.08,.55],['sine',2640,2640,.35,.03,.55]],
       refno:[...CLANG,['sawtooth',260,70,.5,.05,.3],['sine',120,50,.45,.08,.3]],
@@ -4560,12 +4560,15 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function kill(m){m.st=3;m.hp=0;m.deadAt=performance.now();if(TY[m.ty].boss)bossDead[m.ty]=m.deadAt}
   function vanish(m){m.st=3;m.deadAt=performance.now()}   // (gone without being beaten: no experience for it)
   // ---- hits on a slime (anyone's): the host decides; everyone else shows it at once and tells the host ----
-  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;m.mine=true;if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+5*(1+bonSum(4)/100));   // (hits charge the burst; a burst's own hits don't)
+  function hitMon(m,d,dx,dz,crit){if(m.st===3)return;m.mine=true;
+    {const T=TY[m.ty];if(T.boss){const gap=T.lv-RPG.l,f=gap<=1?1:Math.max(.04,1-.3*(gap-1));   // (a boss shrugs off the blows of someone far below its level: full damage from one level under, then less and less, and next to nothing from 5 under)
+      if(f<1){d=Math.max(1,Math.round(d*f));if(performance.now()>toldWeak){toldWeak=performance.now()+8000;toast('',T.name+' shrugs it off 💢 Come back stronger (Lv '+(T.lv-1)+'+)',true)}}}}
+    if(performance.now()>EN.lock)EN.v=Math.min(100,EN.v+5*(1+bonSum(4)/100));   // (hits charge the burst; a burst's own hits don't)
     const ny=m.y+1.3*TY[m.ty].sc;numAt(m.x,ny,m.z,(crit?'💥 ':'')+d,crit?'crit':'');m.flash=1;sfx('hit');
-    if(host){m.hp-=d;if(!TY[m.ty].boss){m.x+=dx*.8;m.z+=dz*.8}m.tp='';if(m.hp<=0)kill(m)}
+    if(host){m.hp-=d;m.lh=performance.now();if(!TY[m.ty].boss){m.x+=dx*.8;m.z+=dz*.8}m.tp='';if(m.hp<=0)kill(m)}
     else{m.hp-=d;m.pt=performance.now();NET.send('h',{id:m.id,d,x:P.position.x,z:P.position.z})}}
   NET.on('h',d=>{if(!host||!d||typeof d.id!=='string')return;const m=list.get(d.id),dm=Math.min(40,Math.max(1,Math.round(+d.d)||0));if(!m||m.st===3||!dm)return;
-    const dx=m.x-(+d.x||0),dz=m.z-(+d.z||0),l=Math.hypot(dx,dz)||1,ny=m.y+1.3*TY[m.ty].sc;m.hp-=dm;if(!TY[m.ty].boss){m.x+=dx/l*.8;m.z+=dz/l*.8}m.flash=1;numAt(m.x,ny,m.z,String(dm));if(m.hp<=0)kill(m)});
+    const dx=m.x-(+d.x||0),dz=m.z-(+d.z||0),l=Math.hypot(dx,dz)||1,ny=m.y+1.3*TY[m.ty].sc;m.hp-=dm;m.lh=performance.now();if(!TY[m.ty].boss){m.x+=dx/l*.8;m.z+=dz/l*.8}m.flash=1;numAt(m.x,ny,m.z,String(dm));if(m.hp<=0)kill(m)});
   // ---- the host's side: spawning, chasing, striking ----
   function spawn(zi,ps){const Z=ZONES[zi];for(let k=0;k<14;k++){const a=Math.random()*6.283,r=Z.r*Math.sqrt(Math.random());let x=Z.x+Math.cos(a)*r,z=Z.z+Math.sin(a)*r;
       if(!walkable(x,z)||H(x,z)<.8||SPOTS.some(s=>Math.hypot(s.x-x,s.z-z)<12)||Math.hypot(x-LAIR.x,z-LAIR.z)<LAIR.r+6||Math.hypot(x-GOB.x,z-GOB.z)<GOB.fr+5||ps.some(p=>Math.hypot(p.x-x,p.z-z)<14))continue;
@@ -4584,18 +4587,20 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
     if(ok(nx,nz)){m.x=nx;m.z=nz}else if(ok(nx,m.z))m.x=nx;else if(ok(m.x,nz))m.z=nz;m.ry=Math.atan2(dx,dz)}
   function strike(m,ps){const T=TY[m.ty],p=ps.find(q=>q.key===m.tp);if(!p||Math.hypot(p.x-m.x,p.z-m.z)>1.7+.5*T.sc+1)return;const d=T.dmg+rnd(0,3);
     if(p.me)hurtMe(d,m.x,m.z);else NET.send('d',{to:p.key,d,x:+m.x.toFixed(1),z:+m.z.toFixed(1)})}
-  function aoe(x,z,r,d,ps){for(const p of ps)if(Math.hypot(p.x-x,p.z-z)<r){if(p.me)hurtMe(d,x,z);else NET.send('d',{to:p.key,d,x:+x.toFixed(1),z:+z.toFixed(1)})}}
+  function aoe(x,z,r,d0,ps,L){for(const p of ps)if(Math.hypot(p.x-x,p.z-z)<r){const d=L?Math.round(d0*(1+Math.min(1,.18*Math.max(0,L-(p.lv||99))))):d0;   // (a boss hits someone far below its level up to twice as hard)
+      if(p.me)hurtMe(d,x,z);else NET.send('d',{to:p.key,d,x:+x.toFixed(1),z:+z.toFixed(1)})}}
   function bossStep(m,dt,ps){const T=TY[m.ty],LR=m.zone===ZONES.length?LAIR:GLAIR,mini=T.gob?3:0;m.cd-=dt;m.lc-=dt;
-    if(m.st===2){m.wind-=dt;if(m.wind<=0){aoe(m.x,m.z,T.ar[0],T.dmg+rnd(0,5),ps);m.st=0;m.cd=2}return}   // a smash all round it
-    if(m.st===4){m.wind-=dt;if(m.wind<=0){m.x=m.jx;m.z=m.jz;aoe(m.jx,m.jz,T.ar[1],T.dmg+8+rnd(0,5),ps);m.st=0;m.cd=1.5;m.lc=7+Math.random()*3}return}   // a leap to where you were standing
+    if(m.hp>0&&m.hp<m.hpm&&performance.now()-(m.lh||0)>5000)m.hp=Math.min(m.hpm,m.hp+m.hpm*.02*dt);   // (hit and run does not work: left alone for five seconds it mends 2% of its health a second, so you have to keep up the pressure)
+    if(m.st===2){m.wind-=dt;if(m.wind<=0){aoe(m.x,m.z,T.ar[0],T.dmg+rnd(0,5),ps,T.lv);m.st=0;m.cd=2}return}   // a smash all round it
+    if(m.st===4){m.wind-=dt;if(m.wind<=0){m.x=m.jx;m.z=m.jz;aoe(m.jx,m.jz,T.ar[1],T.dmg+8+rnd(0,5),ps,T.lv);m.st=0;m.cd=1.5;m.lc=3.5+Math.random()*2.5}return}   // a leap to where you were standing
     let best=null,bd=1e9;for(const p of ps){if(Math.hypot(p.x-LR.x,p.z-LR.z)>LR.r+8)continue;const d=Math.hypot(p.x-m.x,p.z-m.z);if(d<bd){bd=d;best=p}}   // (it never goes far from its lair)
     if(!best){m.st=0;if(!ps.some(p=>Math.hypot(p.x-m.x,p.z-m.z)<70)){m.hp=m.hpm;m.pp=0}if(Math.hypot(m.x-LR.x,m.z-LR.z)>1.5)mv(m,LR.x-m.x,LR.z-m.z,T.sp*dt);return}   // (nobody about: it heals and goes back to its throne)
     const f=m.hp/m.hpm;if((f<.66&&m.pp<1)||(f<.33&&m.pp<2)){m.pp++;for(let i=0;i<2;i++){const a=Math.random()*6.283,x=m.x+Math.cos(a)*6,z=m.z+Math.sin(a)*6;if(walkable(x,z)){let id;do{id=Math.random().toString(36).slice(2,6)}while(list.has(id));addMon(id,mini,x,z,TY[mini].hp,m.zone).cd=2}}}   // (it calls two little ones at two thirds and at one third of its health)
     m.st=1;m.ry=Math.atan2(best.x-m.x,best.z-m.z);
-    if(m.lc<=0&&bd>7&&bd<24){m.st=4;m.wind=1.3;m.jx=best.x;m.jz=best.z}
-    else if(bd>T.ar[0]*.76)mv(m,best.x-m.x,best.z-m.z,T.sp*dt);
+    if(m.lc<=0&&bd>5&&bd<30){m.st=4;m.wind=1.3;m.jx=best.x;m.jz=best.z}
+    else if(bd>T.ar[0]*.76)mv(m,best.x-m.x,best.z-m.z,T.sp*dt*(bd>9?1.8:1));   // (it runs faster at somebody keeping their distance, and leaps at them every few seconds)
     else if(m.cd<=0){m.st=2;m.wind=.9}}
-  function step(m,dt,ps){if(m.st===3)return;if(m.ty===2)return bossStep(m,dt,ps);if(m.ty===6)return archerStep(m,dt,ps);const T=TY[m.ty],Z=zoneOf(m);m.cd-=dt;
+  function step(m,dt,ps){if(m.st===3)return;if(TY[m.ty].boss)return bossStep(m,dt,ps);if(m.ty===6)return archerStep(m,dt,ps);const T=TY[m.ty],Z=zoneOf(m);m.cd-=dt;
     if(m.st===2){m.wind-=dt;if(m.wind<=0){strike(m,ps);m.st=0;m.cd=1.3}return}
     let best=null,bd=1e9;for(const p of ps){const d=Math.hypot(p.x-m.x,p.z-m.z);if(d<bd){bd=d;best=p}}
     const zd=Math.hypot(m.x-Z.x,m.z-Z.z),rng=1.2+.5*T.sc;
