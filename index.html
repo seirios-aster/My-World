@@ -567,6 +567,7 @@ R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
 const cv=R.domElement;cv.id='world';cv.tabIndex=0;document.body.prepend(cv);
 const W=new THREE.Scene();
 W.fog=new THREE.Fog(0xcfe9f6,80,280);
+let VIS=1;   // how many times further you can see than from the ground or the sky islands: it grows with the camera's height beyond that (so that from way up high the world below is still there, not hidden in haze), and the sea, the haze, the draw distance and the camera planes all grow with it
 const cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,1000);
 const composer=new EffectComposer(R,new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4}));
 composer.addPass(new RenderPass(W,cam));
@@ -3401,6 +3402,9 @@ const SUNDIR=new THREE.Vector3(0,1,0),MOONDIR=new THREE.Vector3(0,-1,0);
 // (the sun's sunset swell, SUNSW, is set by skyTick and multiplied in here; the glow sprites share the group's scale)
 let SUNSW=1;const _fw=new THREE.Vector3();
 const faceCam=(g,d,k)=>{g.children[0].quaternion.copy(cam.quaternion);g.scale.setScalar(k*Math.max(_fw.dot(d),.25))};
+// the draw distance, the camera's near plane and the size of the sea grow with VIS; the sea follows the camera and snaps to its own grid (5 units, doubling as it grows) so its waves never swim
+function sightTick(){const far=Math.max(1000,280*VIS*1.7),near=Math.max(.1,.1*VIS/3);if(Math.abs(far-cam.far)>8||Math.abs(near-cam.near)>.02){cam.far=far;cam.near=near;cam.updateProjectionMatrix()}
+  const ws=VIS<2?1:VIS<4?2:VIS<8?4:VIS<16?8:16,g=5*ws;water.scale.set(ws,1,ws);water.position.x=Math.round(cam.position.x/g)*g;water.position.z=Math.round(cam.position.z/g)*g}
 function anchorSky(){skyRot(simH);placeDir(sunG,SUNDIR,1);placeDir(moonG,MOONDIR,1);cam.getWorldDirection(_fw);faceCam(sunG,SUNDIR,SUNSW);faceCam(moonG,MOONDIR,1);const dip=hzDip();HZE.value=-dip;HZY.value=cam.position.y-R0*dip}
 /* ---- shooting stars + meteor showers: a small pool of glowing point-trails in the night sky ----
    Every device works out the SAME streaks from the real clock (nothing is sent over the network), so players together see the same ones at the same moments.
@@ -3468,6 +3472,7 @@ function meteorTick(dt){
   metG.position.copy(P.position);metG.visible=any||metGeo.userData.was;metGeo.userData.was=any;
   if(metG.visible){metGeo.attributes.position.needsUpdate=metGeo.attributes.mc.needsUpdate=metGeo.attributes.sz.needsUpdate=true}}
 function skyTick(dt){
+  VIS=Math.max(1,cam.position.y/140);waterU.fogNear.value=80*VIS;waterU.fogFar.value=280*VIS;cloudU.fogNear.value=80*VIS;cloudU.fogFar.value=280*VIS;
   simH=tmode===1?(simH+dt*.2)%24:tmode===2?simH:clockH();
   const phi=(simH-6)/12*Math.PI;sdir.set(Math.cos(phi),Math.sin(phi)*.85,Math.sin(phi)*.5).normalize();/* east = +x (sunrise over the east sea), west = -x (sunset over the west coast), south = +z */
   const ey=sdir.y,s=clamp((ey+.12)/.27,0,1);nt=1-s*s*(3-2*s);
@@ -3537,10 +3542,10 @@ function fxTick(dt){
   const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z;
   // a grey, closer, dimmer day (and a dark grey night) while it rains or snows
   if(wi>.003){FXGREY.setRGB(.62,.66,.7).multiplyScalar(1-nt*.82);
-    W.fog.color.lerp(FXGREY,.55*wi);W.fog.near=80*(1-.6*wi);W.fog.far=280*(1-.5*wi);
+    W.fog.color.lerp(FXGREY,.55*wi);W.fog.near=80*VIS*(1-.6*wi);W.fog.far=280*VIS*(1-.5*wi);
     domeU.uTop.value.lerp(FXGREY,.6*wi);domeU.uHor.value.lerp(FXGREY,.7*wi);domeU.uBot.value.lerp(FXGREY,.7*wi);
     key.intensity*=1-.6*wi;hemi.intensity*=1-.2*wi;cloudU.uLit.value.multiplyScalar(1-.3*wi);cloudU.uShade.value.multiplyScalar(1-.3*wi);cloudU.uOp.value=lerp(cloudU.uOp.value,1,wi)}
-  else{W.fog.near=80;W.fog.far=280}
+  else{W.fog.near=80*VIS;W.fog.far=280*VIS}
   // rain
   rainObj.visible=FXS.ir>.01;
   if(rainObj.visible){rainMat.opacity=.65*FXS.ir;const sx=.18,len=.9;
@@ -5424,7 +5429,7 @@ function frame(){
   cam.position.set(cpx-vx*dd,ty-vy*dd,P.position.z-vz*dd);
   const gy=H(cam.position.x,cam.position.z)+.8;if(cam.position.y<gy)cam.position.y=gy;
   cam.lookAt(cam.position.x+vx,cam.position.y+vy,cam.position.z+vz);
-  dome.position.copy(cam.position);hazeCap.position.copy(cam.position);anchorSky();water.position.x=Math.round(cam.position.x/5)*5;water.position.z=Math.round(cam.position.z/5)*5;
+  dome.position.copy(cam.position);hazeCap.position.copy(cam.position);anchorSky();sightTick();
   MIST.forEach((m,i)=>{const k=(t*.22+(i%5)/5)%1,F=m.userData.F;m.position.set(F.x+Math.sin(i*2.1+t*.3)*1.6,F.y+.4+k*3.2,F.z+Math.cos(i*1.7+t*.25)*1.6);m.scale.setScalar(2.4+k*3.2);m.material.opacity=.42*sstep(0,.2,k)*(1-k)*(1-nt*.6)});
   wheelG.rotation.x+=dt*.6;   // the wheel turns with the water (bottom moving downstream, to the east)
   lhTick(dt);
