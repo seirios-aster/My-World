@@ -492,6 +492,7 @@ const CBP=(async()=>{const get=async u=>{try{return await Promise.race([new GLTF
 const GOB={n:'Goblin Lair',x:-28,z:258,fr:17},GLAIR={x:GOB.x,z:GOB.z+5,r:GOB.fr+3};   // the goblin lord's lair: a crater at the far end of the south, open to the north
 const wildsW=(x,z)=>sstep(168,192,z)*(1-sstep(266,290,z))*sstep(-92,-72,x)*(1-sstep(28,48,x));   // the Goblin Wilds: 1 over the rough, barren hills in front of the lair   // the goblins' camp: a crater in the far south, open to the north, with a flat floor 16 m across
 const BEAM={x:-68,z:98},SKI={x:-68,z:98,y:118,r:34},inBeam=(x,z,m)=>Math.hypot(x-BEAM.x,z-BEAM.z)<6+m;   // the Sky Garden: a floating island over the middle of the map, and the beam of light on the ground that lifts level 99 players up to it
+const SKIS=[SKI,{id:'w',x:SKI.x-118,z:SKI.z,y:SKI.y+6,r:26,ph:2.1},{id:'e',x:SKI.x+118,z:SKI.z,y:SKI.y+6,r:26,ph:4.0}];   // (the Sky Garden and, either side of it, two garden islands you reach through portals)
 let ONSKY=false;const ASC={m:0,t:0,y0:0,y1:0,armed:true,armedG:false,charge:0,told:0,welcomed:false};   // (ONSKY: I am up on the island. ASC: a ride on the beam, 1 up, 2 down)
 const LAIR={n:'the Slime Throne',x:-25,z:75,r:18};   // the boss slime's lair: a flat ring of standing stones in the quiet southern valley, off every trail and well away from the sports complex (built in MOB; no trees grow here)
 const SPOTS=[
@@ -4225,7 +4226,7 @@ function applyPos(R,d){const x=num(d.x,-2000,2000),z=num(d.z,-2000,2000),r0=num(
   if(!R.has){R.has=true;R.x=R.tx=x;R.z=R.tz=z;R.r=r;R.vx=R.vz=0;R.rig.root.visible=true}
   else{const dt=(now-R.lastP)/1000;if(mv&&dt>.05&&dt<1.5){R.vx=(x-R.tx)/dt;R.vz=(z-R.tz)/dt}else R.vx=R.vz=0}
   R.tx=x;R.tz=z;R.tr=r;R.m=mv;R.lastP=now;if(d.v===1||d.v===0){R.vc=d.v===1;R.vcp=true}
-  const yy=num(d.y,10,400);if(yy!=null&&Math.hypot(x-SKI.x,z-SKI.z)<SKI.r+8){if(R.ty==null)R.yy=yy;R.ty=yy}else R.ty=null;   // (a height only counts over the Sky Garden)
+  const yy=num(d.y,10,400);if(yy!=null&&SKIS.some(I=>Math.hypot(x-I.x,z-I.z)<I.r+8)){if(R.ty==null)R.yy=yy;R.ty=yy}else R.ty=null;   // (a height only counts over the Sky Garden)
   const lv=num(d.l,1,99);if(lv!=null)R.lv=lv|0}   // (d.v: whether they have voice on)
 WS.on('p',d=>{if(!d||typeof d.k!=='string'||d.k===myKey)return;const R=remotes.get(d.k);
   if(R){applyPos(R,d);return}
@@ -4988,10 +4989,26 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   return{tick,list,HP,CD,RPG,EN,attack,slam,dash,monsOn,gainXp,shopNear,shopOpen,shopClose,forgeNear,forgeOpen:()=>shopOpen(true)}})();
 
 /* ---- the Sky Garden: a floating island high above the middle of the map, for level 99 only. A beam of light on the ground lifts you up to it, and a second one on the island brings you back down. Cherry trees, a pond, lanterns, no monsters. ---- */
-const islR=a=>SKI.r*(1+.08*Math.sin(3*a+.7)+.05*Math.sin(5*a+2.1)+.03*Math.sin(9*a)),PND={x:10,z:-7,r:6};
+const islR=(a,I=SKI)=>I.r*(1+.08*Math.sin(3*a+(I.ph||.7))+.05*Math.sin(5*a+2.1)+.03*Math.sin(9*a)),PND={x:10,z:-7,r:6};
 function islH(dx,dz){const d=Math.hypot(dx,dz),pd=Math.hypot(dx-PND.x,dz-PND.z);return(Math.sin(dx*.11+1)*Math.cos(dz*.09)+.6*Math.sin((dx+dz)*.07))*sstep(4,9,d)-1.1*Math.exp(-((pd/4.4)**2))}   // (gentle hills, a flat middle, and a dip for the pond)
-const islTop=(x,z)=>SKI.y+islH(x-SKI.x,z-SKI.z),islOK=(x,z)=>{const dx=x-SKI.x,dz=z-SKI.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx))-1.6};
-const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0},GARG=new THREE.Group();W.add(GARG);
+SKIS[1].hf=(dx,dz)=>{const d=Math.hypot(dx,dz);return(Math.sin(dx*.16+2)*Math.cos(dz*.12)+.5*Math.sin((dx-dz)*.09))*1.4*sstep(6,13,d)-1.1*Math.exp(-((Math.hypot(dx+3,dz-4)/4.3)**2))};   // (the garden islands: gentle hills round a pond)
+SKIS[2].hf=(dx,dz)=>{const d=Math.hypot(dx,dz);return(Math.sin(dx*.13+4)*Math.cos(dz*.15+1)+.6*Math.sin((dx+dz)*.08))*1.5*sstep(6,13,d)-1.2*Math.exp(-((Math.hypot(dx-4,dz+3)/5.2)**2))};
+const islHI=(I,dx,dz)=>I===SKI?islH(dx,dz):I.hf(dx,dz),
+  islAt=(x,z)=>{let b=SKIS[0],bd=1e9;for(const I of SKIS){const d=Math.hypot(x-I.x,z-I.z)-I.r;if(d<bd){bd=d;b=I}}return b},
+  islTop=(x,z)=>{const I=islAt(x,z);return I.y+islHI(I,x-I.x,z-I.z)},
+  islOK=(x,z)=>SKIS.some(I=>{const dx=x-I.x,dz=z-I.z;return Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-1.6});
+const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt:0,orbs:[],falls:[],parts:[],flash:null},GARG=new THREE.Group();W.add(GARG);
+// a waterfall pouring over an island's edge: a streaky see-through sheet with mist at the lip and at the bottom
+const fallTex=canvasTex(64,256,(g,w,h)=>{for(let i=0;i<16;i++){const x=Math.random()*w,l=60+Math.random()*150,y=Math.random()*h,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(235,248,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x,y,3+Math.random()*4,l)}},1,3);
+function mkFall(I,ang,w,len){const R=islR(ang,I)*.96,x=I.x+Math.cos(ang)*R,z=I.z+Math.sin(ang)*R,top=islTop(x,z)-.2,
+    m=new THREE.Mesh(new THREE.PlaneGeometry(w,len),new THREE.MeshBasicMaterial({map:fallTex,color:'#dff4ff',transparent:true,opacity:.75,side:THREE.DoubleSide,depthWrite:false,fog:false}));
+  m.position.set(x,top-len/2,z);m.rotation.y=Math.PI/2-ang;GARG.add(m);
+  const mist=glowSprite('rgba(230,245,255,.55)',w*3.2);mist.position.set(x+Math.cos(ang)*.6,top-len*.55,z+Math.sin(ang)*.6);GARG.add(mist);
+  const lip=glowSprite('rgba(230,245,255,.5)',w*2);lip.position.set(x,top+.2,z);GARG.add(lip)}
+// drifting specks over an island: m 'f' falls like petals, 'r' rises like fireflies
+function mkParts(I,n,color,size,m,h,add){const pa=new Float32Array(n*3);for(let i=0;i<n;i++){pa[i*3]=(Math.random()-.5)*2*I.r*.95;pa[i*3+1]=Math.random()*h;pa[i*3+2]=(Math.random()-.5)*2*I.r*.95}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));const pts=new THREE.Points(g,new THREE.PointsMaterial({color,size,transparent:true,opacity:.9,depthWrite:false,blending:add?THREE.AdditiveBlending:THREE.NormalBlending}));
+  pts.position.set(I.x,I.y,I.z);pts.frustumCulled=false;GARG.add(pts);GARFX.parts.push({pa,pts,I,m,h})}
 (function buildGarden(){const M=(c,r=.9)=>new THREE.MeshStandardMaterial({color:c,roughness:r,flatShading:true}),stone=M('#8d8f98'),dark=M('#4b4d57'),wood=M('#7a5230'),blue=new THREE.MeshBasicMaterial({color:'#9fe7ff'}),
     B=THREE.BoxGeometry,Cy=THREE.CylinderGeometry,at=(m,x,y,z)=>{m.position.set(x,y,z);GARG.add(m);return m},rg=(()=>{let q=77123;return()=>(q=(q*16807)%2147483647)/2147483647})();
   // the island: a grassy top, a band of soil and a long rocky underside tapering to a point
@@ -5016,7 +5033,7 @@ const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt
   for(let i=0;i<14;i++){const a=i/14*6.283,rr=PND.r+.3+rg()*.5,dx=PND.x+Math.cos(a)*rr,dz=PND.z+Math.sin(a)*rr;at(new THREE.Mesh(new THREE.DodecahedronGeometry(.45+rg()*.35,0),stone),X(dx),gnd(dx,dz)+.05,Z(dz)).scale.y=.7}
   for(let i=0;i<5;i++){const a=i*1.4,rr=1.5+rg()*3,dx=PND.x+Math.cos(a)*rr,dz=PND.z+Math.sin(a)*rr,p=at(new THREE.Mesh(new Cy(.45,.45,.04,10),M('#4fa05a')),X(dx),SKI.y-.34,Z(dz))}
   // cherry trees
-  [[-16,-12],[-22,2],[-14,14],[0,22],[14,18],[22,4],[20,-14],[2,-22],[-8,-24],[-24,-8],[8,-26]].forEach(([dx,dz],i)=>{if(!islOK(X(dx),Z(dz)))return;const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.22,.36,3.4,6),wood),X(dx),y+1.6,Z(dz)).rotation.z=Math.sin(i)*.06;
+  [[-16,-12],[-22,2],[-14,14],[0,22],[14,18],[22,4],[20,-14],[2,-22],[-8,-24],[-24,-8],[8,-26]].forEach(([dx,dz],i)=>{if(!islOK(X(dx),Z(dz))||(Math.abs(dz)<5&&Math.abs(dx)>19))return;const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.22,.36,3.4,6),wood),X(dx),y+1.6,Z(dz)).rotation.z=Math.sin(i)*.06;
     [['#ffb8d1',0,4.2,0,2.4],['#ff9fc2',1.2,3.7,.4,1.8],['#ffd0e1',-1.1,3.9,-.5,1.9]].forEach(([c,ox,oy,oz,s])=>{const k=at(new THREE.Mesh(new THREE.IcosahedronGeometry(s,1),M(c,.8)),X(dx)+ox,y+oy,Z(dz)+oz);k.scale.y=.8})});
   // flowers, scattered
   {const fl=new THREE.InstancedMesh(new THREE.OctahedronGeometry(.17,0),M('#ffffff',.8),260),cc=['#ffffff','#ffe27a','#ffa6c9','#c9b6ff','#ff8f8f'],m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
@@ -5030,8 +5047,23 @@ const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt
   at(plz(),SKI.x,SKI.y-.1,SKI.z);
   for(let i=0;i<6;i++){const a=i/6*6.283+.5,dx=Math.cos(a)*10,dz=Math.sin(a)*10,y=gnd(dx,dz),l=at(new THREE.Mesh(new Cy(.07,.1,2.4,6),dark),X(dx),y+1.1,Z(dz));
     const f=at(new THREE.Mesh(new THREE.ConeGeometry(.2,.55,6),blue),X(dx),y+2.55,Z(dz));GARFX.flames.push(f);const gl=glowSprite('rgba(140,225,255,.75)',3);gl.position.set(X(dx),y+2.6,Z(dz));GARG.add(gl);GARFX.flames.push(gl)}
-  for(let i=0;i<4;i++){const a=i/4*6.283+1.1,dx=Math.cos(a)*7.4,dz=Math.sin(a)*7.4,y=gnd(dx,dz),g2=new THREE.Group();g2.position.set(X(dx),y,Z(dz));g2.rotation.y=-a-Math.PI/2;GARG.add(g2);
-    const sh=new THREE.Mesh(new B(1.9,.12,.55),wood);sh.position.y=.5;g2.add(sh);const bk=new THREE.Mesh(new B(1.9,.5,.1),wood);bk.position.set(0,.85,-.25);g2.add(bk);[-.8,.8].forEach(s2=>{const lg=new THREE.Mesh(new B(.1,.5,.45),dark);lg.position.set(s2,.25,0);g2.add(lg)})}
+  // the Wishing Tree: an old white-barked tree at the back of the plaza, its crown glowing with blossom and hung with little lights
+  {const wy=gnd(0,-17),tr=new THREE.Group(),bark=M('#efe6da',.9);tr.position.set(X(0),wy,Z(-17));GARG.add(tr);
+    const tk=new THREE.Mesh(new Cy(.7,1.3,8,9),bark);tk.position.y=3.8;tr.add(tk);
+    for(let i=0;i<6;i++){const a=i/6*6.283,br=new THREE.Mesh(new Cy(.18,.4,5,6),bark);br.position.set(Math.cos(a)*1.5,8.4,Math.sin(a)*1.5);br.rotation.set(Math.sin(a)*.9,0,-Math.cos(a)*.9);tr.add(br)}
+    const bl=new THREE.MeshStandardMaterial({color:'#ffd6e8',roughness:.7,emissive:'#ff9ec7',emissiveIntensity:.5,flatShading:true});
+    [[0,11.5,0,4.6],[3.4,10.2,.8,3.4],[-3.2,10.5,-.8,3.5],[.6,9.6,3.4,3.2],[-.8,9.8,-3.3,3.3],[2.2,13,-1.4,2.8],[-2,12.8,1.5,2.9]].forEach(([x,y,z,sz])=>{const k=new THREE.Mesh(new THREE.IcosahedronGeometry(sz,1),bl);k.position.set(x,y,z);k.scale.y=.8;tr.add(k)});
+    const lm=new THREE.MeshBasicMaterial({color:'#fff2b8'});for(let i=0;i<34;i++){const a=rg()*6.283,r=1.5+rg()*4.6,y=7.2+rg()*5.8,o=new THREE.Mesh(new THREE.SphereGeometry(.13+rg()*.08,8,6),lm);o.position.set(Math.cos(a)*r,y,Math.sin(a)*r);tr.add(o);GARFX.orbs.push({m:o,y,p:i*.9})}
+    const cg=glowSprite('rgba(255,190,220,.55)',22);cg.position.set(0,11,0);tr.add(cg);
+    const ring=new THREE.Mesh(new Cy(3.4,3.8,.25,28),stone);ring.position.y=.1;tr.add(ring)}
+  // crystal pillars standing round the plaza, glowing
+  {const cm=new THREE.MeshBasicMaterial({color:'#bfeaff',transparent:true,opacity:.6});for(let i=0;i<8;i++){const a=i/8*6.283+.2,dx=Math.cos(a)*16,dz=Math.sin(a)*16;if(Math.hypot(dx-PND.x,dz-PND.z)<PND.r+2)continue;const y=gnd(dx,dz),h=4.5+(i%3)*1.4,c=at(new THREE.Mesh(new THREE.ConeGeometry(.55,h,6),cm),X(dx),y+h/2-.2,Z(dz));c.rotation.z=Math.sin(i*2)*.07;
+      const gl=glowSprite('rgba(150,225,255,.6)',4);gl.position.set(X(dx),y+h*.75,Z(dz));GARG.add(gl);GARFX.flames.push(gl)}}
+  // a stream from the pond to the edge, and waterfalls over the rim
+  {const th=Math.atan2(PND.z,PND.x),wm=new THREE.MeshStandardMaterial({color:'#7fd9ee',roughness:.1,metalness:.1,transparent:true,opacity:.85,emissive:'#1b5870',emissiveIntensity:.5}),Rm=islR(th)*.96;
+    for(let d=PND.r+8.5;d<Rm;d+=2.2){const dx=Math.cos(th)*d,dz=Math.sin(th)*d,m=at(new THREE.Mesh(new B(1.5,.07,2.5),wm),X(dx),gnd(dx,dz)+.05,Z(dz));m.rotation.y=Math.PI/2-th}
+    mkFall(SKI,th,2.8,34);mkFall(SKI,th+2.6,2.2,30);mkFall(SKI,th-2.5,2.2,32)}
+  mkParts(SKI,90,'#fff2b8',.35,'r',22,true);
   // an inscription
   {const tb=canvasTex(512,256,(g,w,h)=>{g.fillStyle='#3a3d45';g.fillRect(0,0,w,h);g.strokeStyle='#9fe7ff';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);g.fillStyle='#e8f6ff';g.textAlign='center';g.font='bold 54px Georgia,serif';g.fillText('ONSKY GARDEN',w/2,100);g.font='28px Georgia,serif';g.fillText('You reached the top. Rest a while.',w/2,158);g.font='22px Georgia,serif';g.fillStyle='#9fe7ff';g.fillText('Step into the light to go back down.',w/2,206)}),
       m=new THREE.Mesh(new B(3.6,1.8,.22),[dark,dark,dark,dark,new THREE.MeshStandardMaterial({map:tb,roughness:.8,emissive:'#ffffff',emissiveMap:tb,emissiveIntensity:.35}),dark]);const y=gnd(0,8);at(m,X(0),y+1.1,Z(8));m.rotation.y=Math.PI;m.rotation.x=-.12}
@@ -5051,6 +5083,100 @@ const GARFX={flames:[],rings:[],floaters:[],petals:null,beams:[],gy:0,plm:[],amt
   {const top=mkBeam(1.6,.35,70,SKI.y+35);top.userData.top=1;const t2=mkBeam(.7,.8,70,SKI.y+35);t2.userData.top=1}
   for(let i=0;i<8;i++){const mt=new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),m=new THREE.Mesh(new THREE.RingGeometry(1.2,1.9,32),mt);m.rotation.x=-Math.PI/2;m.renderOrder=4;GARG.add(m);GARFX.rings.push({m,mt,o:i/8,bh,gy})}
   const base=glowSprite('rgba(255,235,170,.8)',9);base.position.set(BEAM.x,gy+.8,BEAM.z);GARG.add(base);GARFX.base=base})();
+
+/* ---- two garden islands, either side of the Sky Garden, reached through portals: the Blossom Garden (west) and the Starlight Garden (east) ---- */
+function islBody(I,cl){const N=64,TR=14,UR=9,pos=[],col=[],idx=[],C=new THREE.Color(),vtx=(x,y,z,c)=>{pos.push(x,y,z);col.push(c.r,c.g,c.b);return pos.length/3-1},
+    gA=new THREE.Color(cl[0]),gB=new THREE.Color(cl[1]),soil=new THREE.Color(cl[2]),rock=new THREE.Color(cl[3]),rock2=new THREE.Color(cl[4]),rings=[[vtx(0,islHI(I,0,0),0,gA)]];
+  for(let i=1;i<=TR;i++){const u=i/TR,r=[];for(let k=0;k<N;k++){const a=k/N*6.2832,R=islR(a,I)*u,x=Math.cos(a)*R,z=Math.sin(a)*R;C.copy(gA).lerp(gB,.5+.5*Math.sin(x*.31)*Math.sin(z*.27));if(u>.94)C.lerp(soil,.55);r.push(vtx(x,islHI(I,x,z),z,C))}rings.push(r)}
+  for(let j=1;j<=UR;j++){const t=j/UR,r=[];if(j===UR){r.push(vtx(0,-34,0,rock2));rings.push(r);break}
+    for(let k=0;k<N;k++){const a=k/N*6.2832,R=islR(a,I)*Math.pow(1-t,.75)*(1+.1*Math.sin(a*7+j*1.7)+.06*Math.sin(a*13-j)),y=-t*32*(1+.15*Math.sin(a*5+j))-(1-t)*.5;C.copy(j<=2?soil:rock).lerp(rock2,Math.min(1,t*1.1)).offsetHSL(0,0,.04*Math.sin(k*1.7+j*2.3));r.push(vtx(Math.cos(a)*R,y,Math.sin(a)*R,C))}rings.push(r)}
+  for(let i=0;i<rings.length-1;i++){const A=rings[i],B2=rings[i+1];if(A.length===1){for(let k=0;k<N;k++)idx.push(A[0],B2[k],B2[(k+1)%N])}else if(B2.length===1){for(let k=0;k<N;k++)idx.push(A[k],B2[0],A[(k+1)%N])}else for(let k=0;k<N;k++){const k1=(k+1)%N;idx.push(A[k],B2[k],A[k1],A[k1],B2[k],B2[k1])}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
+  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,flatShading:true,side:THREE.DoubleSide}));m.position.set(I.x,I.y,I.z);GARG.add(m)}
+function buildSide(I){const W1=I.id==='w',M=(c,r=.9,e,ei)=>new THREE.MeshStandardMaterial({color:c,roughness:r,flatShading:true,emissive:e||'#000000',emissiveIntensity:ei||0}),Cy=THREE.CylinderGeometry,B=THREE.BoxGeometry,
+    X=dx=>I.x+dx,Z=dz=>I.z+dz,gnd=(dx,dz)=>islTop(X(dx),Z(dz)),at=(m,x,y,z)=>{m.position.set(x,y,z);GARG.add(m);return m},rg=(()=>{let q=W1?4471:9311;return()=>(q=(q*16807)%2147483647)/2147483647})(),
+    rimOK=(dx,dz,m)=>Math.hypot(dx,dz)<islR(Math.atan2(dz,dx),I)-2-(m||0),glow=(c,sz,x,y,z)=>{const g=glowSprite(c,sz);g.position.set(x,y,z);GARG.add(g);return g},
+    PD=W1?{x:-3,z:4,r:5}:{x:4,z:-3,r:6.5},offPath=(dx,dz,pad)=>W1?(dx>-5&&Math.abs(dz)<(pad||3)):(dx<5&&Math.abs(dz+Math.sin(0)*0)<(pad||3)),
+    m4=new THREE.Matrix4(),cc=new THREE.Color(),blue=new THREE.MeshBasicMaterial({color:'#9fe7ff'});
+  islBody(I,W1?['#92d86f','#72c458','#7b5b3b','#8a7f86','#5b5260']:['#4fcaa6','#3fae93','#3d5b66','#6b7690','#454c66']);
+  // crystals hanging underneath and rocks drifting round
+  for(let i=0;i<6;i++){const a=i*2.4+.5,r=4+(i%3)*5,c=at(new THREE.Mesh(new THREE.ConeGeometry(.8+(i%2)*.4,3.2,5),blue),X(Math.cos(a)*r),I.y-8-(i%4)*3.5,Z(Math.sin(a)*r));c.rotation.x=Math.PI;if(i%2===0){const gl=glow('rgba(140,225,255,.7)',4.5,c.position.x,c.position.y,c.position.z);GARFX.flames.push(gl)}}
+  // the pond
+  const wm=new THREE.MeshStandardMaterial({color:W1?'#8fe0f0':'#59d0e6',roughness:.1,metalness:.1,transparent:true,opacity:.84,emissive:W1?'#1b5870':'#1b6a8a',emissiveIntensity:W1?.5:.9}),
+    water=at(new THREE.Mesh(new THREE.CircleGeometry(PD.r,32),wm),X(PD.x),I.y-.42,Z(PD.z));water.rotation.x=-Math.PI/2;
+  const stone=M('#b9b6bd'),wood=M('#8a5a36'),dark=M('#4b4d57');
+  for(let i=0;i<14;i++){const a=i/14*6.283,rr=PD.r+.3+rg()*.5,dx=PD.x+Math.cos(a)*rr,dz=PD.z+Math.sin(a)*rr;at(new THREE.Mesh(new THREE.DodecahedronGeometry(.45+rg()*.35,0),M('#8d8f98')),X(dx),gnd(dx,dz)+.05,Z(dz)).scale.y=.7}
+  if(W1){
+    // BLOSSOM GARDEN: stone path from the portal to the pond under three wisteria arches, sakura everywhere, a gazebo, paper lanterns
+    for(let i=0;i<11;i++){const dx=17-i*1.75,dz=Math.sin(i*.7)*.9;at(new THREE.Mesh(new Cy(.8,.85,.12,8),stone),X(dx),gnd(dx,dz)+.04,Z(dz))}
+    const wis=new THREE.InstancedMesh(new THREE.SphereGeometry(.15,6,5),M('#ffffff',.8,'#8a6ae0',.35),150),wc=['#b9a1ff','#cdb8ff','#a98bf5','#d9c9ff'];let wn=0;
+    [14,10.5,7].forEach(ax=>{const gy=gnd(ax,0),pr=M('#f1ede6',.85);[-1.8,1.8].forEach(sz=>at(new THREE.Mesh(new Cy(.17,.2,3.3,7),pr),X(ax),gy+1.6,Z(sz)));at(new THREE.Mesh(new B(.4,.22,4.4),pr),X(ax),gy+3.3,Z(0));
+      for(let k=0;k<22&&wn<150;k++){const sz=-2+rg()*4,len=.5+rg()*1.5;m4.compose(new THREE.Vector3(X(ax+(rg()-.5)*.5),gy+3.1-len*.5,Z(sz)),new THREE.Quaternion(),new THREE.Vector3(1,1+len*2.2,1));wis.setMatrixAt(wn,m4);wis.setColorAt(wn,cc.set(wc[k%4]));wn++}});
+    wis.count=wn;GARG.add(wis);
+    // sakura trees
+    const trunk=M('#7a5230'),blo=['#ffb8d1','#ff9fc2','#ffd0e1','#ffc7dc'];let tn=0;
+    for(let t=0;t<200&&tn<17;t++){const a=rg()*6.283,r=7+rg()*(I.r-12),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,2)||offPath(dx,dz,3.4)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+2.6||Math.hypot(dx+13,dz+9)<5||Math.hypot(dx-20,dz)<5)continue;
+      tn++;const y=gnd(dx,dz),sc=.8+rg()*.7;at(new THREE.Mesh(new Cy(.2*sc,.34*sc,3.4*sc,6),trunk),X(dx),y+1.6*sc,Z(dz)).rotation.z=Math.sin(tn)*.08;
+      for(let k=0;k<4;k++){const ox=(rg()-.5)*2.4*sc,oz=(rg()-.5)*2.4*sc,oy=(3.5+rg()*1.3)*sc,kk=at(new THREE.Mesh(new THREE.IcosahedronGeometry((1.6+rg()*.9)*sc,1),M(blo[(tn+k)%4],.8,'#ff8fb8',.22)),X(dx)+ox,y+oy,Z(dz)+oz);kk.scale.y=.8}}
+    // gazebo
+    {const gx=-13,gz=-9,gy=gnd(gx,gz);at(new THREE.Mesh(new Cy(3.3,3.4,.22,24),stone),X(gx),gy+.05,Z(gz));for(let i=0;i<6;i++){const a=i/6*6.283;at(new THREE.Mesh(new Cy(.15,.18,3.1,6),M('#f1ede6')),X(gx+Math.cos(a)*2.9),gy+1.6,Z(gz+Math.sin(a)*2.9))}
+      at(new THREE.Mesh(new THREE.ConeGeometry(4.2,1.9,6),M('#d9677d',.8)),X(gx),gy+4.1,Z(gz));const gl=glow('rgba(255,225,170,.7)',6,X(gx),gy+2.4,Z(gz));GARFX.flames.push(gl)}
+    // paper lanterns on poles
+    for(let i=0;i<8;i++){const a=i/8*6.283+.3,dx=Math.cos(a)*(I.r-7),dz=Math.sin(a)*(I.r-7);if(!rimOK(dx,dz,3)||offPath(dx,dz,3))continue;const y=gnd(dx,dz);at(new THREE.Mesh(new Cy(.06,.09,2.6,6),dark),X(dx),y+1.2,Z(dz));
+      at(new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:'#ffd9a0'})),X(dx),y+2.7,Z(dz));GARFX.flames.push(glow('rgba(255,210,150,.75)',3.2,X(dx),y+2.7,Z(dz)))}
+    // lily pads and a few lotus
+    for(let i=0;i<8;i++){const a=i*1.3,rr=.8+rg()*(PD.r-1.6),dx=PD.x+Math.cos(a)*rr,dz=PD.z+Math.sin(a)*rr;at(new THREE.Mesh(new Cy(.45,.45,.04,10),M('#4fa05a')),X(dx),I.y-.38,Z(dz));if(i%2)at(new THREE.Mesh(new THREE.ConeGeometry(.2,.4,6),M('#ffd0e1',.7,'#ff8fb8',.4)),X(dx),I.y-.18,Z(dz))}
+    mkFall(I,Math.PI,2.8,32);mkFall(I,Math.PI*.64,2.2,28);mkFall(I,Math.PI*1.38,2.2,28);
+    mkParts(I,170,'#ffc2d8',.4,'f',16,false);
+  }else{
+    // STARLIGHT GARDEN: a lotus pond with glowing lotus, a glowing path, willows hung with light, glowing mushrooms, a moon gate, fireflies
+    for(let i=0;i<11;i++){const dx=-17+i*1.75,dz=Math.sin(i*.7)*.9;at(new THREE.Mesh(new Cy(.7,.75,.1,8),new THREE.MeshBasicMaterial({color:'#9fe8ff'})),X(dx),gnd(dx,dz)+.04,Z(dz))}
+    for(let i=0;i<9;i++){const a=i*2.3,rr=1.8+(i%3)*1.6,dx=PD.x+Math.cos(a)*rr,dz=PD.z+Math.sin(a)*rr,y=I.y-.36;at(new THREE.Mesh(new Cy(.9,.9,.04,12),M('#2f9a7a')),X(dx),y,Z(dz));
+      for(let k=0;k<8;k++){const p=at(new THREE.Mesh(new THREE.ConeGeometry(.26,1.2,5),M(i%2?'#ffd0f0':'#d6f0ff',.6,i%2?'#ff7ad0':'#7ad0ff',.9)),X(dx)+Math.cos(k/8*6.283)*.45,y+.55,Z(dz)+Math.sin(k/8*6.283)*.45);p.rotation.set(Math.sin(k/8*6.283)*.55,0,-Math.cos(k/8*6.283)*.55)}
+      GARFX.flames.push(glow(i%2?'rgba(255,150,220,.65)':'rgba(130,210,255,.65)',3,X(dx),y+.7,Z(dz)))}
+    // willows
+    const wt=M('#5a4a78'),cn=[];let tn=0;
+    for(let t=0;t<200&&tn<9;t++){const a=rg()*6.283,r=8+rg()*(I.r-13),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,3)||offPath(dx,dz,3.4)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+3||Math.hypot(dx+11,dz+12)<6||Math.hypot(dx+20,dz)<5||cn.some(q=>Math.hypot(q[0]-dx,q[1]-dz)<7))continue;
+      cn.push([dx,dz]);tn++;const y=gnd(dx,dz),sc=.9+rg()*.5;at(new THREE.Mesh(new Cy(.22*sc,.4*sc,4.2*sc,6),wt),X(dx),y+2*sc,Z(dz));
+      const cr=at(new THREE.Mesh(new THREE.IcosahedronGeometry(2.6*sc,1),M('#7a6ad8',.8,'#5a4ad0',.35)),X(dx),y+4.6*sc,Z(dz));cr.scale.y=.6;
+      for(let k=0;k<20;k++){const aa=k/20*6.283+rg()*.3,rr=(1.3+rg()*1.8)*sc,len=(2.4+rg()*2.4)*sc;at(new THREE.Mesh(new Cy(.035,.02,len,4),new THREE.MeshBasicMaterial({color:k%3?'#9fe8ff':'#d9b8ff'})),X(dx)+Math.cos(aa)*rr,y+4.3*sc-len/2,Z(dz)+Math.sin(aa)*rr)}
+      GARFX.flames.push(glow('rgba(150,130,255,.5)',9*sc,X(dx),y+4.2*sc,Z(dz)))}
+    // glowing mushrooms
+    for(let t=0,n=0;t<200&&n<10;t++){const a=rg()*6.283,r=6+rg()*(I.r-10),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,2)||offPath(dx,dz,2.6)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+1.5)continue;n++;
+      const y=gnd(dx,dz),h=.7+rg()*1.2,col=n%2?'#7ad0ff':'#ff8ad8';at(new THREE.Mesh(new Cy(.12,.16,h,6),M('#f2eefc')),X(dx),y+h/2,Z(dz));const cap=at(new THREE.Mesh(new THREE.SphereGeometry(.6+rg()*.4,10,6,0,6.283,0,1.6),new THREE.MeshBasicMaterial({color:col})),X(dx),y+h,Z(dz));cap.scale.y=.7;
+      GARFX.flames.push(glow(n%2?'rgba(120,200,255,.6)':'rgba(255,130,215,.6)',3.4,X(dx),y+h+.2,Z(dz)))}
+    // the moon gate
+    {const gx=-11,gz=-12,gy=gnd(gx,gz),th=Math.atan2(-gx,-gz),sm=M('#eceaf4',.7,'#9fd3ff',.4),gate=new THREE.Group();gate.position.set(X(gx),gy,Z(gz));gate.rotation.y=th;GARG.add(gate);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(4.4,.38,10,48),sm);ring.position.y=4.8;gate.add(ring);[-1,1].forEach(sd=>{const p=new THREE.Mesh(new B(1,.6,1.4),sm);p.position.set(sd*3.2,.3,0);gate.add(p)});
+      const disc=new THREE.Mesh(new THREE.CircleGeometry(4.1,40),new THREE.MeshBasicMaterial({color:'#b9d8ff',transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));disc.position.y=4.8;gate.add(disc);
+      const gl=glowSprite('rgba(170,210,255,.55)',16);gl.position.set(0,4.8,0);gate.add(gl)}
+    // luminous flowers
+    {const fl=new THREE.InstancedMesh(new THREE.OctahedronGeometry(.2,0),new THREE.MeshBasicMaterial({color:'#ffffff'}),360),pc=['#7ad0ff','#c9a8ff','#ffffff','#ff9fe0','#9fffe0'];let n=0;
+      for(let t=0;t<1200&&n<360;t++){const a=rg()*6.283,r=5+rg()*(I.r-8),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,1)||offPath(dx,dz,1.6)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+.6)continue;m4.makeTranslation(X(dx),gnd(dx,dz)+.16,Z(dz));fl.setMatrixAt(n,m4);fl.setColorAt(n,cc.set(pc[n%5]));n++}fl.count=n;GARG.add(fl)}
+    mkFall(I,0,2.8,32);mkFall(I,Math.PI*.38,2.2,28);mkFall(I,-Math.PI*.4,2.2,28);
+    mkParts(I,130,'#d8ffa0',.45,'r',14,true);
+  }
+  if(W1){const fl=new THREE.InstancedMesh(new THREE.OctahedronGeometry(.17,0),M('#ffffff',.8),420),pc=['#ffffff','#ffb8d1','#ff9fc2','#d9c9ff','#fff2a8'];let n=0;
+    for(let t=0;t<1400&&n<420;t++){const a=rg()*6.283,r=5+rg()*(I.r-8),dx=Math.cos(a)*r,dz=Math.sin(a)*r;if(!rimOK(dx,dz,1)||offPath(dx,dz,1.6)||Math.hypot(dx-PD.x,dz-PD.z)<PD.r+.6)continue;m4.makeTranslation(X(dx),gnd(dx,dz)+.12,Z(dz));fl.setMatrixAt(n,m4);fl.setColorAt(n,cc.set(pc[n%5]));n++}fl.count=n;GARG.add(fl)}}
+buildSide(SKIS[1]);buildSide(SKIS[2]);
+// the portals: an arch with a swirling light between them. Walk in and wait a moment; you come out at the other end, and have to step away before it takes you back
+const PORTS=[];
+function mkPortal(I,ang,c1,c2,gc,label){const R=I.r*.78,x=I.x+Math.cos(ang)*R,z=I.z+Math.sin(ang)*R,y=islTop(x,z),th=Math.atan2(I.x-x,I.z-z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=th;GARG.add(g);
+  const st=new THREE.MeshStandardMaterial({color:'#dcdfe9',roughness:.6,flatShading:true,emissive:c1,emissiveIntensity:.3}),Cy=THREE.CylinderGeometry;
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.4,.22,10,44),st);ring.position.y=2.9;g.add(ring);
+  [-1,1].forEach(sd=>{const p=new THREE.Mesh(new Cy(.34,.42,5.6,8),st);p.position.set(sd*2.4,2.8,0);g.add(p);const cap=new THREE.Mesh(new THREE.OctahedronGeometry(.5,0),new THREE.MeshBasicMaterial({color:c1}));cap.position.set(sd*2.4,6,0);g.add(cap);const gl=glowSprite(gc,3.5);gl.position.set(sd*2.4,6,0);g.add(gl)});
+  const base=new THREE.Mesh(new Cy(3.4,3.6,.3,28),st);base.position.y=.12;g.add(base);
+  const mat=new THREE.ShaderMaterial({uniforms:{t:{value:0},c1:{value:new THREE.Color(c1)},c2:{value:new THREE.Color(c2)}},transparent:true,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending,
+    vertexShader:'varying vec2 v;void main(){v=uv-.5;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'uniform float t;uniform vec3 c1,c2;varying vec2 v;void main(){float r=length(v)*2.,a=atan(v.y,v.x);float s=sin(a*3.+r*9.-t*2.5)*.5+.5;float w=sin(a*5.-r*6.+t*1.7)*.5+.5;vec3 c=mix(c1,c2,s*.7+w*.3);float al=smoothstep(1.,.55,r)*(.35+.5*s)+smoothstep(.2,0.,r)*.4;gl_FragColor=vec4(c*al*1.4,al);}'});
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(2.2,40),mat);disc.position.y=2.9;g.add(disc);const gl=glowSprite(gc,9);gl.position.set(0,2.9,0);g.add(gl);
+  const tx=canvasTex(512,96,(c,w,h)=>{c.font='bold 46px Georgia,serif';c.textAlign='center';c.shadowColor='rgba(0,0,0,.7)';c.shadowBlur=8;c.fillStyle='#ffffff';c.fillText(label,w/2,62)}),sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false,fog:false}));sp.scale.set(7.5,1.4,1);sp.position.set(0,7.6,0);g.add(sp);
+  PORTS.push({x,z,arrive:{x:x+Math.sin(th)*3.8,z:z+Math.cos(th)*3.8},armed:true,charge:0,mat,label,to:-1});return PORTS.length-1}
+{const a=mkPortal(SKI,Math.PI,'#ffb3d1','#ffe9f2','rgba(255,190,220,.7)','Blossom Garden'),b=mkPortal(SKIS[1],0,'#ffb3d1','#ffe9f2','rgba(255,190,220,.7)','Back to the Sky Garden'),
+    c=mkPortal(SKI,0,'#8fd8ff','#c9a8ff','rgba(150,200,255,.7)','Starlight Garden'),d=mkPortal(SKIS[2],Math.PI,'#8fd8ff','#c9a8ff','rgba(150,200,255,.7)','Back to the Sky Garden');
+  PORTS[a].to=b;PORTS[b].to=a;PORTS[c].to=d;PORTS[d].to=c;
+  const fl=glowSprite('rgba(235,245,255,.95)',16);fl.visible=false;GARG.add(fl);GARFX.flash=fl}
+function portalGo(p){const q=PORTS[p.to];q.armed=false;P.position.x=q.arrive.x;P.position.z=q.arrive.z;const f=GARFX.flash;f.position.set(q.arrive.x,islTop(q.arrive.x,q.arrive.z)+1.6,q.arrive.z);f.material.opacity=1;f.visible=true;try{chime(1)}catch(_){}toast('',q.label==='Back to the Sky Garden'?'Back in the Sky Garden ✨':'Welcome to the '+q.label.replace('Back to ','')+' ✨',true)}
 function ascStep(dt){ASC.t+=dt;const u=Math.min(1,ASC.t/(ASC.m===1?6:5)),e=u*u*(3-2*u),k=1-Math.exp(-dt*5),tx=ASC.m===1?BEAM.x:SKI.x,tz=ASC.m===1?BEAM.z:SKI.z;MOB.HP.inv=Math.max(MOB.HP.inv||0,.5);   // (safe on the way)
   P.position.x+=(tx-P.position.x)*k;P.position.z+=(tz-P.position.z)*k;P.position.y=ASC.y0+(ASC.y1-ASC.y0)*e;P.rotation.y+=dt*(1.2+2.5*Math.sin(Math.PI*u));JUMP.y=JUMP.v=0;
   if(u>=1){ASC.charge=0;if(ASC.m!==1)ASC.armedG=false;if(ASC.m===1){ONSKY=true;ASC.armed=false;if(!ASC.welcomed){ASC.welcomed=true;toast('','Welcome to the Sky Garden 🌸 Few ever see this place.',true)}}else ONSKY=false;ASC.m=0}}
@@ -5067,7 +5193,7 @@ async function skyKnock(){if(SKYG.busy)return;SKYG.busy=true;
   catch(e){const m=String(e&&e.message||'');if(/not quite/i.test(m))toast('','The stones stay quiet',true);else if(/too many|locked/i.test(m))toast('',m,true);else if(/sign in/i.test(m))toast('','Sign in first to try the keeper’s secret',true)}   // (not set up yet: say nothing)
   finally{SKYG.busy=false}}
 function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(px-BEAM.x,pz-BEAM.z);
-  if(ONSKY&&!ASC.m&&Math.hypot(px-SKI.x,pz-SKI.z)>SKI.r*1.3)ONSKY=false;   // (teleported away from up there)
+  if(ONSKY&&!ASC.m&&!SKIS.some(I=>Math.hypot(px-I.x,pz-I.z)<I.r*1.3))ONSKY=false;   // (teleported away from up there)
   const lv=MOB.RPG.l>=99||SKYG.st===3,alive=MOB.HP.v>0,now=performance.now(),PR=4.6;   // (PR: the radius of the stone circle)
   if(!ASC.m&&alive&&!open){
     if(!ONSKY){if(near>PR+.8)ASC.armedG=true;   // (after a ride down you have to step off the circle before it will take you up again)
@@ -5085,8 +5211,11 @@ function gardenTick(dt,t){const px=P.position.x,pz=P.position.z,near=Math.hypot(
   GARFX.beams.forEach(b=>{b.m.visible=am>0;b.mt.color.copy(gold);b.mt.opacity=b.op*am*pulse;b.mt.map.offset.y=-t*.2});
   GARFX.rings.forEach(r=>{r.m.visible=am>0;const u=(t*.16+r.o)%1;r.m.position.set(BEAM.x,r.gy+u*r.bh,BEAM.z);r.mt.color.copy(gold);r.mt.opacity=.7*am*Math.sin(Math.PI*u)});
   GARFX.base.material.opacity=.9*am;GARFX.base.visible=am>0;GARFX.plm.forEach(m=>m.emissiveIntensity=.25+.5*am);
+  PORTS.forEach(p=>p.mat.uniforms.t.value=t);fallTex.offset.y=(t*.8)%1;GARFX.orbs.forEach(o=>o.m.position.y=o.y+Math.sin(t*1.3+o.p)*.25);
+  if(GARFX.flash&&GARFX.flash.visible){GARFX.flash.material.opacity-=dt*1.6;if(GARFX.flash.material.opacity<=.02)GARFX.flash.visible=false}
+  if(ONSKY&&!ASC.m&&alive&&!open&&!sitting&&!riding)for(const p of PORTS){const d=Math.hypot(px-p.x,pz-p.z);if(d>3.6)p.armed=true;if(d<1.7&&p.armed){p.charge+=dt;if(p.charge>=.7){p.charge=0;portalGo(p);break}}else p.charge=0}
   GARFX.floaters.forEach(f=>{f.m.position.y=f.y+Math.sin(t*.5+f.p)*1.2;f.m.rotation.y=t*.15+f.p;f.m.rotation.x=Math.sin(t*.3+f.p)*.2});
-  if(ONSKY||ASC.m){const pa=GARFX.petals;for(let i=0;i<pa.length;i+=3){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=16;pa[i]=(Math.random()-.5)*2*SKI.r;pa[i+2]=(Math.random()-.5)*2*SKI.r}}GARFX.pts.geometry.attributes.position.needsUpdate=true}}
+  if(ONSKY||ASC.m){GARFX.parts.forEach(q=>{const pa=q.pa,R=q.I.r*.95;for(let i=0;i<pa.length;i+=3){if(q.m==='f'){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=q.h;pa[i]=(Math.random()-.5)*2*R;pa[i+2]=(Math.random()-.5)*2*R}}else{pa[i+1]+=dt*(.5+.4*Math.sin(i));pa[i]+=Math.sin(t*.7+i)*dt*.4;pa[i+2]+=Math.cos(t*.6+i)*dt*.4;if(pa[i+1]>q.h){pa[i+1]=0;pa[i]=(Math.random()-.5)*2*R;pa[i+2]=(Math.random()-.5)*2*R}}}q.pts.geometry.attributes.position.needsUpdate=true});const pa=GARFX.petals;for(let i=0;i<pa.length;i+=3){pa[i+1]-=dt*(.7+.3*Math.sin(i));pa[i]+=Math.sin(t*.8+i)*dt*.6;if(pa[i+1]<-8){pa[i+1]=16;pa[i]=(Math.random()-.5)*2*SKI.r;pa[i+2]=(Math.random()-.5)*2*SKI.r}}GARFX.pts.geometry.attributes.position.needsUpdate=true}}
 
 const clockT=new THREE.Clock();let t=0,walkPh=0,walkAmt=0,frames=0,lift=0,lastStep=0;
 function frame(){
