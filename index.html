@@ -2975,7 +2975,7 @@ function hideGate(){gateOn=false;gate.classList.add('out');setTimeout(()=>{if(!g
 /* the gate's 3D set dressing: a few little floating islands and crystals over the dusk skyline. Built when the gate opens, freed when it closes; if WebGL is
    not available the flat skyline simply stays as it is */
 const G3={r:null,raf:0,on:false};
-function gate3dStop(){G3.on=false;cancelAnimationFrame(G3.raf);if(G3.r){G3.dispose&&G3.dispose();G3.r.dispose();try{G3.r.forceContextLoss()}catch(_){}G3.r=null;$('gate').classList.remove('g3')}}
+function gate3dStop(){G3.on=false;cancelAnimationFrame(G3.raf);if(G3.r){G3.dispose&&G3.dispose();G3.r.dispose();try{G3.r.forceContextLoss()}catch(_){}G3.r=null;$('gate').classList.remove('g3');const old=$('g3d');old.replaceWith(old.cloneNode(false))}}   // (a fresh canvas for next time: one whose context was force-lost can't be used again, and shows as a broken picture over a blank screen when you sign out and the gate comes back)
 function gate3dStart(){
   if(G3.r)return;
   const cvs=$('g3d');let r;try{r=new THREE.WebGLRenderer({canvas:cvs,alpha:true,antialias:true,powerPreference:'low-power'})}catch(_){return}
