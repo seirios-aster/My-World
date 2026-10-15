@@ -4343,7 +4343,7 @@ const MOB=(()=>{
   const RPG={l:1,xp:0,s:[0,0,0,0],k:[1,1,1],kb:1,c:0},CLS=[{n:'Knight',ic:'⚔️',hp:100,cdb:{a:.5,z:7,d:3.5}},{n:'Mage',ic:'🔮',hp:85,cdb:{a:.65,z:8,d:5}},{n:'Archer',ic:'🏹',hp:90,cdb:{a:.55,z:7,d:4}}],MAXL=99,need=l=>40+30*l*l,sum=a=>a.reduce((x,y)=>x+y,0),
     spLeft=()=>3*(RPG.l-1)-sum(RPG.s),kpLeft=()=>(RPG.l-1)-(sum(RPG.k)-3)-(RPG.kb-1),
     maxHp=()=>CLS[RPG.c].hp+16*(RPG.l-1)+12*RPG.s[0],dmgMul=i=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+(i===1?.3:.12)*(RPG.k[i]-1))*(1+atkB()/100)*(GOD?1000:1),critP=()=>Math.min(.5,.12+.015*RPG.s[2]),
-    cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[3])*(1-Math.min(.4,bonSum(3)/100))),hitP=(A,E)=>A>=E?1:Math.max(.3,A/E),accP=()=>40+4*RPG.s[3]+2*RPG.l,   // (hitP: the chance an attack lands. Accuracy at or above the other side's evasion never misses; below it the chance is accuracy / evasion, never under 30%)
+    cdOf=k=>Math.max(.4,(CLS[RPG.c].cdb[k]-(k==='d'?.3*(RPG.k[2]-1):0))*Math.max(.6,1-.02*RPG.s[3])*(1-Math.min(.4,bonSum(3)/100))),hitP=(A,E)=>A>=E?1:A/E,accP=()=>40+4*RPG.s[3]+2*RPG.l,   // (hitP: the chance an attack lands. Accuracy at or above the other side's evasion never misses; below it the chance is accuracy / evasion, with no floor: evasion far above accuracy can make it almost never land)
     evaP=()=>10+3*RPG.s[2]+RPG.l,RNG=()=>[0,10,13][RPG.c]+.5*(RPG.k[0]-1),   // (RNG: how far the mage's bolt and the archer's arrow fly; the archer reaches a little further)
     BRSI=['🌪️','🌠','🎯'],BRST=[['🌪️','Blade Storm','Four spinning hits all round you'],['🌠','Starfall','Nine meteors rain around the nearest enemy'],['🎯','Arrow Barrage','Fourteen arrows into the nearest enemies']],ATKI=['⚔️','⚔️','⚔️'],SLMI=['💥','☄️','🌧️'],DSHI=['💨','✨','🥾'],
     SDEF=[['Vitality','+12 max HP each'],['Strength','+8% damage each'],['Agility','+3 evasion (dodge) and +1.5% crit chance each'],['Dexterity','+4 accuracy and 2% faster cooldowns each']],
@@ -4624,7 +4624,7 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
     list.forEach(m=>{if(!seen.has(m.id)){if(!m.dead)burst(m.x,m.y,m.z,TY[m.ty].col);dropMon(m)}})});
   // ---- me: hit points, the three moves ----
   function hurtMe(d,fx,fz,ac){if(GOD||HP.inv>0||HP.v<=0)return;
-    if(ac>0){const E=evaP();if(Math.random()>hitP(ac,E)){numAt(P.position.x,P.position.y+2.4,P.position.z,'Dodge','me');return}}   // (evasion: nothing is dodged while the attacker's accuracy is at least your evasion; above it you dodge more and more, up to 70%)
+    if(ac>0){const E=evaP();if(Math.random()>hitP(ac,E)){numAt(P.position.x,P.position.y+2.4,P.position.z,'Dodge','me');return}}   // (evasion: nothing is dodged while the attacker's accuracy is at least your evasion; above it you dodge more and more, with no cap)
     d=Math.min(400,Math.max(1,Math.round(d*(1-defRed()))));HP.v-=d;   // (only a boss hits for more than 40 before defence; the cap is just there to bound a made-up message)
     HP.hurt=performance.now();EN.v=Math.min(100,EN.v+3*(1+bonSum(4)/100));sfx('hurt');numAt(P.position.x,P.position.y+2.4,P.position.z,'-'+d,'me');
     document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),220);
