@@ -2051,11 +2051,7 @@ CS.forEach(([nm,sd,ld])=>{const cen=[0,0,0];sd.split(';').forEach(s=>{const[n,ra
   if(ld)ld.split(' ').forEach(q=>{const[a,b]=q.split('-');LNP.push(...STAR[a].map(k=>k*R0),...STAR[b].map(k=>k*R0))});
   if(nm!=='*'){const l=Math.hypot(...cen);LBL.push([nm,cen.map(k=>k/l),1])}});
 ['Sirius','Betelgeuse','Rigel'].forEach(n=>LBL.push([n,STAR[n],0]));
-// the ~1100 filler stars are invented, so they are spread evenly (each is the best of a few random spots: the one farthest from every star already placed, real ones included)
-{const P=[];for(let i=0;i<STP.length;i+=3)P.push([STP[i]/R0,STP[i+1]/R0,STP[i+2]/R0]);let ls=777;const lr=()=>(ls=(ls*16807)%2147483647)/2147483647;
-for(let i=0;i<1100;i++){rnd();rnd();const q=rnd(),m=4.2+rnd()*1.7;   // (the shared random sequence advances exactly as before, so nothing else in the world moves)
-  let best=null,bd=-2;for(let k=0;k<10;k++){const z=lr()*2-1,a=lr()*6.283,r=Math.sqrt(1-z*z),c=[r*Math.cos(a),r*Math.sin(a),z];let mx=-2;for(const o of P){const d=c[0]*o[0]+c[1]*o[1]+c[2]*o[2];if(d>mx)mx=d}if(bd<-1||mx<bd){bd=mx;best=c}}
-  P.push(best);addStar(best,m,q<.6?[.85,.9,1]:q<.85?[1,.97,.9]:q<.95?[1,.85,.65]:[1,.72,.55])}}
+for(let i=0;i<1100;i++){const z=rnd()*2-1,a=rnd()*6.283,r=Math.sqrt(1-z*z);const q=rnd();addStar([r*Math.cos(a),r*Math.sin(a),z],4.2+rnd()*1.7,q<.6?[.85,.9,1]:q<.85?[1,.97,.9]:q<.95?[1,.85,.65]:[1,.72,.55])}
 const SKYBLEND={blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor};   // (alpha blending without being 'transparent', so these stay in the early sky pass instead of being drawn after the scene)
 const starMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},t:{value:0},pr:{value:pixelRatio()},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
   vertexShader:`attribute vec3 col;attribute float sz,mg;uniform float pr;varying vec3 vc;varying float vh,ph,vm,vl,vs;void main(){vc=col;vm=mg;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;ph=fract(sin(dot(position,vec3(12.9898,78.233,37.719)))*43758.5453)*6.2832;vs=.7+fract(ph*7.31)*.9;vl=1.-clamp(normalize(w.xyz-cameraPosition).y,0.,1.);gl_PointSize=(sz+(mg<1.5?3.5:0.)+(mg<4.?.8:0.))*1.3*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
