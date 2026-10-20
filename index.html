@@ -2043,23 +2043,23 @@ const CS=[
 ['Centaurus','RigilKent 14.66 -60.835 -.27;Hadar 14.064 -60.373 .61',''],
 ['Leo','Regulus 10.139 11.967 1.35;EtaLeo 10.122 16.763 3.5;Algieba 10.333 19.842 2.28;Adhafera 10.278 23.417 3.43;Rasalas 9.879 26.007 3.88;Algenubi 9.764 23.774 2.98;Zosma 11.235 20.524 2.56;Denebola 11.818 14.572 2.14;Chertan 11.237 15.43 3.3','Regulus-EtaLeo EtaLeo-Algieba Algieba-Adhafera Adhafera-Rasalas Rasalas-Algenubi Algieba-Zosma Zosma-Denebola Zosma-Chertan Chertan-Regulus'],
 ['*','Arcturus 14.261 19.182 -.05;Vega 18.616 38.784 .03;Capella 5.278 45.998 .08;Canopus 6.399 -52.696 -.74;Altair 19.846 8.868 .76;Deneb 20.69 45.28 1.25;Spica 13.42 -11.161 .97;Fomalhaut 22.961 -29.622 1.16;Polaris 2.53 89.264 1.98;Achernar 1.629 -57.237 .46','']];
-const STAR={},STP=[],STC=[],STS=[],LNP=[],LBL=[],sc=new THREE.Color();
+const STAR={},STP=[],STC=[],STS=[],STM=[],LNP=[],LBL=[],sc=new THREE.Color();
 const cdir=(ra,de)=>{const a=ra*Math.PI/12,d=de*Math.PI/180;return[Math.cos(d)*Math.cos(a),Math.cos(d)*Math.sin(a),Math.sin(d)]};
 function addStar(v,m,c){c=c||[.9,.93,1];sc.setRGB(c[0],c[1],c[2],THREE.SRGBColorSpace).multiplyScalar(m<.6?2.6:m<1.5?1.7:m<2.5?1.15:.95);
-  STP.push(v[0]*R0,v[1]*R0,v[2]*R0);STC.push(sc.r,sc.g,sc.b);STS.push(Math.max(1.6,(6.2-m)*1.5))}
+  STP.push(v[0]*R0,v[1]*R0,v[2]*R0);STC.push(sc.r,sc.g,sc.b);STS.push(Math.max(2,Math.min(5.5,(6.2-m)*.85)));STM.push(m)}
 CS.forEach(([nm,sd,ld])=>{const cen=[0,0,0];sd.split(';').forEach(s=>{const[n,ra,de,m]=s.split(' '),v=cdir(+ra,+de);STAR[n]=v;addStar(v,+m,TINT[n]);cen[0]+=v[0];cen[1]+=v[1];cen[2]+=v[2];if(nm==='*')LBL.push([n,v,0])});
   if(ld)ld.split(' ').forEach(q=>{const[a,b]=q.split('-');LNP.push(...STAR[a].map(k=>k*R0),...STAR[b].map(k=>k*R0))});
   if(nm!=='*'){const l=Math.hypot(...cen);LBL.push([nm,cen.map(k=>k/l),1])}});
 ['Sirius','Betelgeuse','Rigel'].forEach(n=>LBL.push([n,STAR[n],0]));
-for(let i=0;i<1100;i++){const z=rnd()*2-1,a=rnd()*6.283,r=Math.sqrt(1-z*z);addStar([r*Math.cos(a),r*Math.sin(a),z],4.2+rnd()*1.7)}
+for(let i=0;i<1100;i++){const z=rnd()*2-1,a=rnd()*6.283,r=Math.sqrt(1-z*z);const q=rnd();addStar([r*Math.cos(a),r*Math.sin(a),z],4.2+rnd()*1.7,q<.6?[.85,.9,1]:q<.85?[1,.97,.9]:q<.95?[1,.85,.65]:[1,.72,.55])}
 const SKYBLEND={blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor};   // (alpha blending without being 'transparent', so these stay in the early sky pass instead of being drawn after the scene)
 const starMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},t:{value:0},pr:{value:pixelRatio()},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
-  vertexShader:`attribute vec3 col;attribute float sz;uniform float pr;varying vec3 vc;varying float vh,ph;void main(){vc=col;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;ph=position.x*.13+position.z*.07;gl_PointSize=sz*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
-  fragmentShader:`uniform float op,t,hzy;varying vec3 vc;varying float vh,ph;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float tw=.86+.14*sin(t*2.5+ph);gl_FragColor=vec4(vc*tw,op*smoothstep(hzy,hzy+22.,vh)*(1.-d*1.7));}`});
+  vertexShader:`attribute vec3 col;attribute float sz,mg;uniform float pr;varying vec3 vc;varying float vh,ph,vm,vl,vs;void main(){vc=col;vm=mg;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;ph=fract(sin(dot(position,vec3(12.9898,78.233,37.719)))*43758.5453)*6.2832;vs=.7+fract(ph*7.31)*.9;vl=1.-clamp(normalize(w.xyz-cameraPosition).y,0.,1.);gl_PointSize=(sz+(mg<1.5?3.5:0.))*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
+  fragmentShader:`uniform float op,t,hzy;varying vec3 vc;varying float vh,ph,vm,vl,vs;void main(){float d=length(gl_PointCoord-.5)*2.;float core=exp(-d*d*(vm<1.5?30.:vm<3.5?14.:7.)),halo=vm<1.5?.16*exp(-d*d*5.):0.;float am=(.1+.9*vl*vl*vl)*(vm<3.5?1.:.8);float tw=1.+am*(.45*sin(t*7.*vs+ph)+.3*sin(t*13.*vs+ph*2.3)+.25*sin(t*3.1+ph*5.));tw=clamp(tw,.25,1.6);float thr=clamp((vm+1.)/8.,0.,.85);float vis=smoothstep(thr*.7,thr*.7+.3,op);vec3 c=vc*tw;c.b*=1.+.25*vl*sin(t*9.*vs+ph);gl_FragColor=vec4(c,vis*smoothstep(hzy,hzy+22.,vh)*min(1.,(core+halo)*tw));}`});
 const lineMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},hzy:HZY},...SKYBLEND,depthTest:false,depthWrite:false,
   vertexShader:`varying float vh;void main(){vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_Position=projectionMatrix*viewMatrix*w;}`,
   fragmentShader:`uniform float op,hzy;varying float vh;void main(){gl_FragColor=vec4(.42,.6,1.,op*smoothstep(hzy,hzy+22.,vh));}`});
-{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(STP,3));g.setAttribute('col',new THREE.Float32BufferAttribute(STC,3));g.setAttribute('sz',new THREE.Float32BufferAttribute(STS,1));
+{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(STP,3));g.setAttribute('col',new THREE.Float32BufferAttribute(STC,3));g.setAttribute('sz',new THREE.Float32BufferAttribute(STS,1));g.setAttribute('mg',new THREE.Float32BufferAttribute(STM,1));
   const s=new THREE.Points(g,starMat);s.frustumCulled=false;s.renderOrder=-5;sky.add(s)}
 const lineObj=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(LNP,3)),lineMat);lineObj.frustumCulled=false;lineObj.renderOrder=-4;sky.add(lineObj);
 const lg=new THREE.Group();sky.add(lg);
