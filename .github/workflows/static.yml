@@ -41,8 +41,8 @@ jobs:
           cp -r icons _site/
           cp -r models _site/
           cp -r assets _site/
-          # the song list in the game is built from the audio files in assets/, so uploading a song is enough
-          python3 -c "import os,json;print(json.dumps(sorted(f for f in os.listdir('_site/assets') if f.lower().endswith(('.mp3','.ogg','.m4a','.wav','.opus')))))" > _site/assets/music.json
+          # the song list in the game is built from the audio files in assets/ and its folders, so uploading a song is enough
+          python3 -c "import os,json;r='_site/assets';print(json.dumps(sorted(os.path.relpath(os.path.join(d,f),r).replace(os.sep,'/') for d,_,fs in os.walk(r) for f in fs if f.lower().endswith(('.mp3','.ogg','.m4a','.wav','.opus')))))" > _site/assets/music.json
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
