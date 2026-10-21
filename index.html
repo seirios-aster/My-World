@@ -410,7 +410,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
   <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
-  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">Background music <small>(for everyone; Auto follows the place and time of day)</small></div><select id="gmbg" aria-label="Background music"><option value="">Auto (Ragnarok by day, classical at night, Streamside at the beach)</option><option value="off">No music</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">Christmas town <small>(snow on the ground, trees and roofs; White Christmas plays)</small></div><select id="gmxm" aria-label="Christmas town"><option value="auto">Auto (16 to 31 December)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Background music <small>(for everyone; Auto follows the place and time of day)</small></div><select id="gmbg" aria-label="Background music"><option value="">Auto (Ragnarok by day, classical at night, Streamside at the beach)</option><option value="off">No music</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -808,6 +808,7 @@ const PLATS=[];   // low platforms you can step up onto (the podium)
 function platY(x,z){let y=-1e9;for(const p of PLATS)if(Math.abs(x-p.x)<p.hw&&Math.abs(z-p.z)<p.hd)y=Math.max(y,p.top);return y}
 const groundY=(x,z)=>Math.max(H(x,z),deckY(x,z),platY(x,z));
 
+const XMU={value:0};   // how Christmassy the town is (0 = ordinary, 1 = snow on the ground, trees, roofs and rocks); eased towards xmTarget() every frame
 const C={grassA:new THREE.Color('#7cc65a'),grassB:new THREE.Color('#5aa947'),dry:new THREE.Color('#b9cc6c'),alpine:new THREE.Color('#a9b86a'),
   sand:new THREE.Color('#f2dfa8'),wet:new THREE.Color('#d2b884'),seabed:new THREE.Color('#bba67c'),dirt:new THREE.Color('#cda36b'),forest:new THREE.Color('#4f8f45'),
   rock:new THREE.Color('#a39a90'),rockDark:new THREE.Color('#77717a'),snow:new THREE.Color('#f5f8ff'),
@@ -864,14 +865,14 @@ function groundColor(x,z,h,out){
 // terrain mesh: height + painted colours; meadows get a grass grain, rock gets a cracked-stone texture projected from three sides
 const rockTex=tex('rockg',1,1);
 {const g=new THREE.PlaneGeometry(NX*TST,NZ*TST,NX,NZ);g.rotateX(-Math.PI/2);g.translate(TX0+NX*TST/2,0,TZ0+NZ*TST/2);
-  const p=g.attributes.position,col=new Float32Array(p.count*3),mx=new Float32Array(p.count*2),c=new THREE.Color();
-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),h=H(x,z);p.setY(i,h);groundColor(x,z,h,c);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;mx[i*2]=GC.rock;mx[i*2+1]=GC.snow}
-  g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('mx',new THREE.BufferAttribute(mx,2));g.computeVertexNormals();
+  const p=g.attributes.position,col=new Float32Array(p.count*3),mx=new Float32Array(p.count*3),c=new THREE.Color();
+  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),h=H(x,z);p.setY(i,h);groundColor(x,z,h,c);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;mx[i*3]=GC.rock;mx[i*3+1]=GC.snow;mx[i*3+2]=Math.max(0,1-Math.max(GC.dirt,GC.sand,GC.rock)*1.4)}   // (third: grass and forest floor, not trails, sand or rock: what the Christmas snow covers)
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('mx',new THREE.BufferAttribute(mx,3));g.computeVertexNormals();
   const mat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0,map:tex('grass',110,110)});
-  mat.onBeforeCompile=sh=>{sh.uniforms.rockMap={value:rockTex};sh.uniforms.uSnow={value:C.snow};
-    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 mx;varying vec2 vMx;varying vec3 vWP;varying vec3 vWN;')
+  mat.onBeforeCompile=sh=>{sh.uniforms.rockMap={value:rockTex};sh.uniforms.uSnow={value:C.snow};sh.uniforms.uXm=XMU;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 mx;varying vec3 vMx;varying vec3 vWP;varying vec3 vWN;')
       .replace('#include <begin_vertex>','#include <begin_vertex>\nvMx=mx;vWP=transformed;vWN=objectNormal;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D rockMap;uniform vec3 uSnow;varying vec2 vMx;varying vec3 vWP;varying vec3 vWN;')
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D rockMap;uniform vec3 uSnow;uniform float uXm;varying vec3 vMx;varying vec3 vWP;varying vec3 vWN;')
       .replace('#include <map_fragment>',`
         float det=texture2D(map,vMapUv).r,rs=.5,snowM=0.;
         if(vMx.x+vMx.y>.01){
@@ -879,6 +880,7 @@ const rockTex=tex('rockg',1,1);
           rs=texture2D(rockMap,vWP.zy*.12).r*bw.x+texture2D(rockMap,vWP.xz*.12).r*bw.y+texture2D(rockMap,vWP.xy*.12).r*bw.z;
           det=mix(det,.84+(rs-.5)*.9,vMx.x);
           snowM=smoothstep(.4,.6,vMx.y+(rs-.5)*.8);}
+        snowM=max(snowM,uXm*smoothstep(.1,.5,vMx.z)*smoothstep(.15,.45,vWP.y));
         diffuseColor.rgb*=det;`)
       .replace('#include <color_fragment>',`
         diffuseColor.rgb*=vColor;
@@ -1019,6 +1021,12 @@ function occFade(mat){if(mat.userData.occ)return mat;mat.userData.occ=1;const pr
           vec2 a=floor(gl_FragCoord.xy),b=floor(gl_FragCoord.xy*.5);float th=fract(dot(a,vec2(.5,a.y*.75)))+fract(dot(b,vec2(.5,b.y*.75)))*.25;
           if(f>th*.9+.05)discard;}}`)};
   mat.customProgramCacheKey=()=>k0+'|occ';return mat}
+// snow settling on anything that faces up (roofs, rocks, treetops, benches, bridge planks...): in the Christmas season the material's colour is mixed towards white by how much its surface points at the sky.
+// userData.xm = [from, to, most] on a material changes how steep a surface can be and how white it gets.
+function xmasify(mat){if(mat.userData.xmd)return mat;mat.userData.xmd=1;const prev=mat.onBeforeCompile,k0=mat.customProgramCacheKey.call(mat),q=mat.userData.xm||[.38,.72,.95];
+  mat.onBeforeCompile=(sh,r)=>{prev.call(mat,sh,r);sh.uniforms.uXm=XMU;
+    sh.fragmentShader='uniform float uXm;\n'+sh.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n\tif(uXm>.001){float up=inverseTransformDirection(normal,viewMatrix).y;diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.93,.96,1.),uXm*'+q[2].toFixed(2)+'*smoothstep('+q[0].toFixed(2)+','+q[1].toFixed(2)+',up));}')};
+  mat.customProgramCacheKey=()=>k0+'|xm';return mat}
 function instanced(geo,mat,list,place,{cast=true,receive=true}={}){
   const m=new THREE.InstancedMesh(geo,mat,list.length),o=new THREE.Object3D(),c=new THREE.Color(1,1,1);
   list.forEach((it,i)=>{o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);c.setRGB(1,1,1);place(it,o,c,i);o.updateMatrix();m.setMatrixAt(i,o.matrix);m.setColorAt(i,c)});
@@ -1058,7 +1066,7 @@ const ALLTREES=TREES;
 const pines=ALLTREES.filter(t=>t.type===0),rounds=ALLTREES.filter(t=>t.type===1);
 const trunkGeo=new THREE.CylinderGeometry(.3,.45,2.4,6).translate(0,1.2,0);
 instanced(trunkGeo,occFade(std('#7a5232')),ALLTREES,(t,o,c)=>{o.position.set(t.x,t.y,t.z);o.scale.setScalar(t.s);c.setScalar(.85+hs(t.x,t.z,1)*.3)});
-const pineMat=occFade(windify(std('#2f8a4c'),.0016,1.5));
+const pineMat=occFade(windify(std('#2f8a4c'),.0016,1.5));pineMat.userData.xm=[.16,.42,.62];   // (snow settles on the steep cones too)
 instanced(new THREE.ConeGeometry(2.2,4.6,7).translate(0,4.1,0),pineMat,pines,(t,o,c)=>{o.position.set(t.x,t.y,t.z);o.scale.setScalar(t.s);o.rotation.y=t.r;c.setHSL(.37+hs(t.x,1,t.z)*.05,.55,.38+hs(t.z,t.x,2)*.08,THREE.SRGBColorSpace)});
 instanced(new THREE.ConeGeometry(1.6,3.8,7).translate(0,6.5,0),pineMat,pines,(t,o,c)=>{o.position.set(t.x,t.y,t.z);o.scale.setScalar(t.s);o.rotation.y=t.r+.4;c.setHSL(.36+hs(t.x,2,t.z)*.05,.5,.44+hs(t.z,t.x,3)*.08,THREE.SRGBColorSpace)});
 const ROUNDC=['#6cbf4b','#86cc55','#5aae46','#9dcf55','#e3a83c'];
@@ -3328,11 +3336,11 @@ const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1'],['mo','gmmo'],['bg','gmbg']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1'],['mo','gmmo'],['xm','gmxm'],['bg','gmbg']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
 async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);FXS.loaded=true;syncFx()}   // (undefined: can't be read, keep what we have)
 {const note=t=>{$('gmfx').textContent=t};
-  const gmSel='#gmw,#gmf,#gmm1,#gms1,#gmmo,#gmbg';
-  ['gmw','gmf','gmm1','gms1','gmmo','gmbg'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value,mo:$('gmmo').value,bg:$('gmbg').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
+  const gmSel='#gmw,#gmf,#gmm1,#gms1,#gmmo,#gmxm,#gmbg';
+  ['gmw','gmf','gmm1','gms1','gmmo','gmxm','gmbg'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value,mo:$('gmmo').value,xm:$('gmxm').value,bg:$('gmbg').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
     try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
     catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
     finally{[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=false)}}})}
@@ -3520,13 +3528,17 @@ function skyTick(dt){
    Every one is Auto or set by the GM (stored in world_settings.fx, see supabase-world-weather.sql, and read the same way as the game clock).
    Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
    fireflies come out at dusk and stay till dawn. The GM's choice only overrides what Auto would do. */
-const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always'],mo:['auto','always','off']};
-const BGOK=/^(?!\/)(?!.*\.\.)[^\\?#%]{1,120}\.(mp3|ogg|m4a|wav|opus)$/i,FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',bg:'',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
+const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always'],mo:['auto','always','off'],xm:['auto','on','off']};
+const BGOK=/^(?!\/)(?!.*\.\.)[^\\?#%]{1,120}\.(mp3|ogg|m4a|wav|opus)$/i,FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',xm:'auto',bg:'',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
 setTimeout(()=>{FXS.loaded=true;bgmSync()},6000);   // (if it can't be read at all, Auto takes over after 6 s)
 function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}const b=o&&typeof o.bg==='string'&&(o.bg==='off'||BGOK.test(o.bg))?o.bg:'';if(FXS.bg!==b){FXS.bg=b;ch=true}bgmSync();return ch}   // (bg: the music file name or 'off'; anything else means the default)
 const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
-function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=doyNow(),winter=d>=335||d<=6;   // (the game clock's date: 1 Dec to 6 Jan is snow season)
-  return winter?(r<.4?'snow':'clear'):(r<.14?'rain':'clear')}
+function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=doyNow();   // (no snowfall by itself any more: the Christmas look is the winter, see xmTarget; the GM can still pick Snow)
+  return r<.14?'rain':'clear'}
+const xmTarget=()=>{if(!FXS.loaded||FXS.xm==='off')return 0;if(FXS.xm==='on')return 1;const w=wall();return w.mo===12&&w.d>=16?1:0};   // (auto: 16 to 31 December on the game clock)
+let xmGrass=false;
+function xmasTick(dt){const t=xmTarget();if(Math.abs(XMU.value-t)>.002)XMU.value+=(t-XMU.value)*Math.min(1,dt*1.2);else XMU.value=t;
+  const hide=XMU.value>.5;if(hide!==xmGrass){xmGrass=hide;grass.visible=flowers.visible=!hide}}   // (no green blades or flowers poking through the snow)
 const fxWeather=()=>!FXS.loaded?'clear':FXS.w==='auto'?fxAutoWeather():FXS.w;
 const fxGlowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
 const FXG=new THREE.Group();FXG.frustumCulled=false;W.add(FXG);
@@ -3592,8 +3604,9 @@ addEventListener('pointerdown',snd);addEventListener('keydown',snd);
 // An <audio> element streams the file (a 5 MB song is never decoded into memory). It starts on the first tap or key press (browsers do not allow sound before that),
 // follows each player's own volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted, with no fades.)
 const BGM=new Audio();BGM.preload='none';let bgmWant=false,bgmFile='',bgmCur='',bgmFade=1,bgmList=[],bgmNightS=false,bgmBeachS=false,bgmBeachT=0,bgmAcc=1;
-const BGM_DAY=/^Ragnarok/i,BGM_NIGHT=/^Classical/i,BGM_BEACH=/streamside/i,bgmUrl=f=>'assets/'+f.split('/').map(encodeURIComponent).join('/');
-function bgmPool(){const L=bgmList.length?bgmList:['sobakasu.mp3'];   // (the songs that fit right now; if a folder is missing, anything plays)
+const BGM_DAY=/^Ragnarok/i,BGM_NIGHT=/^Classical/i,BGM_BEACH=/streamside/i,BGM_XMAS=/christmas/i,bgmUrl=f=>'assets/'+f.split('/').map(encodeURIComponent).join('/');
+function bgmPool(){const L=(bgmList.length?bgmList:['sobakasu.mp3']).filter(f=>!BGM_XMAS.test(f)||XMU.value>.5);   // (the songs that fit right now; if a folder is missing, anything plays. White Christmas only while the town is Christmassy)
+  if(XMU.value>.5){const x=L.filter(f=>BGM_XMAS.test(f));if(x.length)return x}   // (and then it is the only song, day or night, beach or not)
   if(bgmNightS){const p=L.filter(f=>BGM_NIGHT.test(f));if(p.length)return p}
   else{if(bgmBeachS){const p=L.filter(f=>BGM_BEACH.test(f));if(p.length)return p}const p=L.filter(f=>BGM_DAY.test(f)&&!BGM_BEACH.test(f));if(p.length)return p}
   return L}
@@ -3749,7 +3762,7 @@ function surfaceAt(x,z){const wr=inRiver(x,z);if(wr&&deckY(x,z)<0&&rAt(wr.R.WL,w
   if(deckY(x,z)>-1e8)return 'wood';for(const p of PLATS)if(Math.abs(x-p.x)<p.hw&&Math.abs(z-p.z)<p.hd)return p.hw<.6&&p.hd<.6?'stone':'wood';
   if(sdTrack(x,z,TRK.r2)<0&&sdTrack(x,z,TRK.r1)>0)return 'track';
   const h=H(x,z);if(h<-.15)return 'water';groundColor(x,z,h,tmpC);
-  if(GC.snow>.45)return 'snow';if(GC.rock>.5)return 'rock';if(GC.sand>.5)return 'sand';if(GC.dirt>.5)return 'dirt';return 'grass'}
+  if(GC.snow>.45)return 'snow';if(GC.rock>.5)return 'rock';if(GC.sand>.5)return 'sand';if(GC.dirt>.5)return 'dirt';return XMU.value>.5&&h>.3?'snow':'grass'}
 function footstep(){if(!AC||mute||!A.wn||!A.fsb)return;const k=surfaceAt(P.position.x,P.position.z),d=A.fsb,t=AC.currentTime,r=.85+Math.random()*.3,v=(.8+Math.random()*.4)*((fsAlt^=1)?1:.9);
   switch(k){
     case 'grass':nzb(d,t,'bandpass',2600*r,.5,.17*v,.1);note(d,'sine',110*r,t,.003,.1*v,.07,0,70);break;
@@ -5459,7 +5472,7 @@ function frame(){
   eagleTick(dt);
   birds.forEach(b=>{const a=t*b.sp+b.o,f=Math.sin(t*9+b.o)*.6;b.g.position.set(b.cx+Math.cos(a)*b.r,b.h+Math.sin(t+b.o)*.6,b.cz+Math.sin(a)*b.r);b.g.rotation.y=-a;b.wl[0].rotation.z=f;b.wl[1].rotation.z=-f});
   clouds.forEach(c=>{c.position.x+=c.userData.sp*dt;if(c.position.x>170)c.position.x-=340});
-  skyTick(dt);ambient(dt);bgmTick(dt);coordTick();pinScale();lapTick(dt);crowdTick(dt);
+  skyTick(dt);ambient(dt);xmasTick(dt);bgmTick(dt);coordTick();pinScale();lapTick(dt);crowdTick(dt);
   // camera: orbit behind the walker; pull down past level to look up at the sky
   zs+=(zoom-zs)*.1;
   const SWc=sitting&&sitting.sw,cpx=SWc?SWc.px+(P.position.x-SWc.px)*.3:P.position.x;   // on the swing the camera only follows a little of the to and fro
@@ -5496,7 +5509,7 @@ if(HOMEP.redrawPlate)HOMEP.redrawPlate();buildSigns();buildSummitSign();buildRac
 // the see-through tunnel also takes in everything solid (a bridge seen from below, the cottage, a tent, an umbrella, a lighthouse...):
 // all but the ground, the people, Awaw, the bikes, the grass and the flowers
 {const skip=new Set([grass.material,flowers.material]);[me.root,fr.root,dog.root,myBike.g,...PARKED.map(b=>b.g)].forEach(r=>r.traverse(o=>{if(o.material)skip.add(o.material)}));
-  W.traverse(o=>{if(!o.isMesh||o.userData.noOcc)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m&&m.isMeshStandardMaterial&&!skip.has(m))occFade(m)})})}
+  W.traverse(o=>{if(!o.isMesh||o.userData.noOcc)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m&&m.isMeshStandardMaterial&&!skip.has(m)){occFade(m);xmasify(m)}})})}
 window.__world={footstep,surfaceAt,AU:()=>({AC,master,amb,A,TUN}),DOG,dog,dogTick,petDog,dogNear,dogClear,HEARTS,OCC,homeLift,HOMELIFT,houseY,BL,BLS,crossWall,W,key,water,EAGLE,SWING,SUNPT,SUNSETWAY,SUNOPTS,frGoSit,LH2,LH2X,EBP,EBWAY,ISL,RAMP,BARP,LHWAY,LHTOP,isletH,barH,polyNear,SEATS,LHS,BOATS,westD,sitDown,standUp,sitToggle,sitState:()=>sitting,nearSeat,GYM,CT,LH,PIER,LHX,GYMP,VB,SPOTS,platY,birds,FITWAY,SANDWAY,MILLWAY,wheelView,nearFalls,HOME,HOMEWAY,YARD,WALLS,HOMEP,LAKE,BRIDGES,PADS,frTick,fr,FR,PPL,TG,WHEEL,wheelG,R1,RROCKS,nearR,lapTick,groundAt,TREES,ROCKS,TRK,trkProj,trkPt,sdTrack,LAP,best,toggleBike,riding:()=>riding,PLATS,POD,RACK,LSRC,POOL,PARKED,CROWD,inWorld,RIV,RWL,RW,iFall,iLake,BRIDGE,riverNear,inRiver,deckY,groundY,LANTS,LAMPPOS,P,H,slope:slopeAt,ROUTES,PEAKS,TRAIL,walkable,zoom:z=>{zoom=z;zs=z},look:(y,p)=>{yaw=y;pitch=p},setTime:h=>{simH=h;setTm(2)},state:()=>({yaw,pitch,nt,simH,HQ})};
 frame();
 </script>
