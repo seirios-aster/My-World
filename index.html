@@ -410,7 +410,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
   <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
-  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">Background music <small>(for everyone; songs come from the assets folder)</small></div><select id="gmbg" aria-label="Background music"><option value="">Default (Sobakasu)</option><option value="off">No music</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">Background music <small>(for everyone; Auto follows the place and time of day)</small></div><select id="gmbg" aria-label="Background music"><option value="">Auto (Ragnarok by day, classical at night, Streamside at the beach)</option><option value="off">No music</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -3521,7 +3521,7 @@ function skyTick(dt){
    Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
    fireflies come out at dusk and stay till dawn. The GM's choice only overrides what Auto would do. */
 const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always'],mo:['auto','always','off']};
-const BGOK=/^[^\/\\?#%]{1,80}\.(mp3|ogg|m4a|wav|opus)$/i,FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',bg:'',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
+const BGOK=/^(?!\/)(?!.*\.\.)[^\\?#%]{1,120}\.(mp3|ogg|m4a|wav|opus)$/i,FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',bg:'',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
 setTimeout(()=>{FXS.loaded=true;bgmSync()},6000);   // (if it can't be read at all, Auto takes over after 6 s)
 function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}const b=o&&typeof o.bg==='string'&&(o.bg==='off'||BGOK.test(o.bg))?o.bg:'';if(FXS.bg!==b){FXS.bg=b;ch=true}bgmSync();return ch}   // (bg: the music file name or 'off'; anything else means the default)
 const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
@@ -3585,20 +3585,38 @@ function snd(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext
   A.mus=AC.createGain();A.mus.gain.value=0;A.mus.connect(amb);const dl=AC.createDelay(1),fb=AC.createGain(),wet=AC.createGain();dl.delayTime.value=.32;fb.gain.value=.32;wet.gain.value=.4;A.mus.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(amb)}
   if(AC.state==='suspended')AC.resume()}
 addEventListener('pointerdown',snd);addEventListener('keydown',snd);
-// background music: one looping track for the whole game, chosen by the GM (GM panel > Settings, stored with the other world settings as fx.bg: a file name from the assets folder, or 'off').
-// The GM's list is whatever audio files sit in assets/: the deploy writes assets/music.json from it, so a newly uploaded song shows up after the next deploy.
+// Background music for the whole game. By default it follows the place and the time (Auto): songs from the "Ragnarok Online BGM" folder by day, "Classical music" at night,
+// and the Streamside song while you are on or near the beach by day. Songs are picked at random from what fits, and the next one follows when a song ends; a change of time or place fades one out and the other in.
+// The GM can instead pick one song for everyone, or no music (GM panel > Settings, stored with the other world settings as fx.bg: a file path under assets/, 'off', or empty for Auto).
+// The song list is every audio file under assets/: the deploy writes assets/music.json from it, so a newly uploaded song is picked up after the next deploy.
 // An <audio> element streams the file (a 5 MB song is never decoded into memory). It starts on the first tap or key press (browsers do not allow sound before that),
-// follows each player's own volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted.)
-const BGM=new Audio();BGM.loop=true;BGM.preload='none';let bgmWant=false,bgmFile='';
-function bgmSync(){BGM.volume=clamp(VOL*VOL*.55,0,1);
-  const f=!FXS.loaded||FXS.bg==='off'?'':FXS.bg||'sobakasu.mp3';   // (nothing chosen yet: Sobakasu; the GM's saved choice has not been read yet: wait for it)
-  if(f!==bgmFile){bgmFile=f;if(f)BGM.src='assets/'+encodeURIComponent(f)}
-  if(mute||document.hidden||!bgmWant||!bgmFile){BGM.pause();return}BGM.play().catch(()=>{})}
-addEventListener('pointerdown',()=>{bgmWant=true;bgmSync()});addEventListener('keydown',()=>{bgmWant=true;bgmSync()});document.addEventListener('visibilitychange',bgmSync);
-(async()=>{const sel=$('gmbg');if(!sel)return;let list=[];
+// follows each player's own volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted, with no fades.)
+const BGM=new Audio();BGM.preload='none';let bgmWant=false,bgmFile='',bgmCur='',bgmFade=1,bgmList=[],bgmNightS=false,bgmBeachS=false,bgmBeachT=0,bgmAcc=1;
+const BGM_DAY=/^Ragnarok/i,BGM_NIGHT=/^Classical/i,BGM_BEACH=/streamside/i,bgmUrl=f=>'assets/'+f.split('/').map(encodeURIComponent).join('/');
+function bgmPool(){const L=bgmList.length?bgmList:['sobakasu.mp3'];   // (the songs that fit right now; if a folder is missing, anything plays)
+  if(bgmNightS){const p=L.filter(f=>BGM_NIGHT.test(f));if(p.length)return p}
+  else{if(bgmBeachS){const p=L.filter(f=>BGM_BEACH.test(f));if(p.length)return p}const p=L.filter(f=>BGM_DAY.test(f)&&!BGM_BEACH.test(f));if(p.length)return p}
+  return L}
+function bgmWanted(){if(!FXS.loaded||FXS.bg==='off')return '';if(FXS.bg)return FXS.bg;   // (the GM's saved choice has not been read yet: wait for it)
+  const p=bgmPool();if(!p.includes(bgmCur))bgmCur=p[Math.random()*p.length|0];return bgmCur}
+function bgmEnv(){bgmNightS=nt>.62?true:nt<.38?false:bgmNightS;   // (night from the sky, with a margin so dusk does not flip it back and forth)
+  let c=0;const x=P.position.x,z=P.position.z;if(!ONSKY)for(const[dx,dz]of[[0,0],[5,0],[-5,0],[0,5],[0,-5]])if(H(x+dx,z+dz)<3.5&&surfaceAt(x+dx,z+dz)==='sand')c++;   // (low sand around you = the beach)
+  bgmBeachT=clamp(bgmBeachT+(c>=2?.5:-.5),0,6);if(bgmBeachT>=2)bgmBeachS=true;else if(bgmBeachT<=0)bgmBeachS=false}   // (two seconds on the beach to switch to it, six off it to switch back)
+function bgmSync(go){const want=bgmWanted(),idle=mute||document.hidden||!bgmWant||!want;BGM.loop=!!FXS.bg||bgmPool().length<2;
+  if(want!==bgmFile&&(go||idle||BGM.paused||!bgmFile)){bgmFile=want;bgmFade=go?0:1;if(want)BGM.src=bgmUrl(want)}   // (nothing audible to fade out: switch now; after a fade-out the new song fades in)
+  BGM.volume=clamp(VOL*VOL*.55*bgmFade,0,1);if(idle||!bgmFile){BGM.pause();return}BGM.play().catch(()=>{})}
+function bgmTick(dt){if(!bgmWant)return;bgmAcc+=dt;if(bgmAcc>.5){bgmAcc=0;bgmEnv()}
+  const want=bgmWanted(),vol=()=>clamp(VOL*VOL*.55*bgmFade,0,1);
+  if(want!==bgmFile&&!BGM.paused&&bgmFile&&!mute&&!document.hidden){bgmFade=Math.max(0,bgmFade-dt/1.1);BGM.volume=vol();if(bgmFade<=0)bgmSync(true);return}
+  if(bgmFade<1){bgmFade=Math.min(1,bgmFade+dt/1.6);BGM.volume=vol()}
+  if(want!==bgmFile)bgmSync()}
+BGM.addEventListener('ended',()=>{if(BGM.loop||FXS.bg)return;const p=bgmPool().filter(f=>f!==bgmCur);if(p.length)bgmCur=p[Math.random()*p.length|0];bgmSync()});
+addEventListener('pointerdown',()=>{bgmWant=true;bgmSync()});addEventListener('keydown',()=>{bgmWant=true;bgmSync()});document.addEventListener('visibilitychange',()=>bgmSync());
+(async()=>{let list=[];
   try{const r=await fetch('assets/music.json',{cache:'no-cache'});if(r.ok){const j=await r.json();if(Array.isArray(j))list=j.filter(x=>typeof x==='string'&&BGOK.test(x))}}catch(_){}
-  list.forEach(f=>{const o=document.createElement('option');o.value=f;const n=f.replace(/\.[^.]+$/,'').replace(/_+/g,' ').trim();o.textContent=n.charAt(0).toUpperCase()+n.slice(1);sel.appendChild(o)});
-  syncFx()})();
+  bgmList=list;const sel=$('gmbg');
+  if(sel)list.forEach(f=>{const o=document.createElement('option'),k=f.lastIndexOf('/'),n=f.slice(k+1).replace(/\.[^.]+$/,'').replace(/_+/g,' ').trim();o.value=f;o.textContent=(k>0?f.slice(0,k)+': ':'')+n;sel.appendChild(o)});
+  syncFx();bgmSync()})();
 // volume: tap the speaker for a slider (and a mute button); the level is remembered
 let VOL=.85,MUTED=false;try{const v=localStorage.getItem('myworld.vol');if(v!=null&&v!==''&&!isNaN(+v))VOL=clamp(+v,0,1);MUTED=localStorage.getItem('myworld.muted')==='1'}catch(_){}
 function applyVol(){mute=MUTED||VOL<.01;const ic=mute?IC.v0:VOL<.34?IC.v1:VOL<.7?IC.v2:IC.v3;$('bs').innerHTML=ic;$('vmute').innerHTML=ic;$('vsl').value=Math.round(VOL*100);$('vpc').textContent=mute?'off':Math.round(VOL*100)+'%';
@@ -5441,7 +5459,7 @@ function frame(){
   eagleTick(dt);
   birds.forEach(b=>{const a=t*b.sp+b.o,f=Math.sin(t*9+b.o)*.6;b.g.position.set(b.cx+Math.cos(a)*b.r,b.h+Math.sin(t+b.o)*.6,b.cz+Math.sin(a)*b.r);b.g.rotation.y=-a;b.wl[0].rotation.z=f;b.wl[1].rotation.z=-f});
   clouds.forEach(c=>{c.position.x+=c.userData.sp*dt;if(c.position.x>170)c.position.x-=340});
-  skyTick(dt);ambient(dt);coordTick();pinScale();lapTick(dt);crowdTick(dt);
+  skyTick(dt);ambient(dt);bgmTick(dt);coordTick();pinScale();lapTick(dt);crowdTick(dt);
   // camera: orbit behind the walker; pull down past level to look up at the sky
   zs+=(zoom-zs)*.1;
   const SWc=sitting&&sitting.sw,cpx=SWc?SWc.px+(P.position.x-SWc.px)*.3:P.position.x;   // on the swing the camera only follows a little of the to and fro
