@@ -51,7 +51,6 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #vol{position:fixed;display:none;flex-direction:column;gap:4px;background:var(--paper);color:var(--ink);padding:5px 14px 5px 5px;border-radius:22px;box-shadow:var(--shadow);z-index:3}#vol .vrow{display:flex;align-items:center;gap:8px}#vol .vlb{font:700 12px var(--body);width:40px}
 #vol .round{width:32px;height:32px;font-size:15px;box-shadow:none;background:var(--paper-2)}
 #vsl,#vcsl{width:118px;accent-color:var(--sun);margin:0;height:28px;touch-action:none}
-#vol .bgic{display:grid;place-items:center;flex:none}#bgsel{flex:1;min-width:0;height:32px;font:700 12px var(--body);color:var(--ink);background:var(--paper-2);border:0;border-radius:12px;padding:0 8px}
 #vpc,#vcpc{font:700 12px var(--body);min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
 #fsmsg{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:var(--paper);color:var(--ink);font:700 14px/1.45 var(--body);padding:11px 18px;border-radius:16px;box-shadow:var(--shadow);display:none;z-index:5;text-align:center;cursor:pointer}
 #tools{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(44px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:7px}
@@ -402,7 +401,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
   <button class="round" id="bout" title="Sign out" aria-label="Sign out" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </div>
 <div id="clk"></div>
-<div id="vol" role="group" aria-label="Volume"><div class="vrow"><button type="button" class="round" id="vmute" aria-label="Mute"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button><span class="vlb">Game</span><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Game volume"><span id="vpc">85%</span></div><div class="vrow" id="vcrow"><button type="button" class="round" id="vcmute" aria-label="Mute voices">🎧</button><span class="vlb">Voice</span><input id="vcsl" type="range" min="0" max="100" step="5" value="100" aria-label="Voice chat volume"><span id="vcpc">100%</span></div><div class="vrow" id="bgrow"><span class="round bgic" aria-hidden="true">🎵</span><select id="bgsel" aria-label="Background music"><option value="">Off</option></select></div></div>
+<div id="vol" role="group" aria-label="Volume"><div class="vrow"><button type="button" class="round" id="vmute" aria-label="Mute"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button><span class="vlb">Game</span><input id="vsl" type="range" min="0" max="100" step="5" value="85" aria-label="Game volume"><span id="vpc">85%</span></div><div class="vrow" id="vcrow"><button type="button" class="round" id="vcmute" aria-label="Mute voices">🎧</button><span class="vlb">Voice</span><input id="vcsl" type="range" min="0" max="100" step="5" value="100" aria-label="Voice chat volume"><span id="vcpc">100%</span></div></div>
 <div id="fsmsg" role="status"></div>
 <button class="round" id="bchat" title="Send a message to everyone here · Enter" aria-label="Send a message" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.7 7L4 20.5l1.6-4.6A8 8 0 1 1 21 12z"/><circle cx="8.6" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="15.4" cy="12" r=".6" fill="currentColor"/></svg></button>
 <button class="round" id="bfs" title="Full screen (landscape on phones)" aria-label="Full screen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -411,7 +410,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 <div id="gmp"><div id="gmh" title="Drag to move"><b>GM panel<span class="gmgrip">⋮⋮</span></b><button type="button" class="round" id="gmx" aria-label="Close">✕</button></div><div id="gmt"><button type="button" class="gmb on" id="gmt1">Online <span id="gmn"></span></button><button type="button" class="gmb" id="gmt2">Kicked / banned <span id="gmbc"></span></button><button type="button" class="gmb" id="gmt3">⚙ Settings</button></div><div id="gmo"></div><div id="gmbn" hidden></div><div id="gms" hidden><div class="lbl">Game clock</div><select id="gmtz" aria-label="Game clock time zone"></select><div id="gmnote" aria-live="polite"></div>
   <div class="lbl">Weather <small>(Auto follows the shared clock)</small></div><select id="gmw" aria-label="Weather"><option value="auto">Auto</option><option value="clear">Clear</option><option value="rain">Rain 🌧️</option><option value="snow">Snow ❄️</option></select>
   <div class="lbl">Fireflies</div><select id="gmf" aria-label="Fireflies"><option value="auto">Auto (dusk and night)</option><option value="on">Always on</option><option value="off">Off</option></select><div class="lbl">Shooting stars <small>(at night)</small></div><select id="gmm1" aria-label="Shooting stars"><option value="auto">Normal</option><option value="off">None</option><option value="rare">Rare</option><option value="often">Often</option></select>
-  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
+  <div class="lbl">Meteor showers <small>(Normal: about 1 night in 4)</small></div><select id="gms1" aria-label="Meteor showers"><option value="auto">Normal</option><option value="off">Never</option><option value="rare">Rare</option><option value="always">Every night</option></select><div class="lbl">Monsters <small>(slimes in the danger zones)</small></div><select id="gmmo" aria-label="Monsters"><option value="auto">At night</option><option value="always">All day too</option><option value="off">Off</option></select><div class="lbl">Background music <small>(for everyone; songs come from the assets folder)</small></div><select id="gmbg" aria-label="Background music"><option value="">Default (Sobakasu)</option><option value="off">No music</option></select><div class="lbl">My level <small>(to try things out)</small></div><div style="display:flex;gap:6px;align-items:center"><input id="gmlv" type="number" min="1" max="99" value="1" aria-label="Level" style="width:72px;padding:4px 6px;border-radius:8px;border:1px solid var(--paper-2);background:var(--paper);color:var(--ink);font:700 13px var(--body)"><button type="button" class="gmb" id="gmlvb">Set</button></div><div id="gmfx" aria-live="polite"></div></div><div id="gmm"></div></div>
 <div id="outfits"><div id="ohd"><b id="who"></b><button type="button" id="oclose" aria-label="Close">✕</button></div>
   <div id="obody"><div id="pvw"><canvas id="pvcv" role="img" aria-label="Preview of your character. Drag to turn it."></canvas><span id="pvh">drag to turn</span></div>
     <div id="octl"><div id="otabs" role="tablist"><button type="button" role="tab" id="t_face">🙂 Face</button><button type="button" role="tab" id="t_hair">💇 Hair</button><button type="button" role="tab" id="t_out">👕 Outfit</button></div>
@@ -2653,6 +2652,16 @@ addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&tpos.has(e.pointe
   else if(e.pointerId===lid&&lp){yaw-=(e.clientX-lp.x)*.007;pitch=clamp(pitch+(e.clientY-lp.y)*.005,-1.45,1.45);lp={x:e.clientX,y:e.clientY}}});
 const pup=e=>{tpos.delete(e.pointerId);if(pz&&(e.pointerId===pz.a||e.pointerId===pz.b))pz=null;if(e.pointerId===sid){sid=null;st=null;sv={x:0,z:0}}if(e.pointerId===lid){lid=null;lp=null}};
 addEventListener('pointerup',pup);addEventListener('pointercancel',pup);addEventListener('lostpointercapture',pup);
+// Buttons while walking: with one thumb on the stick, a phone often drops the click of a tap by the other thumb. So a quick tap on a button made while another finger is down is turned into its click here
+// if the browser did not send one itself. (The jump, attack and talk buttons act on the press itself, so they are left out.)
+{const fin=new Set(),tap=new Map();
+  addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;const b=e.target.closest&&e.target.closest('button,[role="button"]');
+    if(b&&fin.size&&!b.disabled&&!b.closest('#bjump,#bptt,#fight'))tap.set(e.pointerId,{b,x:e.clientX,y:e.clientY,at:performance.now(),clicked:false});fin.add(e.pointerId)},true);
+  addEventListener('pointerup',e=>{fin.delete(e.pointerId);const q=tap.get(e.pointerId);if(!q)return;tap.delete(e.pointerId);
+    if(Math.hypot(e.clientX-q.x,e.clientY-q.y)>12||performance.now()-q.at>600)return;
+    const mark=ev=>{if(q.b.contains(ev.target))q.clicked=true};addEventListener('click',mark,true);
+    setTimeout(()=>{removeEventListener('click',mark,true);if(!q.clicked&&document.contains(q.b)&&!q.b.disabled)q.b.click()},150)},true);
+  addEventListener('pointercancel',e=>{fin.delete(e.pointerId);tap.delete(e.pointerId)},true)}
 /* ===== sculpting engine: signed-distance primitives + a narrow-band surface-nets mesher (no THREE needed) ===== */
 /* ---------------- coordinates: live position + tap-the-ground pin, so we can point at exact spots (x = east, z = south, y = height) ---------------- */
 const coordEl=$('coords'),NAMED=[...SPOTS.map(s=>[s.name+' spot',s.x,s.z]),...LAMPPOS.map((p,i)=>['street lamp '+(i+1),p[0],p[1]]),['campsite',CAMP[0],CAMP[1]],['beach bridge',BRIDGES[0].C[0],BRIDGES[0].C[1]],...(BRIDGES[1]?[['camp footbridge',BRIDGES[1].C[0],BRIDGES[1].C[1]]]:[]),...(BRIDGES[2]?[['mill footbridge',BRIDGES[2].C[0],BRIDGES[2].C[1]]]:[]),['hub',HUB[0],HUB[1]],['Goblin Lair',GOB.x,GOB.z],['Goblin Wilds',-25,218],['Lobby beam',BEAM.x,BEAM.z],['summit flag',SPOTS[3].x-3.9,SPOTS[3].z-.8],['summit sign',SPOTS[3].x+3.1,SPOTS[3].z+.1],
@@ -3319,11 +3328,11 @@ const SET=storage.settings;let clockSeen=false,lastPull=0,pullSeq=0,pullT=0;
 async function pullClock(){if(!SET)return;lastPull=Date.now();const my=++pullSeq;let z;try{z=await SET.load()}catch(_){return}if(z===undefined||my!==pullSeq)return;   // (an older answer arriving late is ignored)
   pullFx();
   const changed=setWorldTz(z);if(changed&&clockSeen)toast('','The game clock now follows '+tzName(WTZ)+(WTZ==='device'?'':' time')+' 🕒',true);clockSeen=true}
-let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1'],['mo','gmmo']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
+let fxSeq=0;const syncFx=()=>{[['w','gmw'],['f','gmf'],['m','gmm1'],['s','gms1'],['mo','gmmo'],['bg','gmbg']].forEach(([k,id])=>{const e=$(id);if(e)e.value=FXS[k]})};
 async function pullFx(){if(!SET||!SET.fx)return;const my=++fxSeq;let v;try{v=await SET.fx()}catch(_){return}if(v===undefined||my!==fxSeq)return;fxSet(v);FXS.loaded=true;syncFx()}   // (undefined: can't be read, keep what we have)
 {const note=t=>{$('gmfx').textContent=t};
-  const gmSel='#gmw,#gmf,#gmm1,#gms1,#gmmo';
-  ['gmw','gmf','gmm1','gms1','gmmo'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value,mo:$('gmmo').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
+  const gmSel='#gmw,#gmf,#gmm1,#gms1,#gmmo,#gmbg';
+  ['gmw','gmf','gmm1','gms1','gmmo','gmbg'].forEach(id=>{const e=$(id);if(!e)return;e.onchange=async()=>{const fx={w:$('gmw').value,f:$('gmf').value,m:$('gmm1').value,s:$('gms1').value,mo:$('gmmo').value,bg:$('gmbg').value};note('Saving...');[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=true);
     try{await SET.saveFx(fx);fxSet(fx);try{storage.world.send('tz',{})}catch(_){}note('Saved: everyone sees it')}
     catch(x){note((x&&x.message)||'Could not save (has supabase-world-weather.sql been run?)');pullFx()}
     finally{[...document.querySelectorAll(gmSel)].forEach(x=>x.disabled=false)}}})}
@@ -3512,9 +3521,9 @@ function skyTick(dt){
    Auto is worked out from the shared clock, so everybody sees the same sky without anyone telling anyone: weather changes every 2 hours (rain now and then; in December snow instead),
    fireflies come out at dusk and stay till dawn. The GM's choice only overrides what Auto would do. */
 const FXOPT={w:['auto','clear','rain','snow'],f:['auto','on','off'],m:['auto','off','rare','often'],s:['auto','off','rare','always'],mo:['auto','always','off']};
-const FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
-setTimeout(()=>{FXS.loaded=true},6000);   // (if it can't be read at all, Auto takes over after 6 s)
-function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}return ch}
+const BGOK=/^[^\/\\?#%]{1,80}\.(mp3|ogg|m4a|wav|opus)$/i,FXS={w:'auto',f:'auto',m:'auto',s:'auto',mo:'auto',bg:'',ir:0,is:0,ff:0,seenW:null,loaded:false};   // (loaded: the GM's saved choice has been read; until then it stays clear rather than guessing Auto, which could start rain that is then switched off)
+setTimeout(()=>{FXS.loaded=true;bgmSync()},6000);   // (if it can't be read at all, Auto takes over after 6 s)
+function fxSet(o){let ch=false;for(const k in FXOPT){const v=o&&typeof o[k]==='string'&&FXOPT[k].includes(o[k])?o[k]:'auto';if(FXS[k]!==v){FXS[k]=v;ch=true}}const b=o&&typeof o.bg==='string'&&(o.bg==='off'||BGOK.test(o.bg))?o.bg:'';if(FXS.bg!==b){FXS.bg=b;ch=true}bgmSync();return ch}   // (bg: the music file name or 'off'; anything else means the default)
 const fxHash=n=>{n=Math.imul(n^n>>>15,2246822507);n=Math.imul(n^n>>>13,3266489909);return((n^n>>>16)>>>0)/4294967296};
 function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=doyNow(),winter=d>=335||d<=6;   // (the game clock's date: 1 Dec to 6 Jan is snow season)
   return winter?(r<.4?'snow':'clear'):(r<.14?'rain':'clear')}
@@ -3576,19 +3585,20 @@ function snd(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext
   A.mus=AC.createGain();A.mus.gain.value=0;A.mus.connect(amb);const dl=AC.createDelay(1),fb=AC.createGain(),wet=AC.createGain();dl.delayTime.value=.32;fb.gain.value=.32;wet.gain.value=.4;A.mus.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(amb)}
   if(AC.state==='suspended')AC.resume()}
 addEventListener('pointerdown',snd);addEventListener('keydown',snd);
-// background music: one looping track, chosen from the list in the volume panel. The list is whatever audio files sit in the assets folder: the deploy writes assets/music.json from it, so a newly uploaded song shows up after the next deploy.
+// background music: one looping track for the whole game, chosen by the GM (GM panel > Settings, stored with the other world settings as fx.bg: a file name from the assets folder, or 'off').
+// The GM's list is whatever audio files sit in assets/: the deploy writes assets/music.json from it, so a newly uploaded song shows up after the next deploy.
 // An <audio> element streams the file (a 5 MB song is never decoded into memory). It starts on the first tap or key press (browsers do not allow sound before that),
-// follows the volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted.)
+// follows each player's own volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted.)
 const BGM=new Audio();BGM.loop=true;BGM.preload='none';let bgmWant=false,bgmFile='';
-function bgmSync(){BGM.volume=clamp(VOL*VOL*.55,0,1);if(mute||document.hidden||!bgmWant||!bgmFile){BGM.pause();return}BGM.play().catch(()=>{})}
-function bgmPick(f,save){bgmFile=f;if(f){const u='assets/'+encodeURIComponent(f);if(!BGM.src.endsWith(u))BGM.src=u}if(save)try{localStorage.setItem('myworld.bgm',f)}catch(_){}bgmSync()}
+function bgmSync(){BGM.volume=clamp(VOL*VOL*.55,0,1);
+  const f=!FXS.loaded||FXS.bg==='off'?'':FXS.bg||'sobakasu.mp3';   // (nothing chosen yet: Sobakasu; the GM's saved choice has not been read yet: wait for it)
+  if(f!==bgmFile){bgmFile=f;if(f)BGM.src='assets/'+encodeURIComponent(f)}
+  if(mute||document.hidden||!bgmWant||!bgmFile){BGM.pause();return}BGM.play().catch(()=>{})}
 addEventListener('pointerdown',()=>{bgmWant=true;bgmSync()});addEventListener('keydown',()=>{bgmWant=true;bgmSync()});document.addEventListener('visibilitychange',bgmSync);
-(async()=>{let list=['sobakasu.mp3'];   // (if the list cannot be read, for example offline, the first song still plays)
-  try{const r=await fetch('assets/music.json',{cache:'no-cache'});if(r.ok){const j=await r.json();if(Array.isArray(j)&&j.length)list=j.filter(x=>typeof x==='string')}}catch(_){}
-  const sel=$('bgsel');list.forEach(f=>{const o=document.createElement('option');o.value=f;const n=f.replace(/\.[^.]+$/,'').replace(/_+/g,' ').trim();o.textContent=n.charAt(0).toUpperCase()+n.slice(1);sel.appendChild(o)});
-  let sv=null;try{sv=localStorage.getItem('myworld.bgm')}catch(_){}
-  const def=list.includes('sobakasu.mp3')?'sobakasu.mp3':list[0],pick=sv===null?def:(sv===''||list.includes(sv))?sv:def;   // (saved choice: a file name, or '' for no music)
-  sel.value=pick;sel.onchange=()=>bgmPick(sel.value,true);bgmPick(pick,false)})();
+(async()=>{const sel=$('gmbg');if(!sel)return;let list=[];
+  try{const r=await fetch('assets/music.json',{cache:'no-cache'});if(r.ok){const j=await r.json();if(Array.isArray(j))list=j.filter(x=>typeof x==='string'&&BGOK.test(x))}}catch(_){}
+  list.forEach(f=>{const o=document.createElement('option');o.value=f;const n=f.replace(/\.[^.]+$/,'').replace(/_+/g,' ').trim();o.textContent=n.charAt(0).toUpperCase()+n.slice(1);sel.appendChild(o)});
+  syncFx()})();
 // volume: tap the speaker for a slider (and a mute button); the level is remembered
 let VOL=.85,MUTED=false;try{const v=localStorage.getItem('myworld.vol');if(v!=null&&v!==''&&!isNaN(+v))VOL=clamp(+v,0,1);MUTED=localStorage.getItem('myworld.muted')==='1'}catch(_){}
 function applyVol(){mute=MUTED||VOL<.01;const ic=mute?IC.v0:VOL<.34?IC.v1:VOL<.7?IC.v2:IC.v3;$('bs').innerHTML=ic;$('vmute').innerHTML=ic;$('vsl').value=Math.round(VOL*100);$('vpc').textContent=mute?'off':Math.round(VOL*100)+'%';
@@ -3599,8 +3609,7 @@ function applyVol(){mute=MUTED||VOL<.01;const ic=mute?IC.v0:VOL<.34?IC.v1:VOL<.7
     const w=vp.offsetWidth,h=vp.offsetHeight;vp.style.right='auto';   // beside the button if there is room on its left, otherwise just under it
     if(r.left-8-w>=8){vp.style.left=(r.left-8-w)+'px';vp.style.top=Math.max(8,Math.min(innerHeight-h-8,r.top+r.height/2-h/2))+'px'}
     else{vp.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';vp.style.top=Math.max(8,Math.min(innerHeight-h-8,r.bottom+8))+'px'}arm()};
-  vp.addEventListener('input',arm);$('bgsel').onfocus=()=>clearTimeout(vt);$('bgsel').onblur=arm;   // (keep the panel open while the song list is open)
-  vp.addEventListener('pointerdown',arm);
+  vp.addEventListener('input',arm);vp.addEventListener('pointerdown',arm);
   $('vsl').oninput=()=>{VOL=+$('vsl').value/100;if(VOL>=.01)MUTED=false;applyVol();arm()};
   $('vmute').onclick=()=>{if(mute){MUTED=false;if(VOL<.01)VOL=.5}else MUTED=true;applyVol();arm()};
   addEventListener('pointerdown',e=>{if(vp.style.display==='flex'&&!vp.contains(e.target)&&e.target!==$('bs'))hideV()},true);
