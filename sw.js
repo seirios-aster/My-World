@@ -6,7 +6,7 @@ self.addEventListener('activate', e => e.waitUntil(
   caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', e => {
   const r = e.request, u = new URL(r.url);
-  if (r.method !== 'GET' || u.origin !== location.origin || u.pathname.includes('/models/')) return;
+  if (r.method !== 'GET' || u.origin !== location.origin || u.pathname.includes('/models/') || u.pathname.includes('/assets/')) return;
   e.respondWith(fetch(r, { cache: 'no-cache' }).then(res => {   // no-cache: always ask the server whether the file changed (GitHub Pages lets browsers keep a page for 10 minutes, which hid new versions)
     if (res.ok) { const c = res.clone(); caches.open(CACHE).then(k => k.put(r, c)); }
     return res;
