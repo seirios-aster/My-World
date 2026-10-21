@@ -3575,10 +3575,15 @@ function snd(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext
   A.mus=AC.createGain();A.mus.gain.value=0;A.mus.connect(amb);const dl=AC.createDelay(1),fb=AC.createGain(),wet=AC.createGain();dl.delayTime.value=.32;fb.gain.value=.32;wet.gain.value=.4;A.mus.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(amb)}
   if(AC.state==='suspended')AC.resume()}
 addEventListener('pointerdown',snd);addEventListener('keydown',snd);
+// background music: one looping track. An <audio> element streams the file, so the 5.7 MB is never decoded into memory. It starts on the first tap or key press (browsers do not allow sound before that),
+// follows the volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted.)
+const BGM=new Audio('assets/sobakasu.mp3');BGM.loop=true;BGM.preload='none';let bgmWant=false;
+function bgmSync(){BGM.volume=clamp(VOL*VOL*.55,0,1);if(mute||document.hidden||!bgmWant){BGM.pause();return}BGM.play().catch(()=>{})}
+addEventListener('pointerdown',()=>{bgmWant=true;bgmSync()});addEventListener('keydown',()=>{bgmWant=true;bgmSync()});document.addEventListener('visibilitychange',bgmSync);
 // volume: tap the speaker for a slider (and a mute button); the level is remembered
 let VOL=.85,MUTED=false;try{const v=localStorage.getItem('myworld.vol');if(v!=null&&v!==''&&!isNaN(+v))VOL=clamp(+v,0,1);MUTED=localStorage.getItem('myworld.muted')==='1'}catch(_){}
 function applyVol(){mute=MUTED||VOL<.01;const ic=mute?IC.v0:VOL<.34?IC.v1:VOL<.7?IC.v2:IC.v3;$('bs').innerHTML=ic;$('vmute').innerHTML=ic;$('vsl').value=Math.round(VOL*100);$('vpc').textContent=mute?'off':Math.round(VOL*100)+'%';
-  if(master&&AC)master.gain.setTargetAtTime(mute?0:VOL*VOL,AC.currentTime,.05);try{localStorage.setItem('myworld.vol',String(VOL));localStorage.setItem('myworld.muted',MUTED?'1':'0')}catch(_){}}
+  if(master&&AC)master.gain.setTargetAtTime(mute?0:VOL*VOL,AC.currentTime,.05);bgmSync();try{localStorage.setItem('myworld.vol',String(VOL));localStorage.setItem('myworld.muted',MUTED?'1':'0')}catch(_){}}
 {const vp=$('vol');let vt=0;const arm=()=>{clearTimeout(vt);vt=setTimeout(()=>{vp.style.display='none'},4500)};
   const hideV=()=>{vp.style.display='none';clearTimeout(vt)};
   $('bs').onclick=()=>{if(vp.style.display==='flex'){hideV();return}vp.style.display='flex';const r=$('bs').getBoundingClientRect();
