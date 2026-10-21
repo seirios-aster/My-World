@@ -3537,8 +3537,66 @@ function fxAutoWeather(){const b=Math.floor(Date.now()/72e5),r=fxHash(b+1337),d=
   return r<.14?'rain':'clear'}
 const xmTarget=()=>{if(!FXS.loaded||FXS.xm==='off')return 0;if(FXS.xm==='on')return 1;const w=wall();return w.mo===12&&w.d>=16?1:0};   // (auto: 16 to 31 December on the game clock)
 let xmGrass=false;
+// Christmas decorations (built the first time the town goes Christmassy, shown while it is): a big decorated tree with presents near the hub, snowmen, striped lamp posts with bulbs round their heads,
+// light strings on the pines near the hub, and a wreath, garland and lights on the cottage door. The coloured bulbs twinkle in turn.
+let XMG=null,xmLight=null;const XMT=[];
+function buildXmas(){XMG=new THREE.Group();W.add(XMG);
+  const mk=(c,r=.9,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:r,flatShading:true,...o}),m4=new THREE.Matrix4(),qq=new THREE.Quaternion(),eu=new THREE.Euler(),v3=new THREE.Vector3(),sv=new THREE.Vector3();
+  const T=(geo,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=sx,sz=sx)=>{const g=geo.clone();qq.setFromEuler(eu.set(rx,ry,rz));g.applyMatrix4(m4.compose(v3.set(x,y,z),qq,sv.set(sx,sy,sz)));return g.index?g.toNonIndexed():g};
+  const bake=(parent,list)=>list.forEach(([mat,geos])=>{if(geos.length){const m=new THREE.Mesh(mergeGeometries(geos),mat);m.castShadow=true;m.receiveShadow=true;parent.add(m)}});
+  const SP=(r,w=10,h=7,...q)=>new THREE.SphereGeometry(r,w,h,...q),CY=(a,b,h,n=8)=>new THREE.CylinderGeometry(a,b,h,n),CO=(r,h,n=8)=>new THREE.ConeGeometry(r,h,n),BX=(a,b,c)=>new THREE.BoxGeometry(a,b,c),TO=(R,t,n=10)=>new THREE.TorusGeometry(R,t,5,n);
+  let xr=987654;const rr=()=>(xr=(xr*16807)%2147483647)/2147483647;
+  const BULBC=['#ff4040','#ffc94a','#4fa8ff','#5be07a'],bulbs=[[],[],[],[]],bulbG=SP(.1,6,5),addBulb=(g,x,y,z)=>bulbs[g%4].push([x,y,z]);
+  const free=(x,z,clr,tr)=>H(x,z)>.3&&x-coastX(z)<-19&&westD(x,z)<-19&&!inRiv(x,z,2.6)&&trailDist(x,z)>clr&&!nearSpot(x,z,3.2)&&LAMPPOS.every(q=>Math.hypot(q[0]-x,q[1]-z)>2)&&TREES.every(t=>Math.hypot(t.x-x,t.z-z)>tr)&&ROCKS.every(r=>Math.hypot(r.x-x,r.z-z)>1.6+r.s)&&!inHome(x,z,2)&&slopeAt(x,z)<.5&&!inGym(x,z,3)&&!inCourt(x,z,3);
+  const found=[],spot=(cx,cz,r0,r1,clr,tr,sep)=>{for(let k=0;k<80;k++){const a=rr()*6.283,r=r0+rr()*(r1-r0),x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;if(free(x,z,clr,tr)&&found.every(f=>Math.hypot(f[0]-x,f[1]-z)>sep)){found.push([x,z]);return[x,z]}}return null};
+  // ---- the big tree ----
+  const tp=spot(HUB[0],HUB[1],7,15,3.6,5,0);
+  if(tp){const [x,z]=tp,y=H(x,z),G=new THREE.Group();G.position.set(x,y,z);G.scale.setScalar(1.25);XMG.add(G);
+    const green=mk('#1f6b3a',.95);green.userData.xm=[.2,.45,.4];xmasify(green);const trunk=mk('#6a4426'),gold=mk('#e8b84a',.35,{metalness:.6}),orn=['#d8322c','#f2c14e','#3a7bd5','#b58cf2'].map(c=>mk(c,.3,{metalness:.35}));
+    const layers=[[3.1,3.5,3.0],[2.5,3.1,4.9],[1.9,2.8,6.7],[1.3,2.4,8.4]],gl=[T(CY(.35,.5,1.9),0,.95,0)],on=[[],[],[],[]];
+    layers.forEach(([R,h,cy],li)=>{gl.push(T(CO(R,h,9),0,cy,0));for(let k=0,n=6+li*-1+3;k<n;k++){const a=k/n*6.283+li*.7,t=.14+rr()*.2,rad=R*(1-t)*.9;on[(k+li)%4].push(T(SP(.17,8,6),Math.cos(a)*rad,cy-h/2+t*h+.1,Math.sin(a)*rad))}
+      for(let k=0,n=10-li;k<n;k++){const a=k/n*6.283,rad=R*.83;addBulb(k+li,x+Math.cos(a)*rad*1.25,y+(cy-h/2+.5)*1.25,z+Math.sin(a)*rad*1.25)}});
+    bake(G,[[green,gl.slice(1)],[trunk,[gl[0]]],...orn.map((m,i)=>[m,on[i]])]);
+    const starS=new THREE.Shape();for(let i=0;i<10;i++){const a=Math.PI/2+i*Math.PI/5,r=i%2?.38:.85;starS[i?'lineTo':'moveTo'](Math.cos(a)*r,Math.sin(a)*r)}starS.closePath();
+    const sm=new THREE.MeshBasicMaterial({color:new THREE.Color('#ffd54a').multiplyScalar(1.5),toneMapped:false}),st=new THREE.Mesh(new THREE.ExtrudeGeometry(starS,{depth:.25,bevelEnabled:false}).translate(0,0,-.125),sm);st.position.y=10.4;G.add(st);XMT.push({m:sm,c:new THREE.Color('#ffd54a'),star:1});
+    const gs=glowSprite('rgba(255,225,150,.32)',4.2);gs.position.set(0,10.4,0);G.add(gs);G.userData.star=st;XMG.userData.star=st;
+    xmLight={p:new THREE.Vector3(x,y+7,z),c:new THREE.Color('#ffd9a0'),pw:16,d:24};LSRC.push(xmLight);
+    // presents round the foot of the tree
+    const pc=['#d8322c','#2f7fd6','#f2c14e','#3fa66b','#b58cf2','#ff8fb3','#d8322c'],pm=pc.map(c=>[mk(c,.7),[]]),rib=[];
+    pc.forEach((c,i)=>{const a=i/7*6.283+.4,r=2.7+rr()*1.1,w=.6+rr()*.45,h=.5+rr()*.4,d=.55+rr()*.4,px=Math.cos(a)*r,pz=Math.sin(a)*r,ry=rr()*3;
+      pm[i][1].push(T(BX(w,h,d),px,h/2,pz,0,ry));rib.push(T(BX(w+.04,h+.04,.1),px,h/2,pz,0,ry),T(BX(.1,h+.04,d+.04),px,h/2,pz,0,ry),T(SP(.13,6,5),px,h+.08,pz))});
+    bake(G,[...pm,[gold,rib]])}
+  // ---- snowmen ----
+  const snow=mk('#f6f9ff',1),coal=mk('#26262c',.8),carrot=mk('#ff8a2a',.7),twig=mk('#6a4426'),scarf=mk('#c8372d',.9),hatA=mk('#26262c',.7),hatB=mk('#2f8a4c',.9),band=mk('#c8372d',.8),pom=mk('#ffffff',1);
+  const mkMan=top=>{const G=new THREE.Group(),sn=[T(SP(.95,10,8),0,.82,0,0,0,0,1,.9,1),T(SP(.68,10,8),0,1.92,0),T(SP(.5,10,8),0,2.82,0)],co=[T(SP(.07,5,4),-.17,2.9,.43),T(SP(.07,5,4),.17,2.9,.43)],ca=[T(CO(.07,.5,6),0,2.8,.65,Math.PI/2)],tw=[],sc=[T(TO(.46,.12,10),0,2.38,0,Math.PI/2),T(BX(.2,.75,.07),.28,2.0,.52,0,0,.1)];
+    for(let i=0;i<5;i++){const a=-.9+i*.45;co.push(T(SP(.04,4,3),Math.sin(a)*.2,2.66+Math.cos(a)*.05-.04,.46))}
+    [2.25,1.95,1.65].forEach(y=>co.push(T(SP(.07,5,4),0,y,.66)));
+    [-1,1].forEach(sx=>{tw.push(T(CY(.04,.03,1.1,5),sx*.9,2.15,0,0,0,sx*-1.05),T(CY(.025,.02,.35,4),sx*1.3,2.5,0,0,0,sx*-.4))});
+    const hl=[],hd=[],hb=[],pm2=[];if(top){hd.push(T(CY(.52,.52,.07,10),0,3.27,0),T(CY(.32,.34,.55,10),0,3.55,0));hb.push(T(CY(.345,.345,.12,10),0,3.38,0))}
+    else{hd.push(T(SP(.43,10,6,0,6.283,0,1.4),0,3.14,0));hl.push(T(SP(.11,6,5),0,3.62,0))}
+    bake(G,[[snow,sn],[coal,co],[carrot,ca],[twig,tw],[scarf,sc],[top?hatA:hatB,hd],[band,hb],[pom,hl]]);return G};
+  const men=[mkMan(1),mkMan(0)],mc=[HUB,HUB,[HOME.x,HOME.z],[HOME.x,HOME.z],CAMP,...SPOTS.slice(0,6).map(s=>[s.x,s.z])];let nm=0;
+  mc.forEach(([cx,cz])=>{const p=spot(cx,cz,5,15,2.6,2.6,7);if(!p)return;const G=men[nm++%2].clone(),s=.85+rr()*.35;G.position.set(p[0],H(p[0],p[1])-.05,p[1]);G.rotation.y=Math.atan2(cx-p[0],cz-p[1])+(rr()-.5)*.8;G.scale.setScalar(s);XMG.add(G)});
+  // ---- lamp posts: candy stripes and a ring of bulbs round the lamp head ----
+  const rd=[],wh=[];LAMPPOS.forEach(([x,z])=>{const y=H(x,z);[.45,1.05,1.65,2.25,2.85].forEach((h,i)=>rd.push(T(TO(.16,.045,10),x,y+h,z,Math.PI/2)));[.75,1.35,1.95,2.55].forEach(h=>wh.push(T(TO(.16,.045,10),x,y+h,z,Math.PI/2)));
+    for(let k=0;k<8;k++){const a=k/8*6.283;addBulb(k,x+Math.cos(a)*.46,y+3.74,z+Math.sin(a)*.46)}});
+  bake(XMG,[[mk('#d8322c',.6),rd],[mk('#f6f9ff',.6),wh]]);
+  // ---- light strings on the pines near the hub ----
+  TREES.filter(t=>t.type===0&&Math.hypot(t.x-HUB[0],t.z-HUB[1])<46).slice(0,26).forEach((t,i)=>{[[1.9,2.2*.92,9],[4.7,1.6*.92,7]].forEach(([h,R,n],j)=>{for(let k=0;k<n;k++){const a=k/n*6.283+i;addBulb(k+j+i,t.x+Math.cos(a)*R*t.s,t.y+h*t.s,t.z+Math.sin(a)*R*t.s)}})});
+  // ---- the cottage door: wreath, garland and lights ----
+  {const G=new THREE.Group();G.position.set(HOME.x,houseY,HOME.z);G.rotation.y=HOME.ry;XMG.add(G);const gw=mk('#1f6b3a',.95),rd2=mk('#d8322c',.6);
+    const wl=[T(TO(.5,.14,12),0,2.95,-4.3)],rl=[T(SP(.09,5,4),.5,2.95,-4.4),T(SP(.09,5,4),-.45,3.22,-4.4),T(SP(.09,5,4),-.2,3.42,-4.4),T(SP(.09,5,4),.3,3.35,-4.4),T(SP(.09,5,4),-.52,2.7,-4.4),T(CO(.2,.5,4),-.17,2.38,-4.42,0,0,Math.PI/2),T(CO(.2,.5,4),.17,2.38,-4.42,0,0,-Math.PI/2),T(SP(.1,5,4),0,2.4,-4.43)];
+    for(let k=0;k<9;k++){const x=-1.3+k*.325;wl.push(T(SP(.1,5,4),x,4.18-Math.sin(k/8*Math.PI)*.12,-4.22))}
+    bake(G,[[gw,wl],[rd2,rl]]);
+    for(let k=0;k<9;k++){const x=-1.55+k*.39;[[x,4.36,-5.56],[x,4.12-Math.sin(k/8*Math.PI)*.12,-4.2]].forEach(([a,b,c],j)=>{v3.set(a,b,c).applyAxisAngle(new THREE.Vector3(0,1,0),HOME.ry);addBulb(k+j,HOME.x+v3.x,houseY+v3.y,HOME.z+v3.z)})}}
+  // ---- every bulb of one colour is one instanced mesh; its colour twinkles in turn ----
+  bulbs.forEach((list,g)=>{if(!list.length)return;const mat=new THREE.MeshBasicMaterial({color:BULBC[g],toneMapped:false}),im=new THREE.InstancedMesh(bulbG,mat,list.length),o=new THREE.Object3D();
+    list.forEach(([x,y,z],i)=>{o.position.set(x,y,z);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.frustumCulled=false;XMG.add(im);XMT.push({m:mat,c:new THREE.Color(BULBC[g]),g})});
+  XMG.visible=false}
 function xmasTick(dt){const t=xmTarget();if(Math.abs(XMU.value-t)>.002)XMU.value+=(t-XMU.value)*Math.min(1,dt*1.2);else XMU.value=t;
-  const hide=XMU.value>.5;if(hide!==xmGrass){xmGrass=hide;grass.visible=flowers.visible=!hide}}   // (no green blades or flowers poking through the snow)
+  const hide=XMU.value>.5;if(hide!==xmGrass){xmGrass=hide;grass.visible=flowers.visible=!hide}
+  if(XMU.value>.02&&!XMG)buildXmas();
+  if(XMG){XMG.visible=hide;if(xmLight)xmLight.pw=hide?16:0;if(hide){const t=performance.now()/1000;XMT.forEach(q=>{const k=q.star?.85+.15*Math.sin(t*3):.5+.5*Math.sin(t*2.6+q.g*1.6);q.m.color.copy(q.c).multiplyScalar(q.star?1.5*k:.5+1.6*k)})}}}   // (the star shimmers; the bulbs take turns being bright)   // (no green blades or flowers poking through the snow)
 const fxWeather=()=>!FXS.loaded?'clear':FXS.w==='auto'?fxAutoWeather():FXS.w;
 const fxGlowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
 const FXG=new THREE.Group();FXG.frustumCulled=false;W.add(FXG);
