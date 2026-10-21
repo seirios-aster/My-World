@@ -3661,7 +3661,7 @@ addEventListener('pointerdown',snd);addEventListener('keydown',snd);
 // The GM can instead pick one song for everyone, or no music (GM panel > Settings, stored with the other world settings as fx.bg: a file path under assets/, 'off', or empty for Auto).
 // The song list is every audio file under assets/: the deploy writes assets/music.json from it, so a newly uploaded song is picked up after the next deploy.
 // An <audio> element streams the file (a 5 MB song is never decoded into memory). It starts on the first tap or key press (browsers do not allow sound before that),
-// follows each player's own volume slider and mute button, and pauses while the tab is hidden. (iPhones ignore an audio element's volume, so there it plays at full level until muted, with no fades.)
+// follows each player's own volume slider and mute button, and keeps playing when the tab or app is in the background, like the wave and wind sounds (a phone may still stop it to save power). (iPhones ignore an audio element's volume, so there it plays at full level until muted, with no fades.)
 const BGM=new Audio();BGM.preload='none';let bgmWant=false,bgmFile='',bgmCur='',bgmFade=1,bgmList=[],bgmNightS=false,bgmBeachS=false,bgmBeachT=0,bgmAcc=1;
 const BGM_DAY=/^Ragnarok/i,BGM_NIGHT=/^Classical/i,BGM_BEACH=/streamside/i,BGM_XMAS=/christmas/i,bgmUrl=f=>'assets/'+f.split('/').map(encodeURIComponent).join('/');
 function bgmPool(){const L=(bgmList.length?bgmList:['sobakasu.mp3']).filter(f=>!BGM_XMAS.test(f)||XMU.value>.5);   // (the songs that fit right now; if a folder is missing, anything plays. White Christmas only while the town is Christmassy)
@@ -3674,12 +3674,12 @@ function bgmWanted(){if(!FXS.loaded||FXS.bg==='off')return '';if(FXS.bg)return F
 function bgmEnv(){bgmNightS=nt>.62?true:nt<.38?false:bgmNightS;   // (night from the sky, with a margin so dusk does not flip it back and forth)
   let c=0;const x=P.position.x,z=P.position.z;if(!ONSKY)for(const[dx,dz]of[[0,0],[5,0],[-5,0],[0,5],[0,-5]])if(H(x+dx,z+dz)<3.5&&surfaceAt(x+dx,z+dz)==='sand')c++;   // (low sand around you = the beach)
   bgmBeachT=clamp(bgmBeachT+(c>=2?.5:-.5),0,6);if(bgmBeachT>=2)bgmBeachS=true;else if(bgmBeachT<=0)bgmBeachS=false}   // (two seconds on the beach to switch to it, six off it to switch back)
-function bgmSync(go){const want=bgmWanted(),idle=mute||document.hidden||!bgmWant||!want;BGM.loop=!!FXS.bg||bgmPool().length<2;
+function bgmSync(go){const want=bgmWanted(),idle=mute||!bgmWant||!want;BGM.loop=!!FXS.bg||bgmPool().length<2;
   if(want!==bgmFile&&(go||idle||BGM.paused||!bgmFile)){bgmFile=want;bgmFade=go?0:1;if(want)BGM.src=bgmUrl(want)}   // (nothing audible to fade out: switch now; after a fade-out the new song fades in)
   BGM.volume=clamp(VOL*VOL*.55*bgmFade,0,1);if(idle||!bgmFile){BGM.pause();return}BGM.play().catch(()=>{})}
 function bgmTick(dt){if(!bgmWant)return;bgmAcc+=dt;if(bgmAcc>.5){bgmAcc=0;bgmEnv()}
   const want=bgmWanted(),vol=()=>clamp(VOL*VOL*.55*bgmFade,0,1);
-  if(want!==bgmFile&&!BGM.paused&&bgmFile&&!mute&&!document.hidden){bgmFade=Math.max(0,bgmFade-dt/1.1);BGM.volume=vol();if(bgmFade<=0)bgmSync(true);return}
+  if(want!==bgmFile&&!BGM.paused&&bgmFile&&!mute){bgmFade=Math.max(0,bgmFade-dt/1.1);BGM.volume=vol();if(bgmFade<=0)bgmSync(true);return}
   if(bgmFade<1){bgmFade=Math.min(1,bgmFade+dt/1.6);BGM.volume=vol()}
   if(want!==bgmFile)bgmSync()}
 BGM.addEventListener('ended',()=>{if(BGM.loop||FXS.bg)return;const p=bgmPool().filter(f=>f!==bgmCur);if(p.length)bgmCur=p[Math.random()*p.length|0];bgmSync()});
