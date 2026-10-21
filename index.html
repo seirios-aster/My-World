@@ -2069,29 +2069,49 @@ const lineMat=new THREE.ShaderMaterial({uniforms:{op:{value:0},hzy:HZY},...SKYBL
   fragmentShader:`uniform float op,hzy;varying float vh;void main(){gl_FragColor=vec4(.42,.6,1.,op*smoothstep(hzy,hzy+22.,vh));}`});
 {const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(STP,3));g.setAttribute('col',new THREE.Float32BufferAttribute(STC,3));g.setAttribute('sz',new THREE.Float32BufferAttribute(STS,1));g.setAttribute('mg',new THREE.Float32BufferAttribute(STM,1));
   const s=new THREE.Points(g,starMat);s.frustumCulled=false;s.renderOrder=-5;sky.add(s)}
-// The Milky Way: a soft, grainy band along the real galactic plane, drawn behind the stars in the same sky coordinates (so it rises, sets and turns with them, and lines up with Deneb, Altair, Antares and the rest).
-// The shader works out galactic latitude and longitude from the direction: the galactic north pole is at RA 12h51.4m, Dec +27.13 and the centre (Sagittarius) at RA 17h45.7m, Dec -28.94.
-// It is widest and brightest toward the centre, mottled with dust, with the dark Great Rift splitting it from Cygnus to Scorpius; it fades in as it gets properly dark, in the moonlight and near the horizon.
+// The Milky Way, drawn from the real galactic plane in the same sky coordinates as the stars (so it rises, sets and turns with them and lines up with Deneb, Altair, Antares and the rest).
+// The galactic north pole is at RA 12h51.4m, Dec +27.13 and the centre (Sagittarius) at RA 17h45.7m, Dec -28.94. Two layers: a soft glow painted once into a picture (longitude along, latitude up: wide and bright toward the centre, warm there and cool elsewhere,
+// mottled with cloud, split by the dark Great Rift from Cygnus to Scorpius, with dark dust patches), spread over a few frames after the game starts, and a dust of tiny stars thickest along the same band.
+// Both fade in as it gets properly dark, dim in moonlight and fade out near the horizon.
 const MWU={op:{value:0},moon:{value:0}};
-{const d2r=Math.PI/180,eq=(ra,de)=>new THREE.Vector3(Math.cos(de*d2r)*Math.cos(ra*15*d2r),Math.cos(de*d2r)*Math.sin(ra*15*d2r),Math.sin(de*d2r)),N=eq(12.8567,27.128),G=eq(17.7611,-28.936),Y=new THREE.Vector3().crossVectors(N,G).normalize();
-  const mw=new THREE.Mesh(new THREE.SphereGeometry(R0,48,24),new THREE.ShaderMaterial({uniforms:{op:MWU.op,moon:MWU.moon,hzy:HZY,uN:{value:N},uG:{value:G},uY:{value:Y}},blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,side:THREE.BackSide,
+const MW=(()=>{const d2r=Math.PI/180,eq=(ra,de)=>new THREE.Vector3(Math.cos(de*d2r)*Math.cos(ra*15*d2r),Math.cos(de*d2r)*Math.sin(ra*15*d2r),Math.sin(de*d2r)),N=eq(12.8567,27.128),G=eq(17.7611,-28.936),Y=new THREE.Vector3().crossVectors(N,G).normalize();
+  const TW=1536,TH=256,BR=32,data=new Uint8Array(TW*TH*4),tex=new THREE.DataTexture(data,TW,TH,THREE.RGBAFormat);tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;tex.minFilter=tex.magFilter=THREE.LinearFilter;tex.generateMipmaps=false;
+  const ih=(x,y,z)=>{let h=Math.imul(x,374761393)^Math.imul(y,668265263)^Math.imul(z,1274126177);h=Math.imul(h^(h>>>13),1103515245);h^=h>>>16;return(h>>>0)/4294967296};
+  const vn=(x,y,z)=>{const xi=Math.floor(x),yi=Math.floor(y),zi=Math.floor(z),xf=x-xi,yf=y-yi,zf=z-zi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf),w=zf*zf*(3-2*zf),
+      a=ih(xi,yi,zi),b=ih(xi+1,yi,zi),c=ih(xi,yi+1,zi),d=ih(xi+1,yi+1,zi),e=ih(xi,yi,zi+1),f=ih(xi+1,yi,zi+1),g=ih(xi,yi+1,zi+1),h=ih(xi+1,yi+1,zi+1),
+      p0=a+(b-a)*u,p1=c+(d-c)*u,p2=e+(f-e)*u,p3=g+(h-g)*u,q0=p0+(p1-p0)*v,q1=p2+(p3-p2)*v;return q0+(q1-q0)*w};
+  const fbm=(x,y,z,o)=>{let a=.5,s=0;for(let i=0;i<o;i++){s+=a*vn(x,y,z);x=x*2.03+17.1;y=y*2.03+3.7;z=z*2.03+11.3;a*=.5}return s/(1-Math.pow(.5,o))*.5};   // (0..1)
+  const ss=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},cl=new Float32Array(TW),sl=new Float32Array(TW),ld=new Float32Array(TW);
+  for(let i=0;i<TW;i++){ld[i]=(i+.5)/TW*360-180;cl[i]=Math.cos(ld[i]*d2r);sl[i]=Math.sin(ld[i]*d2r)}
+  let row=0,done=false;
+  function texel(i,j){const l=ld[i],b=-BR+(j+.5)/TH*2*BR,cx=cl[i],sy=sl[i],l2=l*l,wl=Math.exp(-l2/2400),w=2.5+3.7*wl,bw=b-(1.4*Math.sin(l*.06)+(fbm(cx*3,sy*3,5,2)-.5)*2.4),band=Math.exp(-bw*bw/(w*w)),core=Math.exp(-(l2+b*b)/1352);
+    let k=band*(.3+1.1*core)+.55*core*Math.exp(-b*b/90)+.06*Math.exp(-b*b/260);if(k<.004)return[0,0,0];
+    k*=.3+1.6*ss(.3,.8,fbm(cx*6,sy*6,b*.2,4));k*=.45+1.1*fbm(cx*24,sy*24,b*.9,3);   // (large cloud, then finer structure)
+    const reg=ss(-45,-25,l)*(1-ss(55,85,l)),bc=1.2+2*Math.sin(l*.09+1)+(fbm(cx*5,sy*5,2,2)-.5)*2,lw=1.2+1.1*fbm(cx*9,sy*9,7,2),lane=Math.exp(-(b-bc)*(b-bc)/(lw*lw))*reg*(.55+.45*fbm(cx*16,sy*16,b*.6,3));
+    k*=1-.9*lane;k*=1-.6*ss(.55,.78,fbm(cx*11+9,sy*11,b*.7+5,3))*Math.min(1,band*1.5);   // (the Great Rift, and other dark patches)
+    k=Math.min(1,Math.max(0,k));const wm=Math.min(1,core*1.5+.1*(1-ss(0,40,Math.abs(l))));return[k*(.66+.34*wm),k*(.74+.1*wm),k*(.95-.33*wm)]}   // (cool white in the arms, warm cream at the centre)
+  function step(ms){if(done)return;const t0=performance.now();while(row<TH&&performance.now()-t0<ms){for(let i=0;i<TW;i++){const c=texel(i,row),o=(row*TW+i)*4;data[o]=c[0]*255;data[o+1]=c[1]*255;data[o+2]=c[2]*255;data[o+3]=255}row++}
+    if(row>=TH){done=true;tex.needsUpdate=true;mw.visible=true}}
+  const mw=new THREE.Mesh(new THREE.SphereGeometry(R0,48,24),new THREE.ShaderMaterial({uniforms:{tex:{value:tex},op:MWU.op,moon:MWU.moon,hzy:HZY,uN:{value:N},uG:{value:G},uY:{value:Y}},blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,side:THREE.BackSide,
     vertexShader:`varying vec3 vp;varying float vh;void main(){vp=position;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_Position=projectionMatrix*viewMatrix*w;}`,
-    fragmentShader:`uniform float op,moon,hzy;uniform vec3 uN,uG,uY;varying vec3 vp;varying float vh;
-      float h3(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
-      float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}
-      float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*n3(p);p=p*2.03+7.1;a*=.5;}return s;}
-      void main(){vec3 p=normalize(vp);float sb=dot(p,uN),b=asin(clamp(sb,-1.,1.))*57.2958,xl=dot(p,uG),l=atan(dot(p,uY),xl)*57.2958,dc=acos(clamp(xl,-1.,1.))*57.2958;
-        float w=mix(4.5,10.,exp(-l*l/3600.)),band=exp(-b*b/(w*w)),core=exp(-dc*dc/1568.);
-        float inten=band*(.3+.95*core)+core*exp(-b*b/150.)*.3;
-        if(inten<.004||op<.03||vh<hzy)discard;   // (most of the sky is far from the band, and by day it is off: skip the noise there, it matters on phones)
-        inten*=.45+1.1*smoothstep(.25,.75,fbm(p*5.+3.));
-        float reg=smoothstep(-40.,-20.,l)*(1.-smoothstep(50.,80.,l)),lane=exp(-pow((b-.5)/2.,2.))*reg*(.35+.65*fbm(p*13.));
-        inten*=1.-.85*lane;inten*=.65+.7*fbm(p*9.+11.);
-        float g=n3(p*170.);inten*=.55+.9*g*g;
-        vec3 col=mix(vec3(.6,.7,1.),vec3(1.,.87,.68),core);
-        float a=op*op*(1.-.5*moon)*smoothstep(hzy,hzy+22.,vh);
-        gl_FragColor=vec4(col*inten*.3,a);}`}));
-  mw.frustumCulled=false;mw.renderOrder=-7;sky.add(mw)}
+    fragmentShader:`uniform sampler2D tex;uniform float op,moon,hzy;uniform vec3 uN,uG,uY;varying vec3 vp;varying float vh;
+      void main(){if(op<.03||vh<hzy)discard;vec3 p=normalize(vp);float b=asin(clamp(dot(p,uN),-1.,1.))*57.2958;if(abs(b)>31.)discard;   // (nothing to draw far from the band, or by day: skip it)
+        float l=atan(dot(p,uY),dot(p,uG));vec3 c=texture2D(tex,vec2(l/6.2831853+.5,(b+32.)/64.)).rgb;
+        float dn=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))))-.5;   // (a touch of dither, so the faint glow does not show contour bands on an 8-bit screen)
+        gl_FragColor=vec4(c*.62+dn/200.,op*op*(1.-.5*moon)*smoothstep(hzy,hzy+22.,vh)*(1.-smoothstep(26.,31.,abs(b))));}`}));
+  mw.frustumCulled=false;mw.renderOrder=-7;mw.visible=false;sky.add(mw);
+  // the dust of tiny stars, thickest toward the centre and along the band, thin in the dark rift
+  {const nD=16000,pos=new Float32Array(nD*3),col=new Float32Array(nD*3),sz=new Float32Array(nD),al=new Float32Array(nD),v=new THREE.Vector3();let sd=4242;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
+    for(let i=0;i<nD;){const l=(r()*2-1)*180,sg=3+4.5*Math.exp(-l*l/2400),gs=Math.sqrt(-2*Math.log(r()+1e-9))*Math.cos(6.2832*r()),b=gs*sg*(r()<.15?2.4:1),core=Math.exp(-(l*l+b*b)/1352);
+      if(r()>.25+.75*core||Math.abs(b)>BR)continue;if(l>-45&&l<80&&Math.abs(b-(1.2+2*Math.sin(l*.09+1)))<1.1&&r()<.85)continue;
+      const cb=Math.cos(b*d2r),sb=Math.sin(b*d2r),a=l*d2r;v.set(0,0,0).addScaledVector(G,cb*Math.cos(a)).addScaledVector(Y,cb*Math.sin(a)).addScaledVector(N,sb).multiplyScalar(R0);
+      pos[i*3]=v.x;pos[i*3+1]=v.y;pos[i*3+2]=v.z;const wm=Math.min(1,core*1.4)*(.5+.5*r());col[i*3]=.75+.25*wm;col[i*3+1]=.82+.04*wm-.04*(1-wm);col[i*3+2]=1-.3*wm;sz[i]=1.3+1.6*r()*r();al[i]=.25+.75*r()*r();i++}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('col',new THREE.BufferAttribute(col,3));g.setAttribute('sz',new THREE.BufferAttribute(sz,1));g.setAttribute('al',new THREE.BufferAttribute(al,1));
+    const dust=new THREE.Points(g,new THREE.ShaderMaterial({uniforms:{op:MWU.op,moon:MWU.moon,hzy:HZY,pr:starMat.uniforms.pr},blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,
+      vertexShader:`attribute vec3 col;attribute float sz,al;uniform float pr;varying vec3 vc;varying float va,vh;void main(){vc=col;va=al;vec4 w=modelMatrix*vec4(position,1.);vh=w.y;gl_PointSize=sz*pr;gl_Position=projectionMatrix*viewMatrix*w;}`,
+      fragmentShader:`uniform float op,moon,hzy;varying vec3 vc;varying float va,vh;void main(){float d=length(gl_PointCoord-.5)*2.;gl_FragColor=vec4(vc,va*exp(-d*d*3.5)*op*op*(1.-.5*moon)*smoothstep(hzy,hzy+22.,vh)*.55);}`}));
+    dust.frustumCulled=false;dust.renderOrder=-6;sky.add(dust)}
+  return{step}})();
 const lineObj=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(LNP,3)),lineMat);lineObj.frustumCulled=false;lineObj.renderOrder=-4;sky.add(lineObj);
 const lg=new THREE.Group();sky.add(lg);
 function buildStarTags(){LBL.forEach(([text,v,big])=>{const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');
@@ -3616,7 +3636,7 @@ function buildXmas(){XMG=new THREE.Group();W.add(XMG);
   bulbs.forEach((list,g)=>{if(!list.length)return;const mat=new THREE.MeshBasicMaterial({color:BULBC[g],toneMapped:false}),im=new THREE.InstancedMesh(bulbG,mat,list.length),o=new THREE.Object3D();
     list.forEach(([x,y,z],i)=>{o.position.set(x,y,z);o.updateMatrix();im.setMatrixAt(i,o.matrix)});im.frustumCulled=false;XMG.add(im);XMT.push({m:mat,c:new THREE.Color(BULBC[g]),g})});
   XMG.visible=false}
-function xmasTick(dt){const t=xmTarget();if(Math.abs(XMU.value-t)>.002)XMU.value+=(t-XMU.value)*Math.min(1,dt*1.2);else XMU.value=t;
+function xmasTick(dt){MW.step(4);const t=xmTarget();if(Math.abs(XMU.value-t)>.002)XMU.value+=(t-XMU.value)*Math.min(1,dt*1.2);else XMU.value=t;
   const hide=XMU.value>.5;if(hide!==xmGrass){xmGrass=hide;grass.visible=flowers.visible=!hide}
   if(XMU.value>.02&&!XMG)buildXmas();
   if(XMG){XMG.visible=hide;if(xmLight)xmLight.pw=hide?16:0;if(hide){const t=performance.now()/1000;XMT.forEach(q=>{const k=q.star?.85+.15*Math.sin(t*3):.5+.5*Math.sin(t*2.6+q.g*1.6);q.m.color.copy(q.c).multiplyScalar(q.star?1.5*k:.5+1.6*k)})}}}   // (the star shimmers; the bulbs take turns being bright)   // (no green blades or flowers poking through the snow)
