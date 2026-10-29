@@ -3324,7 +3324,7 @@ function setQuality(hq,save){HQ=hq;if(save)try{localStorage.setItem(QKEY,hq?'hi'
 $('bh').onclick=()=>setQuality(!HQ,true);
 
 /* =========================== TIME, SUN, MOON, SKY COLOURS =========================== */
-let cmode=0,dayI=0,nt=0,tmode=0,simH=0;
+let cmode=2,dayI=0,nt=0,tmode=0,simH=0;
 const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'local time';
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 /* the game clock: 'device' = every player follows their own device's time; otherwise the time zone the GM chose, the same for everybody */
@@ -3352,7 +3352,7 @@ setTm(0);try{setWorldTz(localStorage.getItem('tambayan.wtz'))}catch(_){}   // (t
 $('bn').onclick=()=>setTm(tmode===0?1:0);
 const curDoy=()=>dayI?Math.round((dayI-1)*30.4+15):doyNow()+clockH()/24,sunY=h=>Math.sin((h-6)/12*Math.PI)*.85,orionH=d=>(((12+5.6-(d-80)*24/365.25)%24)+24)%24;
 // Orion jump: freeze the clock when Orion crosses the southern meridian (upright, Sirius below), face south and look up
-// the sky guide button: 0 = constellation lines only (the start), 1 = lines and names, 2 = stars only (as in real life)
+// the sky guide button: 2 = stars only (as in real life, and the start), then 0 = constellation lines only, 1 = lines and names
 const cmSet=()=>{$('bc').style.opacity=cmode===2?.55:1;$('bc').title=['Constellation lines - tap to add the names','Constellation lines and names - tap for stars only','Stars only (as in real life) - tap for the constellation lines'][cmode]};
 $('bc').onclick=()=>{cmode=(cmode+1)%3;cmSet()};cmSet();
 /* The GM picks the game's time zone; it lives in one database row. Everybody reads it when they arrive, whenever the GM nudges the world channel (a tiny 'tz' message that only says
