@@ -39,6 +39,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .tag .sb{margin-left:6px;font-size:11px;font-weight:700;opacity:.95}.tag .sb.dot{display:inline-block;width:7px;height:7px;padding:0;border-radius:50%;background:#4cd964;box-shadow:0 0 0 1.5px rgba(255,255,255,.55);vertical-align:1px}   /* a name tag: the name, then a green dot (active) or the status */
 #say{position:fixed;left:0;top:0;display:none;background:var(--paper);color:var(--ink);font:600 14px var(--display);padding:6px 12px;border-radius:14px;box-shadow:var(--shadow);white-space:nowrap;pointer-events:none;z-index:1}
 #say::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-top-color:var(--paper);border-bottom-width:0}
+#mapx{position:fixed;z-index:5;width:38px;height:38px;font-size:17px}#mapx[hidden]{display:none}
 #map{cursor:pointer}#map.big{left:50%;bottom:50%;transform:translate(-50%,50%);z-index:4}
 #hud kbd{font:inherit;background:rgba(255,255,255,.22);border-radius:5px;padding:0 5px}
 
@@ -476,7 +477,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
 </div></div>
 
 <div id="chat"><input id="chatin" maxlength="80" placeholder="Say something to everyone here…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button type="button" class="round em" id="chatem" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">🙂</button><div id="emopick" role="group" aria-label="Emoji"></div></div>
-<canvas id="map" width="280" height="280"></canvas>
+<canvas id="map" width="280" height="280"></canvas><button type="button" class="round" id="mapx" aria-label="Close map" title="Close map" hidden>✕</button>
 <div id="acts"><button class="round" id="bjump" title="Jump · Space" aria-label="Jump"></button><button class="round" id="bem" title="Emotes: wave, dance, clap, cheer, bow" aria-label="Emotes" aria-expanded="false">😊</button><button class="round" id="bvc" hidden title="Voice chat: hear people near you and talk to them" aria-label="Voice chat" aria-pressed="false">🎧</button><button class="round" id="bptt" aria-label="Hold to talk">🎙️</button><button class="round" id="bsit" title="Sit down (on a bench or chair if one is close) · C" aria-label="Sit"></button></div>
 <div id="emo" role="group" aria-label="Emotes"></div>
 <div id="ask" role="dialog" aria-modal="true" aria-labelledby="asktitle" aria-describedby="asktext"><div id="askbox"><h2 id="asktitle"></h2><p id="asktext"></p><input id="askin" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="16" hidden><div id="askbtns"><button type="button" id="askno">Cancel</button><button type="button" id="askok">OK</button></div></div></div>
@@ -565,9 +566,9 @@ function vnoise(x,z){const xi=Math.floor(x),zi=Math.floor(z),xf=x-xi,zf=z-zi,u=x
 const fbm=(x,z)=>vnoise(x,z)*.55+vnoise(x*2.07+5.2,z*2.07+1.3)*.3+vnoise(x*4.3+9.1,z*4.3+3.7)*.15;
 const smax=(a,b,k)=>{const h=clamp(.5+.5*(a-b)/k,0,1);return lerp(b,a,h)+k*h*(1-h)};   // smooth max
 
-/* ---------------- quality (HD on desktop, Lite on phones; remembered per browser) ---------------- */
+/* ---------------- quality (HD to begin with, on phones too; remembered per browser) ---------------- */
 const QKEY='myworld.quality';
-let HQ=!(matchMedia('(pointer: coarse)').matches||Math.min(innerWidth,innerHeight)<600);
+let HQ=true;   // HD for everyone to begin with, phones too (anyone can still tap HD to switch to Lite, and that choice is remembered)
 try{const q=localStorage.getItem(QKEY);if(q)HQ=q==='hi'}catch(_){}
 const pixelRatio=()=>HQ?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1.25);
 
@@ -3980,8 +3981,10 @@ const mapBg=(()=>{const W2=Math.round((MAP.x1-MAP.x0)*MPU),H2=Math.round((MAP.z1
 let mapBig=false;
 function mapSize(){const mini=Math.round(Math.max(84,Math.min(140,Math.min(innerWidth,innerHeight)*.27)));document.documentElement.style.setProperty('--mh',mini+'px');
   const css=mapBig?Math.max(160,Math.min(innerWidth-32,innerHeight-140,560)):mini,px=Math.round(css*Math.min(devicePixelRatio||1,2));
-  mapCv.style.width=mapCv.style.height=css+'px';if(mapCv.width!==px){mapCv.width=mapCv.height=px}mapCv.classList.toggle('big',mapBig)}
+  mapCv.style.width=mapCv.style.height=css+'px';if(mapCv.width!==px){mapCv.width=mapCv.height=px}mapCv.classList.toggle('big',mapBig);
+  const x=$('mapx');x.hidden=!mapBig;if(mapBig){x.style.left=Math.round(innerWidth/2+css/2-46)+'px';x.style.top=Math.round(innerHeight/2-css/2+8)+'px'}}   // (the close button sits in the top right corner of the open map)
 mapCv.addEventListener('click',()=>{mapBig=!mapBig;mapSize();drawMap()});
+$('mapx').onclick=()=>{mapBig=false;mapSize();drawMap()};addEventListener('keydown',e=>{if(e.key==='Escape'&&mapBig){mapBig=false;mapSize();drawMap()}});
 function drawMap(){const S=mapCv.width,u=S/280;let vs,vx0,vz0;
   if(mapBig){vs=Math.max(MAP.x1-MAP.x0,MAP.z1-MAP.z0);vx0=(MAP.x0+MAP.x1)/2-vs/2;vz0=(MAP.z0+MAP.z1)/2-vs/2}else{vs=230;vx0=P.position.x-vs/2;vz0=P.position.z-vs/2}
   const k=S/vs,X=x=>(x-vx0)*k,Z=z=>(z-vz0)*k;
