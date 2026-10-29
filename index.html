@@ -2664,7 +2664,7 @@ document.addEventListener('contextmenu',e=>{e.preventDefault();clearInput()});ad
 cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}
   if(e.pointerType==='touch'){const now=performance.now();
     for(const id of[...tpos.keys()])if(id!==e.pointerId&&!cv.hasPointerCapture(id)){tpos.delete(id);if(id===sid){sid=null;st=null;sv={x:0,z:0}}if(id===lid){lid=null;lp=null}if(pz&&(id===pz.a||id===pz.b))pz=null}   // (forget a finger whose lift was never reported: it would turn every new touch into a pinch)
-    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY),half=x=>x<innerWidth/2;if(Math.hypot(q.x-q.x0,q.y-q.y0)<35&&(half(q.x)===half(e.clientX)||d<130)){   // a second finger is a pinch, not a new stick or a new look, only if the first has not gone anywhere yet (a moving thumb is never taken over) and the two are on the same half of the screen or very close together. A thumb on each side of the screen is walking and looking, however close they are in a narrow portrait phone.
+    if(!pz)for(const[id,q]of tpos){const d=Math.hypot(q.x-e.clientX,q.y-e.clientY),half=x=>x<innerWidth/2;if(Math.hypot(q.x-q.x0,q.y-q.y0)<60&&(half(q.x)===half(e.clientX)||d<innerWidth*.32)){   // a second finger is a pinch, not a new stick or a new look, only if the first has not gone anywhere yet (a moving thumb is never taken over) and the two are on the same half of the screen or less than a third of the screen width apart (a pinch, even one across the middle). Two thumbs, one on each side, are always further apart than that: walking and looking.
       tpos.set(e.pointerId,{x:e.clientX,y:e.clientY,t:now,x0:e.clientX,y0:e.clientY});pz={a:id,b:e.pointerId,d0:Math.max(d,30),z0:zoom};if(sid===id){sid=null;st=null;sv={x:0,z:0}}if(lid===id){lid=null;lp=null}return}}
     tpos.set(e.pointerId,{x:e.clientX,y:e.clientY,t:now,x0:e.clientX,y0:e.clientY})}
   if(e.pointerType==='touch'&&e.clientX<innerWidth/2&&sid==null){sid=e.pointerId;st={x:e.clientX,y:e.clientY}}else if(lid==null){lid=e.pointerId;lp={x:e.clientX,y:e.clientY}}});
@@ -3352,7 +3352,9 @@ setTm(0);try{setWorldTz(localStorage.getItem('tambayan.wtz'))}catch(_){}   // (t
 $('bn').onclick=()=>setTm(tmode===0?1:0);
 const curDoy=()=>dayI?Math.round((dayI-1)*30.4+15):doyNow()+clockH()/24,sunY=h=>Math.sin((h-6)/12*Math.PI)*.85,orionH=d=>(((12+5.6-(d-80)*24/365.25)%24)+24)%24;
 // Orion jump: freeze the clock when Orion crosses the southern meridian (upright, Sirius below), face south and look up
-$('bc').onclick=()=>{cmode=1-cmode;$('bc').style.opacity=cmode?.55:1;$('bc').title=cmode?'Stars only (as in real life) - tap for lines and names':'Constellation lines and names - tap for stars only'};
+// the sky guide button: 0 = constellation lines only (the start), 1 = lines and names, 2 = stars only (as in real life)
+const cmSet=()=>{$('bc').style.opacity=cmode===2?.55:1;$('bc').title=['Constellation lines - tap to add the names','Constellation lines and names - tap for stars only','Stars only (as in real life) - tap for the constellation lines'][cmode]};
+$('bc').onclick=()=>{cmode=(cmode+1)%3;cmSet()};cmSet();
 /* The GM picks the game's time zone; it lives in one database row. Everybody reads it when they arrive, whenever the GM nudges the world channel (a tiny 'tz' message that only says
    "look again": the real value always comes from the database, so nobody can fake it) and every minute and a half as a safety net. */
 const GMZ=[['device',"Each player's own device time (everyone different)"],['America/New_York','US Eastern - Georgia, New York'],['America/Chicago','US Central - Texas, Illinois'],['America/Denver','US Mountain - Colorado, Utah'],['America/Phoenix','Arizona'],['America/Los_Angeles','US Pacific - California, Washington'],['America/Anchorage','Alaska'],['Pacific/Honolulu','Hawaii'],['America/Toronto','Toronto'],['America/Mexico_City','Mexico City'],['America/Bogota','Bogota'],['America/Lima','Lima'],['Europe/London','London'],['Europe/Paris','Paris, Berlin, Madrid'],['Europe/Istanbul','Istanbul'],['Europe/Moscow','Moscow'],['Africa/Cairo','Cairo'],['Africa/Lagos','Lagos'],['Africa/Johannesburg','Johannesburg'],['Asia/Kolkata','India'],['Asia/Bangkok','Bangkok, Jakarta'],['Asia/Manila','Philippines'],['Asia/Singapore','Singapore, Kuala Lumpur'],['Asia/Hong_Kong','Hong Kong'],['Asia/Shanghai','China'],['Asia/Seoul','Korea'],['Asia/Tokyo','Japan'],['Australia/Sydney','Sydney, Melbourne'],['Australia/Perth','Perth'],['Pacific/Auckland','New Zealand']];
@@ -3541,7 +3543,7 @@ function skyTick(dt){
   poolTick(sstep(.2,.8,nt));fireMat.uniforms.uNight.value=sstep(.5,1,nt);
   // stars + labels
   starMat.uniforms.op.value=nt;starMat.uniforms.t.value=performance.now()/1000;lineMat.uniforms.op.value=nt*.45;
-  lineObj.visible=lg.visible=cmode==0&&nt>.02;lg.children.forEach(s=>s.material.opacity=nt*.85);meteorTick(dt);
+  lineObj.visible=cmode<2&&nt>.02;lg.visible=cmode===1&&nt>.02;lg.children.forEach(s=>s.material.opacity=nt*.85);meteorTick(dt);
   SUNDIR.copy(sdir);MOONDIR.copy(sdir).negate();
   // the sun reddens and swells as it sinks (a little more of everything near the horizon); both glows die away once they are below it
   {const t1=sstep(-.02,.06,ey),t2=sstep(.05,.2,ey),t3=sstep(.15,.45,ey),g=sstep(0,.35,ey);SUNDISC.color.copy(SD0).lerp(SD1,t1).lerp(SD2,t2).lerp(SD3,t3);
