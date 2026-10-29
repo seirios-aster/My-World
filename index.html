@@ -3100,6 +3100,8 @@ if(CLOUD_ON&&storage.auth){
   const gsw=$('gswitch');gsw.onclick=()=>{gsw.disabled=true;storage.session.takeOver().catch(e=>showGate('conflict',(e&&e.message)||'Something went wrong')).finally(()=>{gsw.disabled=false})};
   $('gcancel').onclick=()=>storage.session.cancel();
   addEventListener('pageshow',e=>{if(e.persisted&&gateOn)gateSync()});   // came back from Google with the back button
+  gateOn=true;gate.classList.remove('out');gate.style.display='flex';   // cover the world at once: the sign-in check takes a moment, and the game must not show before the login screen
+  if(INAPP){document.documentElement.classList.add('inapp-gate');gateUI('in')}   // (in Facebook, Messenger and the like there is nothing to wait for: show the open-in-your-browser notice straight away)
   setTimeout(()=>{showGate('check');storage.ready.then(()=>{gateSync();
     const q=new URLSearchParams(location.search+'&'+location.hash.slice(1)),oe=q.get('error_description');if(oe&&!storage.auth.user())showGate('error',oe.replace(/\+/g,' '))})},0)}
 madd.onclick=()=>{if(!mbusy&&cur){mfile.value='';mfile.click()}};
