@@ -219,6 +219,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #gmsg{margin:12px 0 0;font:700 13.5px/1.4 var(--body);color:#b3382c}
 #gskip{margin:10px auto 0;border:0;background:none;color:var(--ink);font:700 14px var(--body);text-decoration:underline;cursor:pointer;padding:8px}
 #gbrowse[hidden]{display:none}
+#gbrowse+#gbtn{margin-top:12px;opacity:.6}
 #gbrowse{margin:14px 0 0;padding:14px;border-radius:14px;background:#fff6e0;border:1px solid #f0d9a2;text-align:left}
 #gbrowse p{margin:0 0 10px;font:600 13.5px/1.45 var(--body);color:var(--ink)}#gbrowse p b{font-weight:800}
 #gbrowse .gbrow{display:flex;gap:8px;flex-wrap:wrap}
@@ -284,6 +285,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
   #bbag,#bhero2{display:none}
 }
 @media (orientation:portrait) and (pointer:coarse) and (max-width:600px){
+  html.inapp-gate #rot{display:none!important}   /* on the login screen in the Facebook / Messenger browser, the notice about opening a real browser must come first: it does not need a landscape phone */
   #rot{display:flex;position:fixed;inset:0;z-index:99;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(20,22,40,.94);color:#fff;font:600 15px var(--body)}
   #rot b{font:700 20px var(--display);display:block;margin-bottom:6px}#rot p{margin:0 0 16px;opacity:.8}#rot button{border:0;border-radius:999px;padding:10px 20px;background:#fff;color:#1b1f3a;font:700 14px var(--body);cursor:pointer}
 }
@@ -3005,12 +3007,13 @@ bout.onclick=async()=>{const A=storage.auth;if(!A||!A.user())return;if(await ask
 if(storage.auth){outSync();storage.ready.then(outSync);storage.auth.onChange(outSync)}
 if(storage.auth)storage.auth.onChange(()=>{SPOTS.forEach(sp=>sp.items.forEach(it=>applyRec(it,null)));if(cur){cur.items.forEach((_,i)=>refreshItem(i));hydrate(cur)}});   // someone signed in or out: show only their own media
 /* ---- login gate: on the hosted version the world opens only after Google sign-in ---- */
+const UA=navigator.userAgent||'',INAPP=/FBAN|FBAV|FB_IAB|FBIOS|FB4A|Messenger|Instagram|MicroMessenger|Snapchat|BytedanceWebview|musical_ly|TikTok|Line\/|LinkedInApp|Pinterest|Twitter|; wv\)/i.test(UA),ANDROID=/Android/i.test(UA);
 const gate=$('gate'),gbtn=$('gbtn'),gstat=$('gstat'),gmsg=$('gmsg'),gskip=$('gskip');let gateOn=false,gateSkipped=false,gateMode='';
 function gateUI(mode,text){gateMode=mode;$('gconf').hidden=mode!=='conflict';gstat.hidden=mode!=='check';gbtn.hidden=!(mode==='in'||mode==='busy'||mode==='error');gbtn.disabled=mode==='busy';
   $('gbtxt').textContent=mode==='busy'?'Opening Google…':'Continue with Google';gmsg.textContent=text||'';gmsg.hidden=!text;gskip.hidden=mode!=='offline'}
-function showGate(mode,text){if(gateSkipped)return;gateOn=true;gate.classList.remove('out');gate.style.display='flex';clearInput();if(open)hide();if(chatEl.style.display==='flex')closeChat();
+function showGate(mode,text){if(gateSkipped)return;gateOn=true;if(INAPP)document.documentElement.classList.add('inapp-gate');gate.classList.remove('out');gate.style.display='flex';clearInput();if(open)hide();if(chatEl.style.display==='flex')closeChat();
   gate3dStart();gateUI(mode,text);if(mode==='in'||mode==='error')gbtn.focus({preventScroll:true})}
-function hideGate(){gateOn=false;gate.classList.add('out');setTimeout(()=>{if(!gateOn){gate.style.display='none';gate3dStop()}},650);cv.focus()}
+function hideGate(){gateOn=false;document.documentElement.classList.remove('inapp-gate');gate.classList.add('out');setTimeout(()=>{if(!gateOn){gate.style.display='none';gate3dStop()}},650);cv.focus()}
 /* the gate's 3D set dressing: a few little floating islands and crystals over the dusk skyline. Built when the gate opens, freed when it closes; if WebGL is
    not available the flat skyline simply stays as it is */
 const G3={r:null,raf:0,on:false};
@@ -3080,8 +3083,9 @@ function gateSync(){const A=storage.auth;if(!A||gateSkipped)return;
 if(CLOUD_ON&&storage.auth){
   ['keydown','keyup'].forEach(t=>addEventListener(t,e=>{if(gateOn)e.stopImmediatePropagation()},true));   // nothing reaches the world while the login screen is up
   // Google refuses to sign anyone in inside the built-in browser of Facebook, Messenger, Instagram, TikTok, Line and the like (it answers "Error 403: disallowed_useragent"), so people who open the link from there are asked to open it in their own browser instead
-  const UA=navigator.userAgent||'',INAPP=/FBAN|FBAV|FB_IAB|FBIOS|FB4A|Messenger|Instagram|MicroMessenger|Snapchat|BytedanceWebview|musical_ly|TikTok|Line\/|LinkedInApp|Pinterest|Twitter|; wv\)/i.test(UA),ANDROID=/Android/i.test(UA);
-  if(INAPP){const how=$('gbhow'),ch=$('gchrome'),href=location.href.split('#')[0];
+  // (UA, INAPP and ANDROID are worked out just above the login gate)
+  if(INAPP){const how=$('gbhow'),ch=$('gchrome'),href=location.href.split('#')[0];gbtn.parentNode.insertBefore($('gbrowse'),gbtn);   // (the notice goes above the Google button: opening a real browser is the first thing to do here)
+   
     how.textContent=ANDROID?'Tap Open in Chrome, or tap the three dots (⋮ or ⋯) and choose Open in browser.':'Tap the three dots (⋯) or the share button, then choose Open in Safari (or Open in browser). You can also copy the link and paste it into your browser.';
     if(ANDROID){const u=new URL(href);ch.href='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(href)+';end';ch.hidden=false}
     $('gcopy').onclick=async()=>{try{await navigator.clipboard.writeText(href);$('gcopy').textContent='Link copied ✓'}catch(_){window.prompt('Copy this link and open it in your browser:',href)}};
