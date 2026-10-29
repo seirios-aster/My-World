@@ -214,6 +214,13 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){#gstat i{animation:none}}
 #gmsg{margin:12px 0 0;font:700 13.5px/1.4 var(--body);color:#b3382c}
 #gskip{margin:10px auto 0;border:0;background:none;color:var(--ink);font:700 14px var(--body);text-decoration:underline;cursor:pointer;padding:8px}
+#gbrowse[hidden]{display:none}
+#gbrowse{margin:14px 0 0;padding:14px;border-radius:14px;background:#fff6e0;border:1px solid #f0d9a2;text-align:left}
+#gbrowse p{margin:0 0 10px;font:600 13.5px/1.45 var(--body);color:var(--ink)}#gbrowse p b{font-weight:800}
+#gbrowse .gbrow{display:flex;gap:8px;flex-wrap:wrap}
+#gcopy,#gchrome{flex:1;min-width:120px;min-height:46px;display:flex;align-items:center;justify-content:center;border:0;border-radius:12px;background:var(--sun);color:#fff;font:700 15px var(--body);text-decoration:none;cursor:pointer}
+#gchrome[hidden]{display:none}
+#gtry{margin:8px auto 0;display:block;border:0;background:none;color:var(--ink-soft);font:700 12.5px var(--body);text-decoration:underline;cursor:pointer;padding:6px}
 #gnote{margin:16px 0 0;font:600 12.5px/1.4 var(--body);color:var(--ink-soft)}
 #gconf[hidden]{display:none}
 #gconf p{margin:0 auto 14px;max-width:32ch;font:600 14.5px/1.45 var(--body);color:var(--ink-soft)}
@@ -458,6 +465,7 @@ body.hurt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4
  <button type="button" id="gbtn" hidden><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg><span id="gbtxt">Continue with Google</span></button>
  <div id="gstat" role="status"><i></i><span>Checking your sign-in…</span></div>
  <div id="gmsg" role="alert" hidden></div>
+ <div id="gbrowse" hidden><p><b>Open this page in your browser to sign in</b><br>Google does not allow sign-in inside the built-in browser of Facebook, Messenger, Instagram and similar apps.</p><p id="gbhow"></p><div class="gbrow"><button type="button" id="gcopy">Copy link</button><a id="gchrome" hidden>Open in Chrome</a></div><button type="button" id="gtry">Try anyway</button></div>
  <button type="button" id="gskip" hidden>Continue without signing in</button>
  <div id="gconf" hidden><p>This account is already open on another device or tab. Only one session can be active at a time. Switch to this one? The other will be signed out.</p><button type="button" id="gswitch">Switch to this device</button><button type="button" id="gcancel">Cancel</button></div>
  <div id="gnote">Your photos and videos stay private to your account.</div>
@@ -3065,7 +3073,17 @@ function gateSync(){const A=storage.auth;if(!A||gateSkipped)return;
   else{const s=storage.session.state();showGate('in',s==='kicked'?'You were signed out because your account was opened on another device.':s==='declined'?"You're still signed in on your other device.":'')}}
 if(CLOUD_ON&&storage.auth){
   ['keydown','keyup'].forEach(t=>addEventListener(t,e=>{if(gateOn)e.stopImmediatePropagation()},true));   // nothing reaches the world while the login screen is up
-  gbtn.onclick=()=>{gateUI('busy');storage.auth.signIn().catch(e=>showGate('error',(e&&e.message)||'Sign-in failed. Try again.'))};
+  // Google refuses to sign anyone in inside the built-in browser of Facebook, Messenger, Instagram, TikTok, Line and the like (it answers "Error 403: disallowed_useragent"), so people who open the link from there are asked to open it in their own browser instead
+  const UA=navigator.userAgent||'',INAPP=/FBAN|FBAV|FB_IAB|FBIOS|FB4A|Messenger|Instagram|MicroMessenger|Snapchat|BytedanceWebview|musical_ly|TikTok|Line\/|LinkedInApp|Pinterest|Twitter|; wv\)/i.test(UA),ANDROID=/Android/i.test(UA);
+  if(INAPP){const how=$('gbhow'),ch=$('gchrome'),href=location.href.split('#')[0];
+    how.textContent=ANDROID?'Tap Open in Chrome, or tap the three dots (⋮ or ⋯) and choose Open in browser.':'Tap the three dots (⋯) or the share button, then choose Open in Safari (or Open in browser). You can also copy the link and paste it into your browser.';
+    if(ANDROID){const u=new URL(href);ch.href='intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(href)+';end';ch.hidden=false}
+    $('gcopy').onclick=async()=>{try{await navigator.clipboard.writeText(href);$('gcopy').textContent='Link copied ✓'}catch(_){window.prompt('Copy this link and open it in your browser:',href)}};
+    const sync=()=>{$('gbrowse').hidden=!(gateMode==='in'||gateMode==='error'||gateMode==='busy');if(!$('gbrowse').hidden)gbtn.classList.add('inapp')};
+    const oldUI=gateUI;gateUI=(m,t)=>{oldUI(m,t);sync()}}
+  let tryAnyway=!INAPP;
+  gbtn.onclick=()=>{if(!tryAnyway){$('gbrowse').hidden=false;gmsg.textContent='Sign-in does not work in this app: open the page in your browser first.';gmsg.hidden=false;return}gateUI('busy');storage.auth.signIn().catch(e=>showGate('error',(e&&e.message)||'Sign-in failed. Try again.'))};
+  $('gtry').onclick=()=>{tryAnyway=true;gbtn.click()};
   gskip.onclick=()=>{gateSkipped=true;hideGate()};
   storage.auth.onChange(gateSync);
   storage.session.onChange(gateSync);
