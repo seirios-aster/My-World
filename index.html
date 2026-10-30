@@ -2070,7 +2070,8 @@ const STAR={},STP=[],STC=[],STS=[],STM=[],LNP=[],LBL=[],sc=new THREE.Color();
 const cdir=(ra,de)=>{const a=ra*Math.PI/12,d=de*Math.PI/180;return[Math.cos(d)*Math.cos(a),Math.cos(d)*Math.sin(a),Math.sin(d)]};
 function addStar(v,m,c){c=c||[.9,.93,1];sc.setRGB(c[0],c[1],c[2],THREE.SRGBColorSpace).multiplyScalar(m<.6?2.6:m<1.5?1.7:m<2.5?1.15:.95);
   STP.push(v[0]*R0,v[1]*R0,v[2]*R0);STC.push(sc.r,sc.g,sc.b);STS.push(Math.max(2,Math.min(7,(6.2-m)*.78)));STM.push(m)}
-CS.forEach(([nm,sd,ld])=>{const cen=[0,0,0];sd.split(';').forEach(s=>{const[n,ra,de,m]=s.split(' '),v=cdir(+ra,+de);STAR[n]=v;addStar(v,+m,TINT[n]);cen[0]+=v[0];cen[1]+=v[1];cen[2]+=v[2];if(nm==='*')LBL.push([n,v,0])});
+CS.forEach(([nm,sd,ld])=>{const cen=[0,0,0];sd.split(';').forEach(s=>{const[n,ra,de,m]=s.split(' '),v=cdir(+ra,+de);STAR[n]=v;addStar(v,+m,TINT[n]);if(n==='SigmaOri'){const k=STS.length-1,bn=(+m<1.5?3.5:0)+(+m<4?6:0);STS[k]=(STS[k]+bn)/2-bn}   // (this one is drawn at half the size: its point size is sz + the bonus, so half of the total goes back into sz)
+cen[0]+=v[0];cen[1]+=v[1];cen[2]+=v[2];if(nm==='*')LBL.push([n,v,0])});
   if(ld)ld.split(' ').forEach(q=>{const[a,b]=q.split('-');LNP.push(...STAR[a].map(k=>k*R0),...STAR[b].map(k=>k*R0))});
   if(nm!=='*'){const l=Math.hypot(...cen);LBL.push([nm,cen.map(k=>k/l),1])}});
 ['Sirius','Betelgeuse','Rigel'].forEach(n=>LBL.push([n,STAR[n],0]));
