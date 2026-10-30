@@ -2726,7 +2726,7 @@ const touch=matchMedia('(pointer: coarse)').matches;
 // ---- the caret: fold the right-hand buttons away (remembered) ----
 {const tl=document.getElementById('tools'),c=document.getElementById('bcar');
   const set=m=>{tl.classList.toggle('min',m);c.setAttribute('aria-expanded',m?'false':'true');c.setAttribute('aria-label',m?'Show buttons':'Hide buttons');if(m){const o=document.getElementById('outfits');if(o)o.style.display='none'}try{localStorage.setItem('tools.min',m?'1':'0')}catch(e){}};
-  let m0=false;try{m0=localStorage.getItem('tools.min')==='1'}catch(e){}
+  let m0=matchMedia('(pointer:coarse)').matches;try{const v=localStorage.getItem('tools.min');if(v!==null)m0=v==='1'}catch(e){}   // phones start folded; once you have chosen, your choice is remembered
   if(m0)set(true);c.onclick=()=>set(!tl.classList.contains('min'))}
 // ---- full screen / app mode (Android: real fullscreen + landscape lock; iPhone: Add to Home Screen) ----
 {const de=document.documentElement,btn=document.getElementById('bfs'),msg=document.getElementById('fsmsg');
