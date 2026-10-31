@@ -4636,7 +4636,7 @@ const MOB=(()=>{
       if(k<=0){toast('','No stat points left to spend',true);return}RPG.s[i]+=k;rpgApply();rpgSave();toast('',nm+' +'+k+(spLeft()?'  ('+spLeft()+' point'+(spLeft()===1?'':'s')+' left)':'  (no points left)'),true)},setLevel(n){n=Math.min(MAXL,Math.max(1,Math.floor(+n)||1));RPG.l=n;RPG.xp=0;if(sum(RPG.s)>3*(n-1)||sum(RPG.k)-3+RPG.kb-1>n-1){RPG.s=[0,0,0];RPG.k=[1,1,1];RPG.kb=1}HP.v=HP.max;rpgApply();rpgSave();toast('','Your level is now '+n,true)},outfit:()=>[0,3,4][RPG.c],give:(sl,r,c)=>gearGive(sl,r,c),
       refine(sl,n){const a=(sl<0?INV.eq:[INV.eq[sl]]).filter(Boolean);if(!a.length){toast('','Nothing worn there to upgrade',true);return}a.forEach(it=>{it[2]=ic(it)+3*n});rpgApply();rpgSave();toast('','Refined '+a.length+' worn item'+(a.length>1?'s':'')+' to +'+n,true)},   // (GM: set the refine level of what you wear)
       fullSet(r){for(let sl=0;sl<4;sl++){const it=[sl,r,sl===0?RPG.c:0,gMax(sl,r)],b=rollBon(r,true,sl),old=INV.eq[sl];if(b)it[4]=b;INV.eq[sl]=it;if(old&&INV.bag.length<BAGMAX)INV.bag.push(old)}rpgApply();rpgSave();toast('','You are now wearing a full '+RAR[r].n+' set ✨',true)},   // (GM: a full set of one rarity, at the best roll, worn at once)
-god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot be hurt and you hit for 1000x. Type /god again to turn it off ⚡':'God mode is off',true)},perfect(v){PERFECT=v==null?!PERFECT:!!v;toast('',PERFECT?'Perfect rolls are ON: new Epic and Legendary gear gets the best extra stats. Type /perfect again to turn it off ★':'Perfect rolls are off: extra stats roll at random',true)},coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN,POT],ein(a,u){rpgUser=u||rpgUser;ecoIn(a);try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}rpgDraw();shopDraw()},cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;try{ecoIn(JSON.parse(localStorage.getItem('myworld.eco.'+(u&&u.id?u.id:'guest'))||'null'))}catch(_){}let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
+god(v){GOD=v==null?!GOD:!!v;if(GOD){for(const k in CD)CD[k]=0;EN.v=100;EN.lock=0}HP.v=HP.max;toast('',GOD?'God mode is ON: no damage, 1000x hits, and no skill cooldowns. Type /god again to turn it off ⚡':'God mode is off',true)},perfect(v){PERFECT=v==null?!PERFECT:!!v;toast('',PERFECT?'Perfect rolls are ON: new Epic and Legendary gear gets the best extra stats. Type /perfect again to turn it off ★':'Perfect rolls are off: extra stats roll at random',true)},coin:n=>{addCoin(n);toast('','You now have '+coinStr(COIN),true)},eout:()=>[COIN,POT],ein(a,u){rpgUser=u||rpgUser;ecoIn(a);try{localStorage.setItem('myworld.eco.'+(rpgUser&&rpgUser.id?rpgUser.id:'guest'),JSON.stringify([COIN,POT]))}catch(_){}rpgDraw();shopDraw()},cls:()=>RPG.c,out:rpgOut,load(u){rpgUser=u;try{ecoIn(JSON.parse(localStorage.getItem('myworld.eco.'+(u&&u.id?u.id:'guest'))||'null'))}catch(_){}let j=null;try{j=JSON.parse(localStorage.getItem(rpgKey(u))||'null')}catch(_){}if(rpgSet(j))rpgApply()},
     in(a,u){rpgUser=u||rpgUser;if(rpgSet(a)){rpgApply();try{localStorage.setItem(rpgKey(rpgUser),JSON.stringify(rpgOut()))}catch(_){}}}};
   bHero.onclick=()=>{const on=!rpgEl.classList.contains('on');rpgEl.classList.toggle('on',on);bHero.setAttribute('aria-expanded',on);if(on){rpgFit();rpgDraw();HPV.show(PPL[ctl]);HPV.start()}else gearDraw()};
   $('rpx').onclick=()=>{rpgEl.classList.remove('on');bHero.setAttribute('aria-expanded','false');gearDraw()};
@@ -4862,7 +4862,7 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
     setTimeout(()=>{const r=P.rotation.y,fx=Math.sin(r),fz=Math.cos(r),reach=2.3;let n=0;ringFx(P.position.x+fx*1.3,P.position.z+fz*1.3,.9,'#ffffff',200);
       list.forEach(m=>{if(n>=2||m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz),rad=.7*TY[m.ty].sc;
         if(d<reach+rad&&(dx*fx+dz*fz)/Math.max(d,.01)>.15){const crit=Math.random()<critP();hitMon(m,Math.max(1,Math.round((5+rnd(0,2))*dmgMul(0)*(crit?2:1))),dx/Math.max(d,.01)*.6,dz/Math.max(d,.01)*.6,crit);n++}})},150)}
-  function attack(){if(CD.a>0||!canAct())return;CD.a=cdOf('a');MP.emoStop(true);if(!armed()){punch();return}
+  function attack(){if((!GOD&&CD.a>0)||!canAct())return;CD.a=GOD?0:cdOf('a');MP.emoStop(true);if(!armed()){punch();return}
     if(RPG.c>0){const c=RPG.c,tg=sortedNear(1,P.position.x,P.position.z,RNG())[0];faceTo(tg);doAnim('a');sfx(c===1?'bolt':'slash');   // (a mage's bolt or an archer's arrow: it flies, and lands when it gets there)
       setTimeout(()=>{const crit=Math.random()<critP();shoot(tg,Math.max(1,Math.round((10+rnd(0,4))*dmgMul(0)*(crit?2:1))),crit,c,c===1?24:36)},c===1?200:180);return}
     let tg=null,td=4.5;list.forEach(m=>{if(m.st===3)return;const d=Math.hypot(m.x-P.position.x,m.z-P.position.z);if(d<td){td=d;tg=m}});
@@ -4878,20 +4878,20 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
       list.forEach(m=>{if(m.st===3)return;const dx=m.x-tx,dz=m.z-tz,d=Math.hypot(dx,dz);if(d<R+.7*TY[m.ty].sc)hitMon(m,Math.max(1,Math.round((110+rnd(0,30))*dmgMul(1))),dx/Math.max(d,.01)*2,dz/Math.max(d,.01)*2,false)})})},420)}
   function volley(){const tgs=sortedNear(3,P.position.x,P.position.z,RNG());faceTo(tgs[0]);doAnim('z');
     for(let i=0;i<3;i++){const tg=tgs.length?tgs[i%tgs.length]:null;setTimeout(()=>{sfx('slash');shoot(tg,Math.max(1,Math.round((40+rnd(0,15))*dmgMul(1))),false,2,36)},170+i*160)}}
-  function slam(){if(CD.z>0||!canAct())return;CD.z=cdOf('z');MP.emoStop(true);
+  function slam(){if((!GOD&&CD.z>0)||!canAct())return;CD.z=GOD?0:cdOf('z');MP.emoStop(true);
     if(RPG.c===1){meteor();return}if(RPG.c===2){volley();return}
     doAnim('z');
     setTimeout(()=>{const R=5.5+.4*(RPG.k[1]-1);list.forEach(m=>{if(m.st===3)return;const dx=m.x-P.position.x,dz=m.z-P.position.z,d=Math.hypot(dx,dz);
         if(d<R+.7*TY[m.ty].sc)hitMon(m,Math.max(1,Math.round((80+rnd(0,25))*dmgMul(1))),dx/Math.max(d,.01)*2.2,dz/Math.max(d,.01)*2.2,false)});
       ringFx(P.position.x,P.position.z,R,'#ffd27a',380);sfx('slam')},380)}
-  function dash(){if(CD.d>0||!canAct())return;CD.d=cdOf('d');MP.emoStop(true);const c=RPG.c,fx=Math.sin(P.rotation.y),fz=Math.cos(P.rotation.y);
+  function dash(){if((!GOD&&CD.d>0)||!canAct())return;CD.d=GOD?0:cdOf('d');MP.emoStop(true);const c=RPG.c,fx=Math.sin(P.rotation.y),fz=Math.cos(P.rotation.y);
     if(c===1){const dist=8+.6*(RPG.k[2]-1);let bx=P.position.x,bz=P.position.z;for(let i=1;i<=8;i++){const nx=P.position.x+fx*dist*i/8,nz=P.position.z+fz*dist*i/8;if(walkable(nx,nz)&&!crossWall(bx,bz,nx,nz)){bx=nx;bz=nz}else break}   // (the mage's blink: straight there, as far as the ground allows)
       ringFx(P.position.x,P.position.z,2.2,'#c9a8ff',300);P.position.x=bx;P.position.z=bz;ringFx(bx,bz,2.2,'#c9a8ff',300);HP.inv=Math.max(HP.inv,.4);doAnim('d');sfx('dash');return}
     const sg=c===2?-1:1;DASH.t=.2;DASH.x=fx*sg;DASH.z=fz*sg;HP.inv=Math.max(HP.inv,.35);   // (the archer's evade rolls backwards, away from what it is facing)
     doAnim('d');ringFx(P.position.x,P.position.z,2.2,'#9fe8ff',250);sfx('dash')}
   const burstMul=()=>1+.3*(RPG.kb-1),statMul=()=>(1+.08*RPG.s[1]+.02*(RPG.l-1))*(1+atkB()/100),   // (the burst: strength, level and the weapon, like every other attack)
     hitArea=(x,z,R,dm,kb)=>list.forEach(m=>{if(m.st===3)return;const dx=m.x-x,dz=m.z-z,d=Math.hypot(dx,dz);if(d<R+.7*TY[m.ty].sc)hitMon(m,Math.max(1,Math.round(dm)),dx/Math.max(d,.01)*kb,dz/Math.max(d,.01)*kb,false)});
-  function ultimate(){if(EN.v<100||!canAct())return;EN.v=0;EN.lock=performance.now()+3000;MP.emoStop(true);const c=RPG.c;HP.inv=Math.max(HP.inv,1.2);doAnim('b');sfx('lvl');
+  function ultimate(){if((!GOD&&EN.v<100)||!canAct())return;if(GOD){EN.v=100;EN.lock=0}else{EN.v=0;EN.lock=performance.now()+3000}MP.emoStop(true);const c=RPG.c;HP.inv=Math.max(HP.inv,1.2);doAnim('b');sfx('lvl');
     if(c===0){for(let i=0;i<4;i++)setTimeout(()=>{ringFx(P.position.x,P.position.z,6.5,'#ffe08a',350);sfx('slam');hitArea(P.position.x,P.position.z,6.5,(56+rnd(0,16))*statMul()*burstMul(),1.5)},250+i*270)}   // blade storm: four hits all round
     else if(c===1){const tg=sortedNear(1,P.position.x,P.position.z,14)[0],r=P.rotation.y,cx=tg?tg.x:P.position.x+Math.sin(r)*8,cz=tg?tg.z:P.position.z+Math.cos(r)*8;faceTo(tg);ringFx(cx,cz,14.7,'#ffb35c',700);   // starfall: nine meteors round the nearest enemy, twice as wide as before (a 14 m scatter)
       for(let i=0;i<9;i++)setTimeout(()=>{for(let k=0;k<2;k++){const a=Math.random()*6.283,rr=Math.sqrt(Math.random())*14,x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr,gy=groundY(x,z);projFx(x+1.5,gy+14,z-1.5,x,gy+.3,z,34,'o',()=>{burst(x,gy,z,'#ff8a3d');ringFx(x,z,5,'#ffb35c',380);if(!k)sfx('slam')})}hitArea(cx,cz,14,(52+rnd(0,16))*statMul()*burstMul(),1.2)},300+i*190)}   // (the meteors you see are for show and fall all over the circle; every one of the nine waves hurts everything inside the whole 14 m circle, the same for each)
@@ -4903,7 +4903,7 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
   function tick(dt,t){if(gateOn)return;const now=performance.now();host=NET.isHost();
     {const nd=Math.hypot(P.position.x-SHOP.x,P.position.z-SHOP.z);NPC.arms[1].rotation.z=nd<7?2.4+Math.sin(t*9)*.3:.12;NPC.arms[1].rotation.x=0;if(nd<7)NPC.root.rotation.y=Math.atan2(P.position.x-SHOP.x,P.position.z-SHOP.z);blinkTick(NPC,dt)}   // (Mira waves when you come near, and turns to look at you)
 
-    for(const k in CD)CD[k]=Math.max(0,CD[k]-dt);HP.inv=Math.max(0,HP.inv-dt);
+    for(const k in CD)CD[k]=GOD?0:Math.max(0,CD[k]-dt);if(GOD){EN.v=100;EN.lock=0}HP.inv=Math.max(0,HP.inv-dt);
     if(HP.v<HP.max&&now-HP.hurt>6000)HP.v=Math.min(HP.max,HP.v+2*dt);
     if(HP.v>0&&HP.v<HP.max){const rg=bonSum(2);if(rg>0)HP.v=Math.min(HP.max,HP.v+HP.max*rg/100*dt)}   // (the HP regen from Epic and Legendary gear, in combat too)
     if(DASH.t>0){DASH.t-=dt;const st=DASH.sp*dt,nx=P.position.x+DASH.x*st,nz=P.position.z+DASH.z*st;if(walkable(nx,nz)&&!crossWall(P.position.x,P.position.z,nx,nz)){P.position.x=nx;P.position.z=nz}}
@@ -4934,8 +4934,8 @@ god(v){GOD=v==null?!GOD:!!v;HP.v=HP.max;toast('',GOD?'God mode is ON: you cannot
     hpb.classList.toggle('show',HP.v<HP.max||now-HP.hurt<6000||now<fightUntil);hpb.lastChild.style.transform='scaleX('+(RPG.l>=MAXL?0:RPG.xp/need(RPG.l))+')';hpf.style.transform='scaleX('+Math.max(0,HP.v/HP.max)+')';hpt.textContent='HP '+Math.ceil(HP.v)+'/'+HP.max;
     bpot.style.setProperty('--cd',Math.max(0,(POTCD-now)/POTCDMS).toFixed(2));if(shopEl.classList.contains('on')){const sp=MODE==='f'?FORGE:SHOP;if(Math.hypot(P.position.x-sp.x,P.position.z-sp.z)>7)shopClose()}
     forgeTick(dt,t);campTick(t);
-    for(const k in btn){if(k==='b')continue;btn[k].style.setProperty('--cd',(CD[k]/cdOf(k)).toFixed(2))}
-    btn.b.style.setProperty('--cd',(1-EN.v/100).toFixed(2));btn.b.classList.toggle('ready',EN.v>=100)}
+    for(const k in btn){if(k==='b')continue;btn[k].style.setProperty('--cd',(GOD?0:CD[k]/cdOf(k)).toFixed(2))}
+    btn.b.style.setProperty('--cd',(GOD?0:1-EN.v/100).toFixed(2));btn.b.classList.toggle('ready',GOD||EN.v>=100)}
   function goblinAnim(m,t,dt,now){const P=m.parts,run=m.st===1;if(m.pst!==2&&m.st===2)m.t2=now;if(m.pst===2&&m.st!==2)m.swing=.25;m.pst=m.st;
     const sw=run?Math.sin(t*11+m.ph)*.85:0;P.lL.rotation.x=sw;P.lR.rotation.x=-sw;P.aL.rotation.x=-sw*.7;
     P.body.position.y=.98+(run?Math.abs(Math.sin(t*11+m.ph))*.06:Math.sin(t*2+m.ph)*.02);P.head.position.y=1.62+(run?Math.abs(Math.sin(t*11+m.ph))*.06:Math.sin(t*2+m.ph)*.02);P.head.rotation.x=run?.15:Math.sin(t*1.3+m.ph)*.08;
