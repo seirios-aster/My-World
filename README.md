@@ -15,7 +15,7 @@ On a phone, open the link in Chrome or Safari (not inside Messenger or Facebook,
 
 ## How it is built
 
-- The whole game is one file, `index.html`, written with [three.js](https://threejs.org/) (loaded from a CDN).
+- The game is `index.html` (the page), `style.css` (the look), `textures.js` (the built-in textures) and `game.js` (all the game code), written with [three.js](https://threejs.org/) (loaded from a CDN).
 - `sw.js` is the service worker and `manifest.json` makes it installable.
 - `models/` and `assets/` hold the 3D models and the music. `chibi_*.glb` are the character models.
 - Accounts, saved characters and multiplayer use [Supabase](https://supabase.com/) (Google sign-in only).

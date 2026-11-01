@@ -37,7 +37,7 @@ jobs:
       - name: Collect the site
         run: |
           mkdir _site
-          cp index.html manifest.json sw.js _site/
+          cp index.html style.css textures.js game.js manifest.json sw.js _site/
           cp -r icons _site/
           cp -r models _site/
           cp -r assets _site/
